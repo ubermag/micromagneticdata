@@ -1,0 +1,1 @@
+from .micromagneticdata import MicromagneticData
