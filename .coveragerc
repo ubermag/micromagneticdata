@@ -1,2 +1,2 @@
 [run]
-omit = oommfc/tests/*
+omit = micromagneticdata/tests/*
