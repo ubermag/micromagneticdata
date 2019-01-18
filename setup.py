@@ -2,7 +2,6 @@ import setuptools
 
 with open('README.md', encoding='utf-8') as f:
     long_description = f.read()
-
 setuptools.setup(
     name='micromagneticdata',
     version='0.1',
@@ -13,8 +12,9 @@ setuptools.setup(
     author='Marijan Beg, Sergii Mamedov, Ryan A. Pepper, Thomas Kluyver, and Hans Fangohr',
     author_email='jupyteroommf@gmail.com',
     packages=setuptools.find_packages(),
-    install_requires=['micromagneticmodel',
+    install_requires=['seaborn',
                       'oommfodt',
+                      'micromagneticmodel',
                       'discretisedfield'],
     classifiers=['Development Status :: 3 - Alpha',
                  'License :: OSI Approved :: BSD License',
