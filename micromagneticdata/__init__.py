@@ -1,6 +1,7 @@
 import pytest
 import pkg_resources
 from .micromagneticdata import MicromagneticData
+from .drive import Drive
 
 
 def test():

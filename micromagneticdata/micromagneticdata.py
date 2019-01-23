@@ -52,4 +52,4 @@ class MicromagneticData:
         return self.__class__(self.name, drives)
 
     def drive(self, number):
-        return Drive(number, self.name)
+        return Drive(self.name, number)

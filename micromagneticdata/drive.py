@@ -1,37 +1,21 @@
 import os
 import glob
 import json
-from .util import drives_number
 import oommfodt
+import discretisedfield as df
+
 
 class Drive:
 
-    def __init__(self, number, name):
-
-        if isinstance(number, int):
-            if number in drives_number(name):
-                self.number = number
-            else:
-                raise IndexError('Drive with this number do not exist')
-        else:
-            raise TypeError('Accept only int')
+    def __init__(self, name, number):
 
         self.name = name
-        self.dirname = '{}/drive-{}'.format(name, number)
+        self.dirname = os.path.join(name, 'drive-{}'.format(number))
+        if not os.path.exists(self.dirname):
+            raise IOError('Drive directory does not exist.')
 
     @property
-    def show_json(self):
-
-        filename = 'info.json'
-        path = os.path.join(self.dirname, filename)
-        with open(path) as f:
-            data = json.loads(f.read())
-
-        return print(json.dumps(data, indent=4))
-
-
-    @property
-    def show_mif(self):
+    def mif(self):
 
         filename = '{}.mif'.format(self.name)
         path = os.path.join(self.dirname, filename)
@@ -42,26 +26,21 @@ class Drive:
         else:
             raise IOError('File does not exist: {}'.format(filename))
         
-        return print(data)
-
+        return data
 
     @property
-    def show_m0(self):
+    def m0(self):
 
         filename = 'm0.omf'
         path = os.path.join(self.dirname, filename)
 
         if os.path.exists(path):
-            with open(path) as f:
-                data = f.read()
+            return df.read(path)
         else:
             raise IOError('File does not exist: {}'.format(filename))
-        
-        return print(data)
-
 
     @property
-    def show_odt(self):
+    def dt(self):
 
         filename = '{}.odt'.format(self.name)
         path = os.path.join(self.dirname, filename)
@@ -74,3 +53,21 @@ class Drive:
         
         return oommfodt.oommfodt.read(path)
     
+    @property
+    def info(self):
+        with open(os.path.join(self.dirname, 'info.json')) as f:
+            return json.load(f)
+
+    @property
+    def step_number(self):
+        return len(list(self.step_filenames))
+
+    @property
+    def step_filenames(self):
+        for filename in sorted(glob.glob(os.path.join(self.dirname, '{}*.omf'.format(self.name)))):
+            yield filename
+
+    @property
+    def step_fields(self):
+        for filename in self.step_filenames:
+            yield df.read(filename)
