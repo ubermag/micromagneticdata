@@ -1,10 +1,7 @@
-#import seaborn as sns
 import matplotlib.pyplot as plt
 
 import ipywidgets as widgets
 from IPython.display import display
-
-#sns.set(style="white") # grid
 
 
 class PlotFig:

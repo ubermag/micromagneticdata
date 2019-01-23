@@ -12,7 +12,7 @@ setuptools.setup(
     author='Marijan Beg, Sergii Mamedov, Ryan A. Pepper, Thomas Kluyver, and Hans Fangohr',
     author_email='jupyteroommf@gmail.com',
     packages=setuptools.find_packages(),
-    install_requires=['seaborn',
+    install_requires=['ipywidgets',
                       'oommfodt',
                       'micromagneticmodel',
                       'discretisedfield'],
