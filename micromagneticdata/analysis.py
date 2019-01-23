@@ -1,10 +1,10 @@
-import seaborn as sns
+#import seaborn as sns
 import matplotlib.pyplot as plt
 
 import ipywidgets as widgets
 from IPython.display import display
 
-sns.set(style="white") # grid
+#sns.set(style="white") # grid
 
 
 class PlotFig:
@@ -44,7 +44,7 @@ class PlotFig:
         for value in m:
             if value in values:
                 left_axis = True
-                ax = sns.lineplot(x='t', y=value, data=self.data.iloc[left:right + 1, :], label=value)
+                ax = plt.plot(x='t', y=value, data=self.data.iloc[left:right + 1, :], label=value)
                 ax.set(xlabel='Time', ylabel='m')
         values = list(set(values) - set(m))
 
@@ -53,14 +53,14 @@ class PlotFig:
             left_axis = True
             value = values[0]
             values = values[1:]
-            ax = sns.lineplot(x='t', y=value, data=self.data.iloc[left:right + 1, :], label=value)
+            ax = plt.plot(x='t', y=value, data=self.data.iloc[left:right + 1, :], label=value)
             ax.set(xlabel='Time')
 
         # right axis, if additional vale exist
         if values:
             ax2 = plt.twinx()
             value = values[0]
-            sns.lineplot(x='t', y=value, data=self.data.iloc[left:right + 1, :], label=value, ax=ax2, color='black')
+            plt.plot(x='t', y=value, data=self.data.iloc[left:right + 1, :], label=value, ax=ax2, color='black')
 
         with self.out:
             display(plt.gcf())
