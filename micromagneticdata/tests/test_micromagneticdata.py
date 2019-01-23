@@ -1,6 +1,6 @@
 import os
 import glob
-import shutil
+import types
 import pytest
 import pandas as pd
 import micromagneticmodel as mm
@@ -8,30 +8,28 @@ import micromagneticdata as md
 
 os.chdir(os.path.dirname(__file__))
 
-@pytest.mark.oommf
-def test_micromagneticdata():
-    name = 'micromagneticdata'
+name = 'test_sample'
+data = md.MicromagneticData(name)
 
-    system = mm.System(name=name)
+def test_numbers():
+    assert data.numbers == [0, 1, 2, 3, 4, 5]
 
-    assert md.MicromagneticData(system).name == name
-    assert md.MicromagneticData('micromagneticdata').name == name
+def test_drives():
+    assert isinstance(data.drives, types.GeneratorType)
+    assert all(isinstance(d, md.Drive) for d in data.drives)
 
-@pytest.mark.oommf
-def test_drives_information():
-    name = 'test_sample'
+def test_metadata():
+    assert isinstance(data.metadata, pd.DataFrame)
 
-    data = md.MicromagneticData(name)
-    df = data.drives
+def test_subset():
+    ss = data.subset([0, 2])
+    assert isinstance(ss, md.MicromagneticData)
+    assert ss.numbers == [0, 2]
 
-    assert isinstance(df, pd.DataFrame) == True
-    assert len(df.index) == 6
-    assert 'date' in df.columns
+def test_drive():
+    assert isinstance(data.drive(0), md.Drive)
 
-@pytest.mark.oommf
-def test_drives_number():
-    name = 'test_sample'
-
-    data = md.MicromagneticData(name)
-
-    assert len(data.drives_number) == 6
+def test_iter():
+    iterator = data.iter('info')
+    assert isinstance(iterator, types.GeneratorType)
+    assert all(isinstance(i, dict) for i in iterator)
