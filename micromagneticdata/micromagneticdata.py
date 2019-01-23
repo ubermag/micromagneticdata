@@ -1,6 +1,7 @@
 import os
 import re
 import json
+import glob
 import pandas as pd
 import micromagneticmodel as mm
 from .analysis import PlotFig
@@ -17,39 +18,40 @@ class MicromagneticData:
     >>> import micromagneticdata
 
     """
-    def __init__(self, data, drives=None):
-        if isinstance(data, mm.System):
-            self.name = data.name
-        elif isinstance(data, str):
-            self.name = data
-        else:
-            raise TypeError("Accept only mm.System or string")
+    def __init__(self, name, numbers=None):
+        self.name = name
 
-        if drives is None:
-            self.drives = self._get_all_drives
+        if numbers is None:
+            self.numbers = self._all_drives
         else:
-            self.drives = drives
-
-        self.metadata = self._get_metadata
+            self.numbers = numbers
 
     @property
-    def _get_all_drives(self):
-        return drives_number(self.name)
+    def _all_drives(self):
+        dirs = glob.glob(os.path.join(self.name, 'drive-*'))
+        numbers = [int(re.findall('[0-9]+', d)[0]) for d in dirs]
+        return sorted(numbers)
 
     @property
-    def _get_metadata(self):
-        info = []
-        for drive in self.drives:
-            file_name = '{}/drive-{}/info.json'.format(self.name, drive)
-            with open(file_name) as f:
-                item = json.loads(f.read())
-                item['id'] = drive
-                info.append(item)
+    def drives(self):
+        for n in self.numbers:
+            yield Drive(self.name, n)
 
-        return pd.DataFrame.from_records(info)
+    @property
+    def metadata(self):
+        data = []
+        for info in self.iter('info'):
+            data.append(info)
 
-    def get_drives(self, drives):
-        return self.__class__(self.name, drives)
+        return pd.DataFrame.from_records(data)
+
+    def subset(self, numbers):
+        return self.__class__(self.name, numbers)
 
     def drive(self, number):
         return Drive(self.name, number)
+
+
+    def iter(self, attribite):
+        for drive in self.drives:
+            yield getattr(drive, attribite)
