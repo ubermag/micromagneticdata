@@ -43,7 +43,7 @@ class MicromagneticData:
         mdata = []
         for info in self.iterate('info'):
             mdata.append(info)
-        return pd.DataFrame.from_records(data)
+        return pd.DataFrame.from_records(mdata)
 
     def subset(self, numbers):
         return self.__class__(self.name, numbers)
