@@ -1,18 +1,17 @@
 import os
 import glob
 import json
-import oommfodt
+import oommfodt as oo
 import discretisedfield as df
 
 
 class Drive:
-
     def __init__(self, name, number):
-
         self.name = name
-        self.dirname = os.path.join(name, 'drive-{}'.format(number))
+        self.number = number
+        self.dirname = os.path.join(name, f'drive-{number}')
         if not os.path.exists(self.dirname):
-            raise IOError('Drive directory does not exist.')
+            raise IOError(f'Drive directory {self.dirname} does not exist.')
 
     @property
     def mif(self):
@@ -51,7 +50,7 @@ class Drive:
         else:
             raise IOError('File does not exist: {}'.format(filename))
         
-        return oommfodt.oommfodt.read(path)
+        return oo.read(path)
     
     @property
     def info(self):

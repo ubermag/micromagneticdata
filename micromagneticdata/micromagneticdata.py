@@ -4,9 +4,7 @@ import json
 import glob
 import pandas as pd
 import micromagneticmodel as mm
-from .analysis import PlotFig
 from .drive import Drive
-from .util import drives_number
 
 
 class MicromagneticData:
