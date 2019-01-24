@@ -7,7 +7,7 @@
 #
 # Title: Oxs_TimeDriver::Magnetization
 # Desc: Oxs vector field output
-# Desc:  MIF source file: /Users/marijanbeg/git/joommf/micromagneticdata/micromagneticdata/tests/test_sample/drive-0/test_sample.mif
+# Desc:  MIF source file: /home/begm/gito/joommf/micromagneticdata/micromagneticdata/tests/test_sample/drive-0/test_sample.mif
 # Desc:  Iteration: 6, State id: 56
 # Desc:  Stage: 0, Stage iteration: 6
 # Desc:  Stage simulation time: 1e-12 s

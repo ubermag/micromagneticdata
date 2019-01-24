@@ -30,7 +30,7 @@ Specify Oxs_FixedZeeman {
 }
 
 # RungeKuttaEvolver
-Specify Oxs_RungeKuttaEvolve:evolver {
+Specify Oxs_RungeKuttaEvolve {
   alpha 0.02
   gamma_G 221100.0
 }
