@@ -15,7 +15,6 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     install_requires=['ipywidgets',
                       'oommfodt',
-                      'micromagneticmodel',
                       'discretisedfield'],
     classifiers=['Development Status :: 3 - Alpha',
                  'License :: OSI Approved :: BSD License',
