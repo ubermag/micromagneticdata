@@ -16,38 +16,34 @@ class MicromagneticData:
     """
     def __init__(self, name, numbers=None):
         self.name = name
-
         if numbers is None:
-            self.numbers = self._all_drives
+            self.numbers = self._all_numbers
         else:
             self.numbers = numbers
 
     @property
-    def _all_drives(self):
+    def _all_numbers(self):
         dirs = glob.iglob(os.path.join(self.name, 'drive-*'))
-        numbers = [int(re.findall('[0-9]+', d)[0]) for d in dirs]
-        return sorted(numbers)
-
-    @property
-    def drives(self):
-        for n in self.numbers:
-            yield Drive(self.name, n)
-
-    @property
-    def metadata(self):
-        data = []
-        for info in self.iter('info'):
-            data.append(info)
-
-        return pd.DataFrame.from_records(data)
-
-    def subset(self, numbers):
-        return self.__class__(self.name, numbers)
+        return sorted([int(re.findall(r'\d+', d)[0]) for d in dirs])
 
     def drive(self, number):
         return Drive(self.name, number)
 
+    @property
+    def drives(self):
+        for number in self.numbers:
+            yield self.drive(number)
 
-    def iter(self, attribite):
+    def iterate(self, attribute):
         for drive in self.drives:
-            yield getattr(drive, attribite)
+            yield getattr(drive, attribute)
+
+    @property
+    def metadata(self):
+        mdata = []
+        for info in self.iterate('info'):
+            mdata.append(info)
+        return pd.DataFrame.from_records(data)
+
+    def subset(self, numbers):
+        return self.__class__(self.name, numbers)
