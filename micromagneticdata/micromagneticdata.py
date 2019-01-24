@@ -1,9 +1,7 @@
 import os
 import re
-import json
 import glob
 import pandas as pd
-import micromagneticmodel as mm
 from .drive import Drive
 
 
@@ -13,7 +11,7 @@ class MicromagneticData:
     --------
     Simple import.
 
-    >>> import micromagneticdata
+    >>> from micromagneticdata import MicromagneticData
 
     """
     def __init__(self, name, numbers=None):
@@ -26,7 +24,7 @@ class MicromagneticData:
 
     @property
     def _all_drives(self):
-        dirs = glob.glob(os.path.join(self.name, 'drive-*'))
+        dirs = glob.iglob(os.path.join(self.name, 'drive-*'))
         numbers = [int(re.findall('[0-9]+', d)[0]) for d in dirs]
         return sorted(numbers)
 

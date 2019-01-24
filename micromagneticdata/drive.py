@@ -6,6 +6,14 @@ import discretisedfield as df
 
 
 class Drive:
+    """
+    Examples
+    --------
+    Simple import.
+
+    >>> from micromagneticdata import Drive
+
+    """
     def __init__(self, name, number):
         self.name = name
         self.number = number
@@ -15,56 +23,36 @@ class Drive:
 
     @property
     def mif(self):
-
-        filename = '{}.mif'.format(self.name)
-        path = os.path.join(self.dirname, filename)
-
-        if os.path.exists(path):
-            with open(path) as f:
-                data = f.read()
-        else:
-            raise IOError('File does not exist: {}'.format(filename))
-        
-        return data
+        miffilename = f'{self.name}.mif'
+        with open(os.path.join(self.dirname, miffilename)) as f:
+            return f.read()
 
     @property
     def m0(self):
-
-        filename = 'm0.omf'
-        path = os.path.join(self.dirname, filename)
-
-        if os.path.exists(path):
-            return df.read(path)
-        else:
-            raise IOError('File does not exist: {}'.format(filename))
+        m0filename = 'm0.omf'
+        return df.read(os.path.join(self.dirname, m0filename))
 
     @property
     def dt(self):
+        odtfilename = f'{self.name}.odt'
+        return oo.read(os.path.join(self.dirname, odtfilename))
 
-        filename = '{}.odt'.format(self.name)
-        path = os.path.join(self.dirname, filename)
-
-        if os.path.exists(path):
-            with open(path) as f:
-                data = f.read()
-        else:
-            raise IOError('File does not exist: {}'.format(filename))
-        
-        return oo.read(path)
-    
     @property
     def info(self):
-        with open(os.path.join(self.dirname, 'info.json')) as f:
+        infofilename = 'info.json'
+        with open(os.path.join(self.dirname, infofilename)) as f:
             return json.load(f)
+
+    @property
+    def step_filenames(self):
+        omffilename = f'{self.name}*.omf'
+        filenames = glob.iglob(os.path.join(self.dirname, omffilename))
+        for filename in sorted(filenames):
+            yield filename
 
     @property
     def step_number(self):
         return len(list(self.step_filenames))
-
-    @property
-    def step_filenames(self):
-        for filename in sorted(glob.glob(os.path.join(self.dirname, '{}*.omf'.format(self.name)))):
-            yield filename
 
     @property
     def step_fields(self):
