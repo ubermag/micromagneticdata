@@ -5,7 +5,7 @@ with open('README.md', encoding='utf-8') as f:
 
 setuptools.setup(
     name='micromagneticdata',
-    version='0.11',
+    version='0.12',
     description='Python tools for analysing micromagnetic data in a Jupyter notebook.',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -13,6 +13,7 @@ setuptools.setup(
     author='Marijan Beg, Sergii Mamedov, Thomas Kluyver, and Hans Fangohr',
     author_email='jupyteroommf@gmail.com',
     packages=setuptools.find_packages(),
+    include_package_data = True,
     install_requires=['ipywidgets',
                       'oommfodt',
                       'discretisedfield'],
