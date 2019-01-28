@@ -42,6 +42,9 @@ class MicromagneticData:
     def metadata(self):
         mdata = []
         for info in self.iterate('info'):
+            info['drive_time'] = info['args'].get('t', 0)
+            info['step_number'] = info['args'].get('n', 0)
+            info.pop('args')
             mdata.append(info)
         return pd.DataFrame.from_records(mdata)
 
