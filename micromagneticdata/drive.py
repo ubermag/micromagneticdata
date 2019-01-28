@@ -43,10 +43,9 @@ class Drive:
         with open(os.path.join(self.dirname, infofilename)) as f:
             return json.load(f)
 
-    @property
-    def step_filenames(self):
-        omffilename = f'{self.name}*.omf'
-        filenames = glob.iglob(os.path.join(self.dirname, omffilename))
+    def step_filenames(self, extension='omf'):
+        filename = f'{self.name}*.{extension}'
+        filenames = glob.iglob(os.path.join(self.dirname, filename))
         for filename in sorted(filenames):
             yield filename
 
@@ -56,5 +55,5 @@ class Drive:
 
     @property
     def step_fields(self):
-        for filename in self.step_filenames:
+        for filename in self.step_filenames():
             yield df.read(filename)
