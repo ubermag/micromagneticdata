@@ -51,7 +51,7 @@ class Drive:
 
     @property
     def step_number(self):
-        return len(list(self.step_filenames))
+        return len(list(self.step_filenames()))
 
     @property
     def step_fields(self):

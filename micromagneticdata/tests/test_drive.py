@@ -32,8 +32,8 @@ def test_step_number():
 
 
 def test_step_filenames():
-    assert isinstance(drive.step_filenames, types.GeneratorType)
-    assert all(isinstance(fn, str) for fn in drive.step_filenames)
+    assert isinstance(drive.step_filenames(), types.GeneratorType)
+    assert all(isinstance(fn, str) for fn in drive.step_filenames())
 
 
 def test_step_fields():
