@@ -6,7 +6,7 @@ from IPython.display import display
 
 class PlotFig:
     def __init__(self, data):
-        self.data = data
+        self.data = data.odt
         self.time_slider = widgets.IntRangeSlider(
             description='Time: ',
             value=(0, len(self.data.index)),
@@ -15,7 +15,6 @@ class PlotFig:
             layout=widgets.Layout(width='99%')
         )
         self.columns = widgets.SelectMultiple(
-            # description='Columns:',
             options=self.data.columns,
             value=['mx', 'my'],
             rows=len(self.data.columns),
@@ -41,8 +40,14 @@ class PlotFig:
         for value in m:
             if value in values:
                 left_axis = True
-                ax = plt.plot(x='t', y=value, data=self.data.iloc[left:right + 1, :], label=value)
-                ax.set(xlabel='Time', ylabel='m')
+                ax = plt.plot(
+                    self.data['tm'].iloc[left:right+1],
+                    self.data[value].iloc[left:right+1],
+                    label=value
+                )
+                plt.xlabel('Time')
+                plt.ylabel('m')
+                plt.legend()
         values = list(set(values) - set(m))
 
         # left axis for first value, if ['mx', 'my', 'mz'] not exist
@@ -50,14 +55,27 @@ class PlotFig:
             left_axis = True
             value = values[0]
             values = values[1:]
-            ax = plt.plot(x='t', y=value, data=self.data.iloc[left:right + 1, :], label=value)
-            ax.set(xlabel='Time')
+            ax = plt.plot(
+                    self.data['tm'].iloc[left:right+1],
+                    self.data[value].iloc[left:right+1],
+                    label=value
+            )
+            plt.xlabel('Time')
+            plt.ylabel(value)
+            plt.legend()
 
         # right axis, if additional vale exist
         if values:
             ax2 = plt.twinx()
             value = values[0]
-            plt.plot(x='t', y=value, data=self.data.iloc[left:right + 1, :], label=value, ax=ax2, color='black')
+            plt.plot(
+                self.data['tm'].iloc[left:right+1],
+                self.data[value].iloc[left:right+1],
+                label=value,
+                color='black',
+            )
+            plt.ylabel(value)
+            plt.legend()
 
         with self.out:
             display(plt.gcf())
