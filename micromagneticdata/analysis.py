@@ -6,7 +6,7 @@ from IPython.display import display
 
 class PlotFig:
     def __init__(self, data):
-        self.data = data.odt
+        self.data = data.dt
         self.time_slider = widgets.IntRangeSlider(
             description='Time: ',
             value=(0, len(self.data.index)),

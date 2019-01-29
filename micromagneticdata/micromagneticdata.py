@@ -46,17 +46,16 @@ class MicromagneticData:
     def metadata(self):
         mdata = []
         for info in self.iterate('info'):
-            info['drive_time'] = info['args'].get('t', 0)
-            info['step_number'] = info['args'].get('n', 0)
+            info['drive_time'] = info['args'].get('t', float('NaN'))
+            info['step_number'] = info['args'].get('n', float('NaN'))
             info.pop('args')
             mdata.append(info)
         return pd.DataFrame.from_records(mdata)
 
     @property
-    def odt(self):
-        odt_files = []
-        for drive in self.drives:
-            for file in drive.step_filenames(extension='odt'):
-                odt_files.append(file)
+    def dt(self):
+        dfs = []
+        for df in self.iterate('dt'):
+            dfs.append(df)
 
-        return oo.merge(odt_files, timedriver=True)
+        return oo.merge(dfs, timedriver=True)
