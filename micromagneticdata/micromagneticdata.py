@@ -2,6 +2,7 @@ import os
 import re
 import glob
 import pandas as pd
+import oommfodt as oo
 from .drive import Drive
 
 
@@ -38,6 +39,9 @@ class MicromagneticData:
         for drive in self.drives:
             yield getattr(drive, attribute)
 
+    def subset(self, numbers):
+        return self.__class__(self.name, numbers)
+
     @property
     def metadata(self):
         mdata = []
@@ -48,5 +52,11 @@ class MicromagneticData:
             mdata.append(info)
         return pd.DataFrame.from_records(mdata)
 
-    def subset(self, numbers):
-        return self.__class__(self.name, numbers)
+    @property
+    def odt(self):
+        odt_files = []
+        for drive in self.drives:
+            for file in drive.step_filenames(extension='odt'):
+                odt_files.append(file)
+
+        return oo.merge(odt_files, timedriver=True)
