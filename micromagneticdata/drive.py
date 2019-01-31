@@ -45,8 +45,8 @@ class Drive:
 
     @property
     def step_filenames(self):
-        omffilename = f'{self.name}*.omf'
-        filenames = glob.iglob(os.path.join(self.dirname, omffilename))
+        filename = f'{self.name}*.omf'
+        filenames = glob.iglob(os.path.join(self.dirname, filename))
         for filename in sorted(filenames):
             yield filename
 
