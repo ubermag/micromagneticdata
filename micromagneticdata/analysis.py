@@ -101,60 +101,18 @@ class Plot3D:
             value=0,
             min=0,
             max=max(self.data.dt.index),
-            # continuous_update=False,
+            continuous_update=False,
             layout=widgets.Layout(width='99%')
         )
-
         self.vectors = self.vectors_plot
-
         self.out = widgets.Output()
-
         self.time_slider.observe(self.update)
         self.update(None)
 
-    def get_coord_and_vect(self, dt):
-        # Plot arrows only with norm > 0.
-        data = [(i, dt(i)) for i in dt.mesh.coordinates
-                if dt.norm(i) > 0]
-        coordinates, vectors = zip(*data)
-        coordinates, vectors = np.array(coordinates), np.array(vectors)
-
-        # Middle of the arrow at the cell centre.
-        coordinates -= 0.5 * vectors
-
-        # To avoid the warning
-        coordinates = coordinates.astype(np.float32)
-        vectors = vectors.astype(np.float32)
-
-        return coordinates, vectors
-
-    def get_colors(self, vectors, colormap='viridis'):
-        cmap = matplotlib.cm.get_cmap(colormap, 256)
-
-        vc = vectors[..., 0]
-        vc = np.interp(vc, (vc.min(), vc.max()), (0, 1))
-        colors = cmap(vc)
-        colors = [int('0x{}'.format(matplotlib.colors.to_hex(rgb)[1:]), 16)
-                  for rgb in colors]
-        colors = list(zip(colors, colors))
-
-        return colors
-
     @property
-    def vectors_plot(self):
-        plot = k3d.plot()
-        plot.camera_auto_fit = False
-        plot.grid_auto_fit = False
-
-        field = self.get_field
-        coord, vect = self.get_coord_and_vect(field)
-        colors = self.get_colors(vect)
-
-        vectors = k3d.vectors(coord, vect, colors=colors)
-        plot += vectors
-        plot.display()
-
-        return vectors
+    def get_field(self):
+        filename = self.omf_files[self.time_slider.value]
+        return df.read(filename)
 
     @property
     def omf_files(self):
@@ -164,15 +122,26 @@ class Plot3D:
         return files
 
     @property
-    def get_field(self):
-        filename = self.omf_files[self.time_slider.value]
-        return df.read(filename)
+    def vectors_plot(self):
+        plot = k3d.plot()
+        plot.camera_auto_fit = False
+        plot.grid_auto_fit = False
+
+        field = self.get_field
+        coord, vect = field.get_coord_and_vect(field.mesh.coordinates)
+        colors = df.plot3d.get_colors(vect)
+
+        vectors = k3d.vectors(coord, vect, colors=colors)
+        plot += vectors
+        plot.display()
+
+        return vectors
 
     def update(self, val):
         self.out.clear_output(wait=True)
 
         field = self.get_field
-        coor, vect = self.get_coord_and_vect(field)
+        coor, vect = field.get_coord_and_vect(field.mesh.coordinates)
         self.vectors.vectors = vect
 
     def _ipython_display_(self):
