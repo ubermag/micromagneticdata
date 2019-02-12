@@ -179,3 +179,71 @@ class Plot3D:
         box1 = widgets.VBox([self.time_slider])
         box2 = widgets.VBox([box1, self.out])
         display(box2)
+
+
+class PlotPlane:
+    def __init__(self, data):
+        self.data = data.m0
+        self.coord_select = widgets.ToggleButtons(
+            options=['x', 'y', 'z'],
+            description='Coordinate:',
+            disabled=False
+        )
+        self.min, self.max, self.cell, self.value = self.coord_min_max
+        self.coord_slider = widgets.FloatSlider(
+            description='Value',
+            value=self.value,
+            min=self.min,
+            max=self.max,
+            step=self.cell,
+            disabled=False,
+            continuous_update=False,
+            readout=True,
+            readout_format='.2f',
+            layout=widgets.Layout(width='35%')
+        )
+        self.output = widgets.Output()
+        self.coord_select.observe(self.update)
+        self.coord_slider.observe(self.update)
+        self.update(None)
+
+    @property
+    def coord_min_max(self):
+        coord = {'x': 0, 'y': 1, 'z': 2}
+        coord = {0: 'x', 1: 'y', 2: 'z'}
+        for i in range(3):
+            if self.coord_select.value == coord[i]:
+                # min = min of mesh + 1/2 cell size for this component
+                # max = max of mesh - 1/2 cell size for this component
+                # value = middle of mesh + 1/2 cell size
+                data = {}
+                data['cell'] = self.data.mesh.l[i] / self.data.mesh.n[i]
+                data['min'] = self.data.mesh.pmin[i] + data['cell'] / 2.0
+                data['max'] = self.data.mesh.pmax[i] - data['cell'] / 2.0
+                data['value'] = data['min'] + (data['max'] - data['min']) / 2.0 + data['cell'] / 2.0
+                return data['min'], data['max'], data['cell'], data['value']
+
+    def update(self, val):
+        self.output.clear_output(wait=True)
+        coord = self.coord_select.value
+        value = self.coord_slider.value
+
+        self.coord_slider.min, self.coord_slider.max, self.coord_slider.cell, _ = self.coord_min_max
+
+        x, y, z = None, None, None
+        if coord == 'x': x = value;
+        if coord == 'y': y = value;
+        if coord == 'z': z = value;
+
+        self.data.plot_plane(x=x, y=y, z=z)
+
+        with self.output:
+            display(plt.gcf())
+        plt.close()
+
+    def _ipython_display_(self):
+
+        box1 = widgets.VBox([self.coord_select])
+        box2 = widgets.VBox([box1, self.coord_slider])
+        box3 = widgets.VBox([box2, self.output])
+        display(box3)
