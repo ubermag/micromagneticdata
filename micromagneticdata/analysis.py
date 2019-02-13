@@ -249,6 +249,7 @@ class VectorFieldSlice:
         box3 = widgets.VBox([box2, self.out])
         display(box3)
 
+
 class PlotPlane:
     def __init__(self, data):
         self.data = data.m0
@@ -272,23 +273,23 @@ class PlotPlane:
         )
         self.output = widgets.Output()
         self.coord_select.observe(self.update)
-        self.coord_slider.observe(self.update)
+        self.coord_slider.observe(self.update, names='value')
         self.update(None)
 
     @property
     def coord_min_max(self):
-        coord = {'x': 0, 'y': 1, 'z': 2}
         coord = {0: 'x', 1: 'y', 2: 'z'}
         for i in range(3):
             if self.coord_select.value == coord[i]:
                 # min = min of mesh + 1/2 cell size for this component
                 # max = max of mesh - 1/2 cell size for this component
                 # value = middle of mesh + 1/2 cell size
-                data = {}
+                data = dict()
                 data['cell'] = self.data.mesh.l[i] / self.data.mesh.n[i]
                 data['min'] = self.data.mesh.pmin[i] + data['cell'] / 2.0
                 data['max'] = self.data.mesh.pmax[i] - data['cell'] / 2.0
-                data['value'] = data['min'] + (data['max'] - data['min']) / 2.0 + data['cell'] / 2.0
+                data['value'] = data['min'] + \
+                    (data['max'] - data['min']) / 2.0 + data['cell'] / 2.0
                 return data['min'], data['max'], data['cell'], data['value']
 
     def update(self, val):
