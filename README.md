@@ -8,12 +8,12 @@ Marijan Beg<sup>1,2</sup>, Sergii Mamedov<sup>1</sup>, Thomas Kluyver<sup>1</sup
 | --- | --- |
 | Latest release | [![PyPI version](https://badge.fury.io/py/micromagneticdata.svg)](https://badge.fury.io/py/micromagneticdata) |
 |                | [![Anaconda-Server Badge](https://anaconda.org/conda-forge/micromagneticdata/badges/version.svg)](https://anaconda.org/conda-forge/micromagneticdata) |
-| Build | [![Build Status](https://travis-ci.org/joommf/micromagneticdata.svg?branch=master)](https://travis-ci.org/joommf/micromagneticdata) |
-|       | [![Build status](https://ci.appveyor.com/api/projects/status/8umknqjg7cvlupsk?svg=true)](https://ci.appveyor.com/project/marijanbeg/micromagneticdata) |
-| Coverage | [![codecov](https://codecov.io/gh/joommf/micromagneticdata/branch/master/graph/badge.svg)](https://codecov.io/gh/joommf/micromagneticdata) |
+| Build | [![Build Status](https://travis-ci.org/ubermag/micromagneticdata.svg?branch=master)](https://travis-ci.org/ubermag/micromagneticdata) |
+|       | [![Build status](https://ci.appveyor.com/api/projects/status/8umknqjg7cvlupsk?svg=true)](https://ci.appveyor.com/project/ubermag/micromagneticdata) |
+| Coverage | [![codecov](https://codecov.io/gh/ubermag/micromagneticdata/branch/master/graph/badge.svg)](https://codecov.io/gh/ubermag/micromagneticdata) |
 | Documentation | [![Documentation Status](https://readthedocs.org/projects/micromagneticdata/badge/?version=latest)](http://micromagneticdata.readthedocs.io/en/latest/?badge=latest) |
-| Binder | [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/joommf/micromagneticdata/master?filepath=index.ipynb) |
-| Dependecies | [![Requirements Status](https://requires.io/github/joommf/micromagneticdata/requirements.svg?branch=master)](https://requires.io/github/joommf/micromagneticdata/requirements/?branch=master) |
+| Binder | [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/ubermag/micromagneticdata/master?filepath=index.ipynb) |
+| Dependecies | [![Requirements Status](https://requires.io/github/ubermag/micromagneticdata/requirements.svg?branch=master)](https://requires.io/github/ubermag/micromagneticdata/requirements/?branch=master) |
 | License | [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) |
 
 ## About
@@ -68,14 +68,14 @@ On the other hand, if you used `conda` for installation, update `micromagneticda
 
 The most recent development version of `micromagneticdata` that is not yet released can be installed/updated with
 
-    git clone https://github.com/joommf/micromagneticdata.git
+    git clone https://github.com/ubermag/micromagneticdata.git
     python3 -m pip install --upgrade micromagneticdata
 
 **Note**: If you do not have `git` on your system, it can be installed by following the instructions [here](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
 
 ## Binder
 
-`micromagneticdata` can be used in the cloud via Binder. This does not require you to have anything installed and no files will be created on your machine. To use `micromagneticdata` in the cloud, follow this [link](https://mybinder.org/v2/gh/joommf/micromagneticdata/master?filepath=index.ipynb).
+`micromagneticdata` can be used in the cloud via Binder. This does not require you to have anything installed and no files will be created on your machine. To use `micromagneticdata` in the cloud, follow this [link](https://mybinder.org/v2/gh/ubermag/micromagneticdata/master?filepath=index.ipynb).
 
 ## Documentation
 
@@ -83,7 +83,7 @@ Documentation for `micromagneticdata` is available [here](http://micromagneticda
 
 ## Support
 
-If you require support on installation or usage of `micromagneticdata` or if you want to report a problem, you are welcome to raise an issue in our [joommf/help](https://github.com/joommf/help) repository.
+If you require support on installation or usage of `micromagneticdata` or if you want to report a problem, you are welcome to raise an issue in our [ubermag/help](https://github.com/ubermag/help) repository.
 
 ## License
 
