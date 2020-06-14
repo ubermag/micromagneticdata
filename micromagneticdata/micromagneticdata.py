@@ -2,7 +2,7 @@ import os
 import re
 import glob
 import pandas as pd
-import oommfodt as oo
+import ubermagtable as ut
 from .drive import Drive
 
 

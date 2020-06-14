@@ -1,18 +1,20 @@
 import os
 import glob
 import json
+import ipywidgets
 import ubermagtable as ut
 import discretisedfield as df
 import ubermagutil.typesystem as ts
 
 
-@ts.typesystem(name=ts.Name(const=True),
-               number=ts.Scalar(expected_type=0, unsigned=True))
+@ts.typesystem(name=ts.Typed(expected_type=str),
+               number=ts.Scalar(expected_type=int, unsigned=True),
+               dirname=ts.Typed(expected_type=str))
 class Drive:
-    def __init__(self, name, number):
+    def __init__(self, name, number, dirname='./'):
         self.name = name
         self.number = number
-        self.dirname = os.path.join(name, f'drive-{number}')
+        self.dirname = os.path.join(dirname, name, f'drive-{number}')
 
         if not os.path.exists(self.dirname):
             msg = f'Drive directory {self.dirname} does not exist.'
@@ -38,17 +40,26 @@ class Drive:
                                               f'{self.name}.odt'))
 
     @property
-    def step_filenames(self):
-        filename = f'{self.name}*.omf'
-        filenames = glob.iglob(os.path.join(self.dirname, filename))
-        for filename in sorted(filenames):
-            yield filename
-
-    @property
-    def step_number(self):
+    def n(self):
         return len(list(self.step_filenames))
 
     @property
-    def step_fields(self):
+    def step_filenames(self):
+        filenames = glob.iglob(os.path.join(self.dirname, f'{self.name}*.omf'))
+        for filename in sorted(filenames):
+            yield filename
+
+    def step(self, n):
+        return df.Field.fromfile(filename = list(self.step_filenames)[n])
+
+    def __iter__(self):
         for filename in self.step_filenames:
-            yield df.read(filename)
+            yield df.Field.fromfile(filename)
+
+    def slider(self, description='step', **kwargs):
+        return ipywidgets.IntSlider(value=0,
+                                    min=0,
+                                    max=self.n-1,
+                                    step=1,
+                                    description=description,
+                                    **kwargs)
