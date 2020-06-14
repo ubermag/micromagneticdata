@@ -9,7 +9,7 @@ Marijan Beg<sup>1,2</sup>, Sergii Mamedov<sup>2</sup>, Thomas Kluyver<sup>2</sup
 | Releases | [![PyPI version](https://badge.fury.io/py/micromagneticdata.svg)](https://badge.fury.io/py/micromagneticdata) |
 |          | [![Anaconda-Server Badge](https://anaconda.org/conda-forge/micromagneticdata/badges/version.svg)](https://anaconda.org/conda-forge/micromagneticdata) |
 | Build | [![Build Status](https://travis-ci.org/ubermag/micromagneticdata.svg?branch=master)](https://travis-ci.org/ubermag/micromagneticdata) |
-|       | [![Build status](https://ci.appveyor.com/api/projects/status/8umknqjg7cvlupsk?svg=true)](https://ci.appveyor.com/project/ubermag/micromagneticdata) |
+|       | [![Build status](https://ci.appveyor.com/api/projects/status/pk03qjw0qoaga6yb?svg=true)](https://ci.appveyor.com/project/marijanbeg/micromagneticdata) |
 | Coverage | [![codecov](https://codecov.io/gh/ubermag/micromagneticdata/branch/master/graph/badge.svg)](https://codecov.io/gh/ubermag/micromagneticdata) |
 | Documentation | [![Documentation Status](https://readthedocs.org/projects/micromagneticdata/badge/?version=latest)](http://micromagneticdata.readthedocs.io/en/latest/?badge=latest) |
 | Binder | [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ubermag/micromagneticdata/master?urlpath=lab/tree/docs/ipynb/index.ipynb) |
