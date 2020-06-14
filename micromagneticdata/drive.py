@@ -3,8 +3,11 @@ import glob
 import json
 import oommfodt as oo
 import discretisedfield as df
+import ubermagutil.typesystem as ts
 
 
+@ts.typesystem(name=ts.Name(const=True),
+               number=ts.Scalar(expected_type=0, unsigned=True))
 class Drive:
     """
     Examples

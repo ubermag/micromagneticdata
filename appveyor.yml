@@ -1,14 +1,12 @@
 environment:
   matrix:
-    - PYTHON_VERSION: 3.6
-      MINICONDA: C:\Miniconda3-x64
     - PYTHON_VERSION: 3.7
       MINICONDA: C:\Miniconda3-x64
 
 platform:
   - x64
 
-build: off
+build: false
 
 install:
   - "set PATH=%MINICONDA%;%MINICONDA%\\Scripts;%PATH%"
@@ -16,13 +14,10 @@ install:
   - conda update -q conda
   - "conda create -q -n test-environment python=%PYTHON_VERSION%"
   - activate test-environment
-  - python -m pip install --upgrade pip pytest nbval .
+  - python -m pip install --upgrade pip nbval pycodestyle .
 
 test_script:
-  - python -c "import micromagneticdata as m; import sys; sys.exit(m.test())"
-  - python -m pytest --nbval docs\ipynb\
-  - python -m pytest --doctest-modules --ignore=micromagneticdata\tests micromagneticdata
-
-notifications:
-  - provider: Slack
-    incoming_webhook: https://hooks.slack.com/services/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
+  - python -c "import micromagneticdata as md; import sys; sys.exit(md.test())"
+  - python -m pytest -v --doctest-modules --ignore=micromagneticdata\tests micromagneticdata
+  - python -m pytest -v --nbval docs\ipynb\
+  - python -m pycodestyle --filename=*.py .

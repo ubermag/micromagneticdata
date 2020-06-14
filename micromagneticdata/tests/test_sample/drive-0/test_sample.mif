@@ -1,17 +1,24 @@
-# MIF 2.1
+# MIF 2.2
 
-# BoxAtlas
-Specify Oxs_BoxAtlas:atlas {
-  xrange {0 3e-08}
-  yrange {0 3e-08}
-  zrange {0 3e-08}
-  name atlas
+SetOptions {
+  basename test_sample
+  scalar_output_format %.12g
+  scalar_field_output_format {text %#.15g}
+  vector_field_output_format {text %#.15g}
+}
+
+# BoxAtlas for main_atlas
+Specify Oxs_BoxAtlas:main_atlas {
+  xrange { 0.0 1e-07 }
+  yrange { 0.0 5e-08 }
+  zrange { 0.0 2e-08 }
+  name main
 }
 
 # RectangularMesh
 Specify Oxs_RectangularMesh:mesh {
-  cellsize {1e-08 1.5e-08 5e-09}
-  atlas Oxs_BoxAtlas:atlas
+  cellsize { 5e-09 5e-09 5e-09 }
+  atlas :main_atlas
 }
 
 # UniformExchange
@@ -21,41 +28,34 @@ Specify Oxs_UniformExchange {
 
 # FixedZeeman
 Specify Oxs_FixedZeeman {
-  field {
-    Oxs_UniformVectorField {
-      vector {1000000.0 0.0 200000.0}
-    }
-  }
-  multiplier 1
-}
-
-# RungeKuttaEvolver
-Specify Oxs_RungeKuttaEvolve {
-  alpha 0.02
-  gamma_G 221100.0
+  field {1000000.0 0.0 200000.0}
 }
 
 # m0 file
-Specify Oxs_FileVectorField:m0file {
-   atlas :atlas
-   file m0.omf
+Specify Oxs_FileVectorField:m0 {
+  file m0.omf
+  atlas :main_atlas
+}
+
+# m0_norm
+Specify Oxs_VecMagScalarField:m0_norm {
+    field :m0
+}
+
+# RungeKuttaEvolver
+Specify Oxs_RungeKuttaEvolve:evolver {
+  alpha 0.02
+  gamma_G 221276.14872118403
 }
 
 # TimeDriver
 Specify Oxs_TimeDriver {
-  evolver Oxs_RungeKuttaEvolve
-  stopping_time 1e-12
+  evolver :evolver
   mesh :mesh
+  Ms :m0_norm
+  m0 :m0
+  stopping_time 1e-12
   stage_count 25
-  Ms {
-    Oxs_VecMagScalarField {
-      field :m0file
-    }
-  }
-  m0 :m0file
-  basename test_sample
-  scalar_field_output_format {text %\#.15g}
-  vector_field_output_format {text %\#.15g}
 }
 
 Destination table mmArchive
