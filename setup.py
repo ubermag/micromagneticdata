@@ -5,7 +5,7 @@ with open('README.md', encoding='utf-8') as f:
 
 setuptools.setup(
     name='micromagneticdata',
-    version='0.1',
+    version='0.2',
     description=('Python tools for analysing micromagnetic '
                  'data in a Jupyter notebook.'),
     long_description=long_description,
