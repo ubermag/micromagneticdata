@@ -42,6 +42,22 @@ class Drive:
 
     @property
     def n(self):
+        """Number of steps.
+
+        Examples
+        --------
+        1. Getting the number of steps.
+
+        >>> import os
+        >>> import micromagneticdata as md
+        ...
+        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests')
+        >>> name = 'test_sample'
+        >>> drive = md.Drive(name, 0, dirname)
+        >>> drive.n
+        25
+
+        """
         return len(list(self.step_filenames))
 
     @property
@@ -51,7 +67,7 @@ class Drive:
             yield filename
 
     def step(self, n):
-        return df.Field.fromfile(filename = list(self.step_filenames)[n])
+        return df.Field.fromfile(filename=list(self.step_filenames)[n])
 
     def __iter__(self):
         for filename in self.step_filenames:
