@@ -1,7 +1,7 @@
 import os
 import glob
 import json
-import oommfodt as oo
+import ubermagtable as ut
 import discretisedfield as df
 import ubermagutil.typesystem as ts
 
@@ -9,42 +9,33 @@ import ubermagutil.typesystem as ts
 @ts.typesystem(name=ts.Name(const=True),
                number=ts.Scalar(expected_type=0, unsigned=True))
 class Drive:
-    """
-    Examples
-    --------
-    Simple import.
-
-    >>> from micromagneticdata import Drive
-
-    """
     def __init__(self, name, number):
         self.name = name
         self.number = number
         self.dirname = os.path.join(name, f'drive-{number}')
+
         if not os.path.exists(self.dirname):
-            raise IOError(f'Drive directory {self.dirname} does not exist.')
+            msg = f'Drive directory {self.dirname} does not exist.'
+            raise IOError(msg)
+
+    @property
+    def info(self):
+        with open(os.path.join(self.dirname, 'info.json')) as f:
+            return json.load(f)
 
     @property
     def mif(self):
-        miffilename = f'{self.name}.mif'
-        with open(os.path.join(self.dirname, miffilename)) as f:
+        with open(os.path.join(self.dirname, f'{self.name}.mif')) as f:
             return f.read()
 
     @property
     def m0(self):
-        m0filename = 'm0.omf'
-        return df.read(os.path.join(self.dirname, m0filename))
+        return df.Field.fromfile(os.path.join(self.dirname, 'm0.omf'))
 
     @property
-    def dt(self):
-        odtfilename = f'{self.name}.odt'
-        return oo.read(os.path.join(self.dirname, odtfilename))
-
-    @property
-    def info(self):
-        infofilename = 'info.json'
-        with open(os.path.join(self.dirname, infofilename)) as f:
-            return json.load(f)
+    def table(self):
+        return ut.Table.fromfile(os.path.join(self.dirname,
+                                              f'{self.name}.odt'))
 
     @property
     def step_filenames(self):
