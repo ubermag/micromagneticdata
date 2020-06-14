@@ -14,30 +14,31 @@ class Drive:
     def __init__(self, name, number, dirname='./'):
         self.name = name
         self.number = number
-        self.dirname = os.path.join(dirname, name, f'drive-{number}')
+        self.dirname = dirname
 
-        if not os.path.exists(self.dirname):
-            msg = f'Drive directory {self.dirname} does not exist.'
+        self.path = os.path.join(dirname, name, f'drive-{number}')
+
+        if not os.path.exists(self.path):
+            msg = f'Drive directory {self.path} does not exist.'
             raise IOError(msg)
 
     @property
     def info(self):
-        with open(os.path.join(self.dirname, 'info.json')) as f:
+        with open(os.path.join(self.path, 'info.json')) as f:
             return json.load(f)
 
     @property
     def mif(self):
-        with open(os.path.join(self.dirname, f'{self.name}.mif')) as f:
+        with open(os.path.join(self.path, f'{self.name}.mif')) as f:
             return f.read()
 
     @property
     def m0(self):
-        return df.Field.fromfile(os.path.join(self.dirname, 'm0.omf'))
+        return df.Field.fromfile(os.path.join(self.path, 'm0.omf'))
 
     @property
     def table(self):
-        return ut.Table.fromfile(os.path.join(self.dirname,
-                                              f'{self.name}.odt'))
+        return ut.Table.fromfile(os.path.join(self.path, f'{self.name}.odt'))
 
     @property
     def n(self):
@@ -45,7 +46,7 @@ class Drive:
 
     @property
     def step_filenames(self):
-        filenames = glob.iglob(os.path.join(self.dirname, f'{self.name}*.omf'))
+        filenames = glob.iglob(os.path.join(self.path, f'{self.name}*.omf'))
         for filename in sorted(filenames):
             yield filename
 
