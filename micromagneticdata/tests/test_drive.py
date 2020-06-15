@@ -57,6 +57,11 @@ class TestDrive:
         assert len(list(drive)) == 25
         assert all([isinstance(i, df.Field) for i in drive])
 
+    def test_ovf2vtk(self):
+        drive = md.Drive(name=self.name, number=2, dirname=self.dirname)
+
+        drive.ovf2vtk()
+
     def test_slider(self):
         drive = md.Drive(name=self.name, number=0, dirname=self.dirname)
 

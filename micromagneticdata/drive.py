@@ -73,6 +73,12 @@ class Drive:
         for filename in self.step_filenames:
             yield df.Field.fromfile(filename)
 
+    def ovf2vtk(self):
+        for i, filename in enumerate(self.step_filenames):
+            vtkfilename = 'drive-{}-{:07d}.vtk'.format(self.number, i)
+            df.Field.fromfile(filename).write(os.path.join(self.path,
+                                                           vtkfilename))
+
     def slider(self, description='step', **kwargs):
         return ipywidgets.IntSlider(value=0,
                                     min=0,
