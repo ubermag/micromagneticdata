@@ -5,7 +5,7 @@ with open('README.md', encoding='utf-8') as f:
 
 setuptools.setup(
     name='micromagneticdata',
-    version='0.3',
+    version='0.3.1',
     description=('Python tools for analysing micromagnetic '
                  'data in a Jupyter notebook.'),
     long_description=long_description,
@@ -15,8 +15,8 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     include_package_data=True,
     python_requires='>=3.6',
-    install_requires=['ubermagtable==0.1.11',
-                      'discretisedfield==0.8.12'],
+    install_requires=['ubermagtable==0.1.12',
+                      'discretisedfield==0.8.13'],
     classifiers=['Development Status :: 5 - Production/Stable',
                  'Intended Audience :: Education',
                  'Intended Audience :: Developers',
