@@ -52,6 +52,10 @@ If you require support, have questions, want to report a bug, or want to suggest
 
 All contributions are welcome, however small they are. If you would like to contribute, please fork the repository and create a pull request. If you are not sure how to contribute, please contact us by raising an issue in [ubermag/help](https://github.com/ubermag/help) repository, and we are going to help you get started and assist you on the way.
 
+**Contributors**:
+
+- Sergii Mamedov ([@sergii-mamedov](https://github.com/sergii-mamedov)), European XFEL, Germany
+
 ## License
 
 Licensed under the BSD 3-Clause "New" or "Revised" License. For details, please refer to the [LICENSE](LICENSE) file.
