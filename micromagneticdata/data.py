@@ -168,7 +168,7 @@ class Data:
         Drive(...)
 
         """
-        return md.Drive(name=self.name, number=item%self.n,
+        return md.Drive(name=self.name, number=item % self.n,
                         dirname=self.dirname)
 
     def __iter__(self):
