@@ -19,7 +19,7 @@
 
 project = 'micromagneticdata'
 copyright = '2021, Marijan Beg and Hans Fangohr'
-author = 'Marijan Beg and Hans Fangohr'
+author = 'Marijan Beg, Martin Lang, and Hans Fangohr'
 
 
 # -- General configuration ---------------------------------------------------
