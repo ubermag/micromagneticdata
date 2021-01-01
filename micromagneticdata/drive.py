@@ -350,7 +350,7 @@ class Drive:
         for filename in self._step_files:
             yield df.Field.fromfile(filename)
 
-    def ovf2vtk(self):
+    def ovf2vtk(self, dirname=None):
         """OVF to VTK conversion.
 
         This method iterates through all magnetisation fields in the drive and
@@ -369,9 +369,11 @@ class Drive:
         >>> drive.ovf2vtk()
 
         """
+        if dirname is None:
+            dirname = self.path
         for i, filename in enumerate(self._step_files):
             vtkfilename = 'drive-{}-{:07d}.vtk'.format(self.number, i)
-            df.Field.fromfile(filename).write(os.path.join(self.path,
+            df.Field.fromfile(filename).write(os.path.join(dirname,
                                                            vtkfilename))
 
     def slider(self, description='step', **kwargs):
