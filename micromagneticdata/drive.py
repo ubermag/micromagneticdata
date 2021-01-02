@@ -109,7 +109,7 @@ class Drive:
         ------
         ValueError
 
-            If the column name does not exist.
+            If the column name does not exist in table.
 
         Examples
         --------
