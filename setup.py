@@ -5,7 +5,7 @@ with open('README.md', encoding='utf-8') as f:
 
 setuptools.setup(
     name='micromagneticdata',
-    version='0.4',
+    version='0.5',
     description=('Python tools for the analysis of '
                  'computational magnetism data'),
     author='Marijan Beg, Martin Lang, and Hans Fangohr',
@@ -15,8 +15,8 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     include_package_data=True,
     python_requires='>=3.8',
-    install_requires=['ubermagtable==0.4',
-                      'discretisedfield==0.9'],
+    install_requires=['ubermagtable==0.6',
+                      'discretisedfield==0.11'],
     classifiers=['Development Status :: 5 - Production/Stable',
                  'Intended Audience :: Education',
                  'Intended Audience :: Developers',
