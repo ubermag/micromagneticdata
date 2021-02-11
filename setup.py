@@ -5,7 +5,7 @@ with open('README.md', encoding='utf-8') as f:
 
 setuptools.setup(
     name='micromagneticdata',
-    version='0.5.1',
+    version='0.5.1',  # next version should be 0.13
     description=('Python tools for the analysis of '
                  'computational magnetism data'),
     author='Marijan Beg, Martin Lang, and Hans Fangohr',
