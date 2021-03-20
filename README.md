@@ -18,7 +18,7 @@ Marijan Beg<sup>1,2</sup>, Martin Lang<sup>1</sup>, and Hans Fangohr<sup>1,2,3</
 | Platforms | [![Platforms](https://anaconda.org/conda-forge/micromagneticdata/badges/platforms.svg)](https://anaconda.org/conda-forge/micromagneticdata) |
 | Downloads | [![Downloads](https://anaconda.org/conda-forge/micromagneticdata/badges/downloads.svg)](https://anaconda.org/conda-forge/micromagneticdata) |
 | License | [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) |
-| DOI | Coming soon... |
+| DOI | [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4624870.svg)](https://doi.org/10.5281/zenodo.4624870) |
 
 ## About
 
