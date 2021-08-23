@@ -52,12 +52,16 @@ class Drive:
     >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
 
     """
-    def __init__(self, name, number, dirname='./', x=None):
+    def __init__(self, name, number, dirname='./', x=None, ft=False, table=None):
         self.name = name
         self.number = number
         self.dirname = dirname
-        self.path = os.path.join(dirname, name, f'drive-{number}')
+        self.path = os.path.join(dirname, name,
+                                 f'drive-{number}{"-ft" if ft else ""}')
+        if table is not None:
+            self.table = table
         self.x = x
+        self.ft = ft
 
         if not os.path.exists(self.path):
             msg = f'Directory {self.path=} does not exist.'
@@ -259,8 +263,14 @@ class Drive:
                        E...
 
         """
+        if hasattr(self, '_table'):
+            return self._table
         return ut.Table.fromfile(os.path.join(self.path, f'{self.name}.odt'),
                                  x=self.x)
+
+    @table.setter
+    def table(self, table):
+        self._table = table
 
     @property
     def n(self):
