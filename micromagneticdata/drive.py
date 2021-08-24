@@ -96,7 +96,28 @@ class Drive:
                 f'dirname=\'{self.dirname}\', x=\'{self.x}\')')
 
     def rfft(self):
-        """TODO."""
+        """Real Fast Fourier Transform.
+
+        The real fast Fourier transform of the drive.
+
+        Returns
+        -------
+        micromagneticdata.Drive
+
+            Result of applying a real Fourier transform to the drive.
+
+        Examples
+        --------
+        1. Applying Fourier transforms to the drive.
+
+        >>> import os
+        >>> import micromagneticdata as md
+        ...
+        >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
+        ...                                'tests', 'test_sample')
+        >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
+        >>> drive.rfft()
+        """
         os.mkdir(self.path+'-ft')
         ft_table = self.table.rfft(y=['mx', 'my', 'mz'])
         time_field = []
@@ -107,6 +128,7 @@ class Drive:
             df.Field(mesh=self.m0.mesh, dim=self.m0.dim,
                      value=f[i, ...]).write(os.path.join(self.path+'-ft',
                                             f'{self.name}_{i:09d}_ft.omf'))
+        # Also save m0 for reference
         df.Field(mesh=self.m0.mesh, dim=self.m0.dim,
                  value=self.m0.array).write(os.path.join(self.path+'-ft',
                                                          'm0.omf'))
@@ -114,7 +136,28 @@ class Drive:
                               ft=True, table=ft_table, x='f')
 
     def irfft(self):
-        """TODO."""
+        """Inverse Real Fast Fourier Transform.
+
+        The inverse real fast Fourier transform of the drive.
+
+        Returns
+        -------
+        micromagneticdata.Drive
+
+            Result of applying an inverse real Fourier transform to the drive.
+
+        Examples
+        --------
+        1. Applying Fourier transforms to the drive.
+
+        >>> import os
+        >>> import micromagneticdata as md
+        ...
+        >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
+        ...                                'tests', 'test_sample')
+        >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
+        >>> drive.rfft().irfft()
+        """
         os.mkdir(self.path+'-ift')
         ift_table = self.table.irfft(y=['ft_mx', 'ft_my', 'ft_mz'])
         time_field = []
@@ -125,6 +168,7 @@ class Drive:
             df.Field(mesh=self.m0.mesh, dim=self.m0.dim,
                      value=f[i, ...]).write(os.path.join(self.path+'-ift',
                                             f'{self.name}_{i:09d}_ift.omf'))
+        # Also save m0 for reference
         df.Field(mesh=self.m0.mesh, dim=self.m0.dim,
                  value=self.m0.array).write(os.path.join(self.path+'-ift',
                                                          'm0.omf'))
