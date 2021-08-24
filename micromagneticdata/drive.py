@@ -5,6 +5,7 @@ import ipywidgets
 import ubermagtable as ut
 import discretisedfield as df
 import ubermagutil.typesystem as ts
+import numpy as np
 
 
 @ts.typesystem(name=ts.Typed(expected_type=str),
@@ -52,7 +53,8 @@ class Drive:
     >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
 
     """
-    def __init__(self, name, number, dirname='./', x=None, ft=False, table=None):
+    def __init__(self, name, number, dirname='./', x=None,
+                 ft=False, table=None):
         self.name = name
         self.number = number
         self.dirname = dirname
@@ -92,6 +94,42 @@ class Drive:
         """
         return (f'Drive(name=\'{self.name}\', number={self.number}, '
                 f'dirname=\'{self.dirname}\', x=\'{self.x}\')')
+
+    def rfft(self):
+        """TODO."""
+        os.mkdir(self.path+'-ft')
+        ft_table = self.table.rfft(y=['mx', 'my', 'mz'])
+        time_field = []
+        for field in self:
+            time_field.append(field.array)
+        f = np.fft.rfft(time_field, axis=0)
+        for i in np.arange(f.shape[0]):
+            df.Field(mesh=self.m0.mesh, dim=self.m0.dim,
+                     value=f[i, ...]).write(os.path.join(self.path+'-ft',
+                                            f'{self.name}_{i:09d}_ft.omf'))
+        df.Field(mesh=self.m0.mesh, dim=self.m0.dim,
+                 value=self.m0.array).write(os.path.join(self.path+'-ft',
+                                                         'm0.omf'))
+        return self.__class__(name=self.name, number=self.number,
+                              ft=True, table=ft_table, x='f')
+
+    def irfft(self):
+        """TODO."""
+        os.mkdir(self.path+'-ift')
+        ift_table = self.table.irfft(y=['ft_mx', 'ft_my', 'ft_mz'])
+        time_field = []
+        for field in self:
+            time_field.append(field.array)
+        f = np.fft.irfft(time_field, axis=0)
+        for i in np.arange(f.shape[0]):
+            df.Field(mesh=self.m0.mesh, dim=self.m0.dim,
+                     value=f[i, ...]).write(os.path.join(self.path+'-ift',
+                                            f'{self.name}_{i:09d}_ift.omf'))
+        df.Field(mesh=self.m0.mesh, dim=self.m0.dim,
+                 value=self.m0.array).write(os.path.join(self.path+'-ift',
+                                                         'm0.omf'))
+        return self.__class__(name=self.name, number=self.number,
+                              ft=False, table=ift_table, x='t')
 
     @property
     def x(self):
