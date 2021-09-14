@@ -46,10 +46,6 @@ homepage = "https://ubermag.github.io"
 documentation = "https://ubermag.github.io/documentation/$package"
 repository = "https://github.com/ubermag/$package"
 
-# console entry points
-[project.scripts]
-#name = "module:entrypoint"
-
 # to define additional information we use a custom table
 # we need to own the entry for tool.NAME on PyPI
 # see: https://www.python.org/dev/peps/pep-0518/#tool-table
