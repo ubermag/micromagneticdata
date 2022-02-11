@@ -122,7 +122,7 @@ class Drive:
         ...                                'tests', 'test_sample')
         >>> drive = md.Drive(name='system_name', number=6, dirname=dirname)
         >>> drive.x
-        'B'
+        'B_hysteresis'
         >>> drive.x = 'Bx'
 
         """
