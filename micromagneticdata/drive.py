@@ -123,7 +123,7 @@ class Drive:
         >>> drive = md.Drive(name='system_name', number=6, dirname=dirname)
         >>> drive.x
         'B_hysteresis'
-        >>> drive.x = 'Bx'
+        >>> drive.x = 'Bx_hysteresis'
 
         """
         return self._x
