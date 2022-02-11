@@ -136,7 +136,7 @@ class Drive:
             elif self.info['driver'] == 'MinDriver':
                 self._x = 'iteration'
             elif self.info['driver'] == 'HysteresisDriver':
-                self._x = 'B'
+                self._x = 'B_hysteresis'
         else:
             if value in self.table.data.columns:
                 self._x = value

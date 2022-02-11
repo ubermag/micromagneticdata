@@ -29,7 +29,7 @@ class TestDrive:
     def test_x(self):
         for drive in self.data:
             assert isinstance(drive.x, str)
-            assert drive.x in ['t', 'iteration', 'B']
+            assert drive.x in ['t', 'iteration', 'B_hysteresis']
 
         self.data[0].x = 'mx'
         # Exception

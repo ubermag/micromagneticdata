@@ -3,8 +3,8 @@
 SetOptions {
   basename system_name
   scalar_output_format %.12g
-  scalar_field_output_format {text %#.15g}
-  vector_field_output_format {text %#.15g}
+  scalar_field_output_format {binary 8}
+  vector_field_output_format {binary 8}
 }
 
 # BoxAtlas for main_atlas
@@ -47,7 +47,7 @@ Specify Oxs_CGEvolve:evolver {
 }
 
 # OxS_UZeeman
-Specify Oxs_UZeeman {
+Specify Oxs_UZeeman:hysteresis {
   Hrange {
     { 0 0 1000000.0 0 0 -1000000.0 20 }
     { 0 0 -1000000.0 0 0 1000000.0 20 }
