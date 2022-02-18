@@ -12,10 +12,10 @@ requires-python = ">=3.8"
 license = {file = "LICENSE"}
 
 authors = [
-  {name = "Marijan Beg"},
-  {name = "Martin Lang"},
-  {name = "Samuel Holt"},
-  {name = "Hans Fangohr"}
+    {name = "Marijan Beg"},
+    {name = "Martin Lang"},
+    {name = "Samuel Holt"},
+    {name = "Hans Fangohr"}
 ]
 
 classifiers = [
@@ -35,8 +35,8 @@ classifiers = [
 ]
 
 dependencies = [
-  "discretisedfield~=0.60.0",
-  "ubermagtable~=0.60.0"
+    "discretisedfield~=0.60.0",
+    "ubermagtable~=0.60.0"
 ]
 
 [project.optional-dependencies]
@@ -57,6 +57,8 @@ homepage = "https://ubermag.github.io"
 documentation = "https://ubermag.github.io/documentation/micromagneticdata"
 repository = "https://github.com/ubermag/micromagneticdata"
 
+
+
 # to define additional information we use a custom table
 # we need to own the entry for tool.NAME on PyPI
 # see: https://www.python.org/dev/peps/pep-0518/#tool-table
@@ -64,7 +66,7 @@ repository = "https://github.com/ubermag/micromagneticdata"
 doi = "10.5281/zenodo.4624869"
 copyright_holder = "Marijan Beg and Hans Fangohr"
 contributors = [
-  "Sergii Mamedov"
+    "Sergii Mamedov"
 ]
 about = """
 - The analysis of computational magnetism data.
@@ -72,3 +74,6 @@ about = """
 
 [tool.coverage.run]
 omit = ["micromagneticdata/tests/*"]
+
+[tool.isort]
+skip_gitignore = true  # ignores files listed in .gitignore
