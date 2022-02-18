@@ -1,4 +1,4 @@
-"""Main package"""
+"""Analyse micromagnetic data."""
 import pytest
 import pkg_resources
 from .data import Data
