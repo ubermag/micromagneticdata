@@ -39,8 +39,18 @@ dependencies = [
   "ubermagtable~=0.60.0"
 ]
 
-# [project.optional-dependencies]
-# test = [...]
+[project.optional-dependencies]
+dev = [
+    "build",
+    "invoke",
+    "pre-commit",
+    "twine"
+]
+test = [
+    "nbval",
+    "pytest",
+    "pytest-cov"
+]
 
 [project.urls]
 homepage = "https://ubermag.github.io"
