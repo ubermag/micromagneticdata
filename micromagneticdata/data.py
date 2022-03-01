@@ -3,7 +3,6 @@ import os
 
 import ipywidgets
 import pandas as pd
-import ubermagtable as ut
 import ubermagutil.typesystem as ts
 
 import micromagneticdata as md
