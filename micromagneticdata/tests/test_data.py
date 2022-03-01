@@ -1,7 +1,9 @@
 import os
-import pytest
+
 import ipywidgets
 import pandas as pd
+import pytest
+
 import micromagneticdata as md
 
 
@@ -16,7 +18,7 @@ class TestData:
 
         # Exception
         with pytest.raises(IOError):
-            data = md.Data(name='wrong', dirname=self.dirname)
+            md.Data(name='wrong', dirname=self.dirname)
 
     def test_repr(self):
         assert isinstance(repr(self.data), str)

@@ -1,9 +1,11 @@
 import os
-import pytest
 import tempfile
-import ipywidgets
-import ubermagtable as ut
+
 import discretisedfield as df
+import ipywidgets
+import pytest
+import ubermagtable as ut
+
 import micromagneticdata as md
 
 
