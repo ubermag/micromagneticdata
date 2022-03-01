@@ -1,9 +1,10 @@
-import os
 import glob
 import json
+import os
+
+import discretisedfield as df
 import ipywidgets
 import ubermagtable as ut
-import discretisedfield as df
 import ubermagutil.typesystem as ts
 
 

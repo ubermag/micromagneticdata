@@ -1,8 +1,9 @@
 import os
 import shutil
-import oommfc as mc
+
 import discretisedfield as df
 import micromagneticmodel as mm
+import oommfc as mc
 
 dirname = './test_sample'
 name = 'system_name'

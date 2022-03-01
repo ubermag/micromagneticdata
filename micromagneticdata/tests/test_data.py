@@ -1,7 +1,9 @@
 import os
-import pytest
+
 import ipywidgets
 import pandas as pd
+import pytest
+
 import micromagneticdata as md
 
 

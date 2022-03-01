@@ -1,6 +1,7 @@
 """Analyse micromagnetic data."""
-import pytest
 import pkg_resources
+import pytest
+
 from .data import Data
 from .drive import Drive
 
