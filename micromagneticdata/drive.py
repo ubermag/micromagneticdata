@@ -8,9 +8,11 @@ import ubermagtable as ut
 import ubermagutil.typesystem as ts
 
 
-@ts.typesystem(name=ts.Typed(expected_type=str),
-               number=ts.Scalar(expected_type=int, unsigned=True),
-               dirname=ts.Typed(expected_type=str))
+@ts.typesystem(
+    name=ts.Typed(expected_type=str),
+    number=ts.Scalar(expected_type=int, unsigned=True),
+    dirname=ts.Typed(expected_type=str),
+)
 class Drive:
     """Drive class.
 
@@ -53,15 +55,16 @@ class Drive:
     >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
 
     """
-    def __init__(self, name, number, dirname='./', x=None):
+
+    def __init__(self, name, number, dirname="./", x=None):
         self.name = name
         self.number = number
         self.dirname = dirname
-        self.path = os.path.join(dirname, name, f'drive-{number}')
+        self.path = os.path.join(dirname, name, f"drive-{number}")
         self.x = x
 
         if not os.path.exists(self.path):
-            msg = f'Directory {self.path=} does not exist.'
+            msg = f"Directory {self.path=} does not exist."
             raise IOError(msg)
 
     def __repr__(self):
@@ -87,8 +90,10 @@ class Drive:
         Drive(...)
 
         """
-        return (f'Drive(name=\'{self.name}\', number={self.number}, '
-                f'dirname=\'{self.dirname}\', x=\'{self.x}\')')
+        return (
+            f"Drive(name='{self.name}', number={self.number}, "
+            f"dirname='{self.dirname}', x='{self.x}')"
+        )
 
     @property
     def x(self):
@@ -132,17 +137,17 @@ class Drive:
     @x.setter
     def x(self, value):
         if value is None:
-            if self.info['driver'] == 'TimeDriver':
-                self._x = 't'
-            elif self.info['driver'] == 'MinDriver':
-                self._x = 'iteration'
-            elif self.info['driver'] == 'HysteresisDriver':
-                self._x = 'B_hysteresis'
+            if self.info["driver"] == "TimeDriver":
+                self._x = "t"
+            elif self.info["driver"] == "MinDriver":
+                self._x = "iteration"
+            elif self.info["driver"] == "HysteresisDriver":
+                self._x = "B_hysteresis"
         else:
             if value in self.table.data.columns:
                 self._x = value
             else:
-                msg = f'Column {value=} does not exist in data.'
+                msg = f"Column {value=} does not exist in data."
                 raise ValueError(msg)
 
     @property
@@ -171,7 +176,7 @@ class Drive:
         {...}
 
         """
-        with open(os.path.join(self.path, 'info.json')) as f:
+        with open(os.path.join(self.path, "info.json")) as f:
             return json.load(f)
 
     @property
@@ -200,7 +205,7 @@ class Drive:
         '# MIF 2...'
 
         """
-        with open(os.path.join(self.path, f'{self.name}.mif')) as f:
+        with open(os.path.join(self.path, f"{self.name}.mif")) as f:
             return f.read()
 
     @property
@@ -230,7 +235,7 @@ class Drive:
         Field(...)
 
         """
-        return df.Field.fromfile(os.path.join(self.path, 'm0.omf'))
+        return df.Field.fromfile(os.path.join(self.path, "m0.omf"))
 
     @property
     def table(self):
@@ -260,8 +265,7 @@ class Drive:
                        E...
 
         """
-        return ut.Table.fromfile(os.path.join(self.path, f'{self.name}.odt'),
-                                 x=self.x)
+        return ut.Table.fromfile(os.path.join(self.path, f"{self.name}.odt"), x=self.x)
 
     @property
     def n(self):
@@ -293,7 +297,7 @@ class Drive:
 
     @property
     def _step_files(self):
-        filenames = glob.iglob(os.path.join(self.path, f'{self.name}*.omf'))
+        filenames = glob.iglob(os.path.join(self.path, f"{self.name}*.omf"))
         for filename in sorted(filenames):
             yield filename
 
@@ -373,11 +377,10 @@ class Drive:
         if dirname is None:
             dirname = self.path
         for i, filename in enumerate(self._step_files):
-            vtkfilename = 'drive-{}-{:07d}.vtk'.format(self.number, i)
-            df.Field.fromfile(filename).write(os.path.join(dirname,
-                                                           vtkfilename))
+            vtkfilename = "drive-{}-{:07d}.vtk".format(self.number, i)
+            df.Field.fromfile(filename).write(os.path.join(dirname, vtkfilename))
 
-    def slider(self, description='step', **kwargs):
+    def slider(self, description="step", **kwargs):
         """Widget for selecting individual steps.
 
         This method is based on ``ipywidgets.IntSlider``, so any keyword
@@ -409,9 +412,6 @@ class Drive:
         IntSlider(...)
 
         """
-        return ipywidgets.IntSlider(value=0,
-                                    min=0,
-                                    max=self.n-1,
-                                    step=1,
-                                    description=description,
-                                    **kwargs)
+        return ipywidgets.IntSlider(
+            value=0, min=0, max=self.n - 1, step=1, description=description, **kwargs
+        )

@@ -5,8 +5,8 @@ import discretisedfield as df
 import micromagneticmodel as mm
 import oommfc as mc
 
-dirname = './test_sample'
-name = 'system_name'
+dirname = "./test_sample"
+name = "system_name"
 
 # Remove any previous simulation directories.
 if os.path.exists(name):
@@ -26,8 +26,7 @@ alpha = 0.02
 
 system = mm.System(name=name)
 system.energy = mm.Exchange(A=A) + mm.Zeeman(H=H)
-system.dynamics = (mm.Precession(gamma0=mm.consts.gamma0) +
-                   mm.Damping(alpha=alpha))
+system.dynamics = mm.Precession(gamma0=mm.consts.gamma0) + mm.Damping(alpha=alpha)
 system.m = df.Field(mesh, dim=3, value=(0.0, 0.25, 0.1), norm=Ms)
 
 td = mc.TimeDriver()
@@ -44,5 +43,4 @@ td.drive(system, t=5e-12, n=5, dirname=dirname)  # drive-4
 md.drive(system, dirname=dirname, output_step=True)  # drive-5
 
 hd = mc.HysteresisDriver()
-hd.drive(system, Hmin=(0, 0, 1e6), Hmax=(0, 0, -1e6), n=21,
-         dirname=dirname)  # drive-6
+hd.drive(system, Hmin=(0, 0, 1e6), Hmax=(0, 0, -1e6), n=21, dirname=dirname)  # drive-6
