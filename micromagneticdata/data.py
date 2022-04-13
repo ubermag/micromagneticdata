@@ -8,8 +8,7 @@ import ubermagutil.typesystem as ts
 import micromagneticdata as md
 
 
-@ts.typesystem(name=ts.Typed(expected_type=str),
-               dirname=ts.Typed(expected_type=str))
+@ts.typesystem(name=ts.Typed(expected_type=str), dirname=ts.Typed(expected_type=str))
 class Data:
     """Computational magnetism data class.
 
@@ -44,13 +43,14 @@ class Data:
     >>> data = md.Data(name='system_name', dirname=dirname)
 
     """
-    def __init__(self, name, dirname='./'):
+
+    def __init__(self, name, dirname="./"):
         self.name = name
         self.dirname = dirname
         self.path = os.path.join(dirname, name)
 
         if not os.path.exists(self.path):
-            msg = f'Directory {self.path=} cannot be found.'
+            msg = f"Directory {self.path=} cannot be found."
             raise IOError(msg)
 
     def __repr__(self):
@@ -76,7 +76,7 @@ class Data:
         Data(...)
 
         """
-        return f'Data(name=\'{self.name}\', dirname=\'{self.dirname}\')'
+        return f"Data(name='{self.name}', dirname='{self.dirname}')"
 
     @property
     def info(self):
@@ -131,7 +131,7 @@ class Data:
         7
 
         """
-        return len(list(glob.iglob(os.path.join(self.path, 'drive-*'))))
+        return len(list(glob.iglob(os.path.join(self.path, "drive-*"))))
 
     def __getitem__(self, item):
         """Get drive with number ``item``.
@@ -169,8 +169,7 @@ class Data:
         Drive(...)
 
         """
-        return md.Drive(name=self.name, number=item % self.n,
-                        dirname=self.dirname)
+        return md.Drive(name=self.name, number=item % self.n, dirname=self.dirname)
 
     def __iter__(self):
         """Iterator.
@@ -202,7 +201,7 @@ class Data:
         for i in range(self.n):
             yield self[i]
 
-    def selector(self, description='drive', **kwargs):
+    def selector(self, description="drive", **kwargs):
         """Widget for selecting drive.
 
         This method is based on ``ipywidgets.BoundedIntText``, so any keyword
@@ -234,9 +233,6 @@ class Data:
         BoundedIntText(...)
 
         """
-        return ipywidgets.BoundedIntText(value=0,
-                                         min=0,
-                                         max=self.n-1,
-                                         step=1,
-                                         description=description,
-                                         **kwargs)
+        return ipywidgets.BoundedIntText(
+            value=0, min=0, max=self.n - 1, step=1, description=description, **kwargs
+        )

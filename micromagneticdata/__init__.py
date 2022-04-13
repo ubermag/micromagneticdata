@@ -20,5 +20,6 @@ def test():
     >>> # micromagneticdata.test()
 
     """
-    return pytest.main(['-v', '--pyargs',
-                        'micromagneticdata', '-l'])  # pragma: no cover
+    return pytest.main(
+        ["-v", "--pyargs", "micromagneticdata", "-l"]
+    )  # pragma: no cover

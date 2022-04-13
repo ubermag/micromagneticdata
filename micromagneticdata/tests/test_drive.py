@@ -11,8 +11,8 @@ import micromagneticdata as md
 
 class TestDrive:
     def setup(self):
-        self.dirname = os.path.join(os.path.dirname(__file__), 'test_sample')
-        self.name = 'system_name'
+        self.dirname = os.path.join(os.path.dirname(__file__), "test_sample")
+        self.name = "system_name"
         self.data = md.Data(name=self.name, dirname=self.dirname)
 
     def test_init(self):
@@ -26,27 +26,27 @@ class TestDrive:
     def test_repr(self):
         for drive in self.data:
             assert isinstance(repr(drive), str)
-            assert 'Drive' in repr(drive)
+            assert "Drive" in repr(drive)
 
     def test_x(self):
         for drive in self.data:
             assert isinstance(drive.x, str)
-            assert drive.x in ['t', 'iteration', 'B_hysteresis']
+            assert drive.x in ["t", "iteration", "B_hysteresis"]
 
-        self.data[0].x = 'mx'
+        self.data[0].x = "mx"
         # Exception
         with pytest.raises(ValueError):
-            self.data[0].x = 'wrong'
+            self.data[0].x = "wrong"
 
     def test_info(self):
         for i, drive in enumerate(self.data):
             assert isinstance(drive.info, dict)
-            assert drive.info['drive_number'] == i
+            assert drive.info["drive_number"] == i
 
     def test_mif(self):
         for drive in self.data:
             assert isinstance(drive.mif, str)
-            assert 'MIF' in drive.mif
+            assert "MIF" in drive.mif
 
     def test_m0(self):
         for drive in self.data:
