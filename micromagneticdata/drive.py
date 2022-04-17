@@ -6,6 +6,7 @@ import discretisedfield as df
 import ipywidgets
 import ubermagtable as ut
 import ubermagutil.typesystem as ts
+import xarray as xr
 
 
 @ts.typesystem(
@@ -414,4 +415,17 @@ class Drive:
         """
         return ipywidgets.IntSlider(
             value=0, min=0, max=self.n - 1, step=1, description=description, **kwargs
+        )
+
+    def to_xarray(self):
+        """Export ``micromagneticdata.Drive`` as ``xarray.Dataset``"""
+        if self.info["driver"] == "MinDriver":
+            darray = self[0].to_xarray()
+        else:
+            field_darrays = [self[i].to_xarray() for i in range(self.n)]
+            steps = self.table.data[self.x].to_numpy
+            darray = xr.concat(field_darrays, dim=self.x).assign_coords({self.x: steps})
+
+        return xr.Dataset({"fields": darray, "m0": self.m0.to_xarray()}).assign_attrs(
+            **self.info
         )
