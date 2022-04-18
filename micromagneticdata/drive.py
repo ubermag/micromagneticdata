@@ -422,9 +422,15 @@ class Drive:
         if self.info["driver"] == "MinDriver":
             darray = self[0].to_xarray()
         else:
-            field_darrays = [self[i].to_xarray() for i in range(self.n)]
-            steps = self.table.data[self.x].to_numpy
+            field_darrays = (self[i].to_xarray() for i in range(self.n))
+            steps = self.table.data[self.x].to_numpy()
             darray = xr.concat(field_darrays, dim=self.x).assign_coords({self.x: steps})
+            if self.info["driver"] == "HysteresisDriver":
+                new_dims = {
+                    f"B{i}_hysteresis": self.table.data[f"B{i}_hysteresis"].to_numpy()
+                    for i in "xyz"
+                }
+                darray = darray.expand_dims(dim=new_dims, axis=[1, 2, 3])
 
         return xr.Dataset({"fields": darray, "m0": self.m0.to_xarray()}).assign_attrs(
             **self.info
