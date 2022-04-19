@@ -6,6 +6,7 @@ import discretisedfield as df
 import ipywidgets
 import ubermagtable as ut
 import ubermagutil.typesystem as ts
+import numpy as np
 import xarray as xr
 
 
@@ -423,14 +424,17 @@ class Drive:
             darray = self[0].to_xarray()
         else:
             field_darrays = (self[i].to_xarray() for i in range(self.n))
-            steps = self.table.data[self.x].to_numpy()
-            darray = xr.concat(field_darrays, dim=self.x).assign_coords({self.x: steps})
-            if self.info["driver"] == "HysteresisDriver":
-                new_dims = {
-                    f"B{i}_hysteresis": self.table.data[f"B{i}_hysteresis"].to_numpy()
-                    for i in "xyz"
-                }
-                darray = darray.expand_dims(dim=new_dims, axis=[1, 2, 3])
+            if self.info["driver"] == "TimeDriver":
+                darray = xr.concat(field_darrays, dim="t").assign_coords(
+                    {"t": self.table.data["t"].to_numpy()}
+                )
+            else:
+                darray = xr.concat(field_darrays, dim="B_hysteresis").assign_coords(
+                    {
+                        f"B{i}": ("B_hysteresis", self.table.data[f"B{i}_hysteresis"])
+                        for i in "xyz"
+                    }
+                )
 
         return xr.Dataset({"fields": darray, "m0": self.m0.to_xarray()}).assign_attrs(
             **self.info
