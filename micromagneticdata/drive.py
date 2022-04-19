@@ -4,7 +4,6 @@ import os
 
 import discretisedfield as df
 import ipywidgets
-import numpy as np
 import ubermagtable as ut
 import ubermagutil.typesystem as ts
 import xarray as xr
