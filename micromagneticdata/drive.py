@@ -422,15 +422,16 @@ class Drive:
         if self.info["driver"] == "MinDriver":
             darray = self[0].to_xarray()
         else:
-            field_darrays = (self[i].to_xarray() for i in range(self.n))
+            field_darrays = (field.to_xarray() for field in self)
             if self.info["driver"] == "TimeDriver":
-                darray = xr.concat(field_darrays, dim="t").assign_coords(
-                    {"t": self.table.data["t"].to_numpy()}
-                )
+                darray = xr.concat(field_darrays, dim=self.table.data["t"])
             else:
                 darray = xr.concat(field_darrays, dim="B_hysteresis").assign_coords(
                     {
-                        f"B{i}": ("B_hysteresis", self.table.data[f"B{i}_hysteresis"])
+                        f"B{i}_hysteresis": (
+                            "B_hysteresis",
+                            self.table.data[f"B{i}_hysteresis"],
+                        )
                         for i in "xyz"
                     }
                 )
