@@ -425,6 +425,7 @@ class Drive:
             field_darrays = (field.to_xarray() for field in self)
             if self.info["driver"] == "TimeDriver":
                 darray = xr.concat(field_darrays, dim=self.table.data["t"])
+                darray.t.attrs["units"] = self.table.units["t"]
             else:
                 darray = xr.concat(field_darrays, dim="B_hysteresis").assign_coords(
                     {
@@ -435,7 +436,9 @@ class Drive:
                         for i in "xyz"
                     }
                 )
+                for i in "xyz":
+                    darray[f"B{i}_hysteresis"].attrs["units"] = self.table.units[
+                        f"B{i}_hysteresis"
+                    ]
 
-        return xr.Dataset({"fields": darray, "m0": self.m0.to_xarray()}).assign_attrs(
-            **self.info
-        )
+        return darray.assign_attrs(**self.info)
