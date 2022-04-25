@@ -1,12 +1,12 @@
 import os
 import tempfile
-import xarray as xr
-import numpy as np
 
 import discretisedfield as df
 import ipywidgets
+import numpy as np
 import pytest
 import ubermagtable as ut
+import xarray as xr
 
 import micromagneticdata as md
 
