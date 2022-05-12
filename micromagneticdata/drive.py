@@ -467,7 +467,7 @@ class Drive:
         ...
 
         """
-        if self.info["driver"] == "MinDriver":
+        if len(self._step_files) == 1:
             darray = self[0].to_xarray()
         else:
             field_darrays = (field.to_xarray() for field in self)
