@@ -415,7 +415,7 @@ class Drive:
             value=0, min=0, max=self.n - 1, step=1, description=description, **kwargs
         )
 
-    def to_xarray(self):
+    def to_xarray(self, *args, **kwargs):
         """Export ``micromagneticdata.Drive`` as ``xarray.DataArray``
 
         The method depends on ``discretisedfield.Field.to_xarray()`` and derives the
@@ -468,9 +468,9 @@ class Drive:
 
         """
         if len(self._step_files) == 1:
-            darray = self[0].to_xarray()
+            darray = self[0].to_xarray(*args, **kwargs)
         else:
-            field_darrays = (field.to_xarray() for field in self)
+            field_darrays = (field.to_xarray(*args, **kwargs) for field in self)
             darray = xr.concat(field_darrays, dim=self.table.data[self.table.x])
             darray[self.table.x].attrs["units"] = self.table.units[self.table.x]
             if self.info["driver"] == "HysteresisDriver":
