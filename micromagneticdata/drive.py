@@ -418,26 +418,35 @@ class Drive:
     def to_xarray(self, *args, **kwargs):
         """Export ``micromagneticdata.Drive`` as ``xarray.DataArray``
 
-        The method depends on ``discretisedfield.Field.to_xarray()`` and derives the
+        The method depends on ``discretisedfield.Field.to_xarray`` and derives the
         last four dimensions ``x``, ``y``, ``z``, and ``comp`` in the output
-        ``xarray.DataArray`` from it.
+        ``xarray.DataArray`` from it. The arguments and named arguments to this method
+        are passed on to ``discretisedfield.Field.to_xarray``.
 
-        Depending on ``micromagneticdata.Drive.info['driver']``, the dimensions and
-        coordinates of the output changes. For ``MinDriver``, which only contains a
-        single ``discretisedfield.Field``, the value of the single
-        ``discretisedfield.Field.to_xarray()`` is returned. For ``TimeDriver``, the
-        output contains an extra dimension ``t`` which corresponds to the time steps of
-        the simulation and is obtained by concatenating individual
-        ``discretisedfield.Field.to_xarray()`` in the ``micromagneticdata.Drive``. The
-        coordinates of ``t`` give the values of time at given time steps. Similarly,
-        for ``HysteresisDriver``, the extra dimension is ``B_hysteresis``. It has four
-        coordinates, namely ``B_hysteresis``, ``Bx_hysteresis``, ``By_hysteresis``, and
+        Depending on type of driver, the dimensions and coordinates of the output may
+        change. If the number of stored steps in the ``micromagneticdata.Drive`` are
+        more than one, the output contains an extra dimension named after
+        ``micromagneticdata.Drive.table.x`` with proper coordinate values. For the case
+        of ``HysteresisDriver``,  the new dimension has four coordinates, namely
+        ``B_hysteresis``, ``Bx_hysteresis``, ``By_hysteresis``, and
         ``Bz_hysteresis``. The first represents the norm of the hysteresis field, while
-        the rest three represents the components along the respective axes.
+        the rest three represents the components along the respective axes. For
+        ``MinDriver`` with a single ``discretisedfield.Field``, the value of the single
+        ``discretisedfield.Field.to_xarray`` is returned.
 
         ``micromagneticdata.Drive.info`` is returned as the output ``xarray.DataArray``
         attributes, besides the ones derived from
-        ``discretisedfield.Field.to_xarray()``.
+        ``discretisedfield.Field.to_xarray``.
+
+        Parameters
+        ----------
+        args: any
+
+            arguments to ``discretisedfield.Field.to_xarray``
+
+        kwargs: any
+
+            named arguments to ``discretisedfield.Field.to_xarray``
 
         Returns
         -------
@@ -455,15 +464,15 @@ class Drive:
         >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
         ...                                'tests', 'test_sample')
         >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
-        >>> xr_drive = drive.to_xarray()
+        >>> xr_drive = drive.to_xarray(name='Mag')
         >>> xr_drive
-        <xarray.DataArray 'field' (t: 25, x: 20, y: 10, z: 4, comp: 3)>
+        <xarray.DataArray 'Mag' (t: 25, x: 20, y: 10, z: 4, comp: 3)>
         ...
 
         2. Magnetization in a cell over time for ``TimeDriver``
 
         >>> xr_drive.isel(x=2, y=2, z=2)
-        <xarray.DataArray 'field' (t: 25, comp: 3)>
+        <xarray.DataArray 'Mag' (t: 25, comp: 3)>
         ...
 
         """
