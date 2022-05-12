@@ -89,7 +89,8 @@ class TestDrive:
             assert all(
                 item in drive.to_xarray().attrs.items() for item in drive.info.items()
             )
-            if drive.info["driver"] != "MinDriver":
+            if len(drive._step_files) != 1:
+                assert len(drive.to_xarray()[drive.table.x]) == len(drive._step_files)
                 assert np.allclose(
                     drive.to_xarray()[drive.table.x].values,
                     drive.table.data[drive.table.x].to_numpy(),
