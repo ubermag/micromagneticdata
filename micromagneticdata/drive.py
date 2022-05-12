@@ -298,9 +298,7 @@ class Drive:
 
     @property
     def _step_files(self):
-        filenames = glob.iglob(os.path.join(self.path, f"{self.name}*.omf"))
-        for filename in sorted(filenames):
-            yield filename
+        return sorted(glob.iglob(os.path.join(self.path, f"{self.name}*.omf")))
 
     def __getitem__(self, item):
         """Magnetisation field of an individual step.
@@ -325,7 +323,7 @@ class Drive:
         Field(...)
 
         """
-        return df.Field.fromfile(filename=list(self._step_files)[item])
+        return df.Field.fromfile(filename=self._step_files[item])
 
     def __iter__(self):
         """Iterator.
