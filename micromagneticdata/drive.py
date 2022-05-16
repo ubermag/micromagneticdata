@@ -430,9 +430,9 @@ class Drive:
         of ``HysteresisDriver``,  the new dimension has four coordinates, namely
         ``B_hysteresis``, ``Bx_hysteresis``, ``By_hysteresis``, and
         ``Bz_hysteresis``. The first represents the norm of the hysteresis field, while
-        the rest three represents the components along the respective axes. For
-        ``MinDriver`` with a single ``discretisedfield.Field``, the value of the single
-        ``discretisedfield.Field.to_xarray`` is returned.
+        the rest three represents the components along the respective axes. For a
+        ``micromagneticdata.Drive`` with a single ``discretisedfield.Field``, the value
+        of the single ``discretisedfield.Field.to_xarray`` is returned.
 
         ``micromagneticdata.Drive.info`` is returned as the output ``xarray.DataArray``
         attributes, besides the ones derived from
@@ -442,11 +442,11 @@ class Drive:
         ----------
         args: any
 
-            arguments to ``discretisedfield.Field.to_xarray``
+            Arguments to ``discretisedfield.Field.to_xarray``
 
         kwargs: any
 
-            named arguments to ``discretisedfield.Field.to_xarray``
+            Named arguments to ``discretisedfield.Field.to_xarray``
 
         Returns
         -------
