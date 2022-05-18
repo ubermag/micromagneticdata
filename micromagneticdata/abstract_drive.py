@@ -195,9 +195,10 @@ class AbstractDrive(abc.ABC):
     def __lshift__(self, other):
         """Concatenate multiple drives of the same type.
 
-        Multiple drives of the same type (e.g. TimeDriver) can be concatenated into one
-        combined drive. The resulting object has one large table with scalar values and
-        allows iterating over all magnetisation files of the individual drives.
+        Multiple drives with the same independent variable (typically drives of the same
+        type, e.g. TimeDriver) can be concatenated into one combined drive. The
+        resulting object has one large table with scalar values and allows iterating
+        over all magnetisation files of the individual drives.
 
         Parameters
         ----------
