@@ -30,7 +30,7 @@ class TestDrive:
         with pytest.raises(ValueError):
             md.CombinedDrive(self.data[0])
         with pytest.raises(TypeError):
-            md.CombinedDrive("wrong type")
+            md.CombinedDrive(self.data[0], "wrong type")
 
     def test_repr(self):
         for combined in self.combined_drives:
