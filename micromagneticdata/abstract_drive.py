@@ -193,7 +193,39 @@ class AbstractDrive(abc.ABC):
 
     @abc.abstractmethod
     def __lshift__(self, other):
-        """Concatenate multiple drives of the same type."""
+        """Concatenate multiple drives of the same type.
+
+        Multiple drives of the same type (e.g. TimeDriver) can be concatenated into one
+        combined drive. The resulting object has one large table with scalar values and
+        allows iterating over all magnetisation files of the individual drives.
+
+        Parameters
+        ----------
+        other : micromagneticdata.Drive, micromagneticdata.CombinedDrive
+
+            The drive to append to the current object.
+
+        Returns
+        -------
+        micromagneticdata.CombinedDrive
+
+            The concatenated drives.
+
+        Examples
+        --------
+        1. Concatenating two drives
+
+        >>> import os
+        >>> import micromagneticdata as md
+        ...
+        >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
+        ...                                'tests', 'test_sample')
+        >>> drive_0 = md.Drive(name='system_name', number=0, dirname=dirname)
+        >>> drive_1 = md.Drive(name='system_name', number=1, dirname=dirname)
+        >>> drive_0 << drive_1
+        CombinedDrive...
+
+        """
 
     def to_xarray(self, *args, **kwargs):
         """Export ``micromagneticdata.Drive`` as ``xarray.DataArray``
