@@ -56,9 +56,20 @@ class AbstractDrive(abc.ABC):
         return self._x
 
     @x.setter
-    @abc.abstractmethod
     def x(self, value):
-        None
+        if value is None:
+            if self.info["driver"] == "TimeDriver":
+                self._x = "t"
+            elif self.info["driver"] == "MinDriver":
+                self._x = "iteration"
+            elif self.info["driver"] == "HysteresisDriver":
+                self._x = "B_hysteresis"
+        else:
+            if value in self.table.data.columns:
+                self._x = value
+            else:
+                msg = f"Column {value=} does not exist in data."
+                raise ValueError(msg)
 
     @property
     @abc.abstractmethod
