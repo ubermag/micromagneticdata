@@ -27,6 +27,10 @@ class TestDrive:
     def test_init(self):
         combined_drive = md.CombinedDrive(self.data[0], self.data[1])
         assert isinstance(combined_drive, md.CombinedDrive)
+        with pytest.raises(ValueError):
+            md.CombinedDrive(self.data[0])
+        with pytest.raises(TypeError):
+            md.CombinedDrive("wrong type")
 
     def test_repr(self):
         for combined in self.combined_drives:
