@@ -89,7 +89,7 @@ class TestDrive:
         ):
             combined = d1 << d2
             assert isinstance(combined, md.CombinedDrive)
-            assert len(combined.drives) == 3
+            assert len(combined.drives) > len(d1.drives)
             assert combined.info["driver"] == self.data[d1].info["driver"]
             assert combined.x == self.data[d1].x
             assert len(combined.table.data) == combined.n
