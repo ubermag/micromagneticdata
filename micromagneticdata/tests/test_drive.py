@@ -3,8 +3,10 @@ import tempfile
 
 import discretisedfield as df
 import ipywidgets
+import numpy as np
 import pytest
 import ubermagtable as ut
+import xarray as xr
 
 import micromagneticdata as md
 
@@ -80,3 +82,25 @@ class TestDrive:
     def test_slider(self):
         for drive in self.data:
             assert isinstance(drive.slider(), ipywidgets.IntSlider)
+
+    def test_to_xarray(self):
+        for drive in self.data:
+            assert isinstance(drive.to_xarray(), xr.DataArray)
+            assert all(
+                item in drive.to_xarray().attrs.items() for item in drive.info.items()
+            )
+            if len(drive._step_files) != 1:
+                assert len(drive.to_xarray()[drive.table.x]) == len(drive._step_files)
+                assert np.allclose(
+                    drive.to_xarray()[drive.table.x].values,
+                    drive.table.data[drive.table.x].to_numpy(),
+                )
+
+            if drive.info["driver"] == "HysteresisDriver":
+                assert all(
+                    np.allclose(
+                        drive.to_xarray()[f"B{i}_hysteresis"].values,
+                        drive.table.data[f"B{i}_hysteresis"].to_numpy(),
+                    )
+                    for i in "xyz"
+                )

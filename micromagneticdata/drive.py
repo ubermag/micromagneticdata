@@ -6,6 +6,7 @@ import discretisedfield as df
 import ipywidgets
 import ubermagtable as ut
 import ubermagutil.typesystem as ts
+import xarray as xr
 
 
 @ts.typesystem(
@@ -297,9 +298,7 @@ class Drive:
 
     @property
     def _step_files(self):
-        filenames = glob.iglob(os.path.join(self.path, f"{self.name}*.omf"))
-        for filename in sorted(filenames):
-            yield filename
+        return sorted(glob.iglob(os.path.join(self.path, f"{self.name}*.omf")))
 
     def __getitem__(self, item):
         """Magnetisation field of an individual step.
@@ -324,7 +323,7 @@ class Drive:
         Field(...)
 
         """
-        return df.Field.fromfile(filename=list(self._step_files)[item])
+        return df.Field.fromfile(filename=self._step_files[item])
 
     def __iter__(self):
         """Iterator.
@@ -415,3 +414,86 @@ class Drive:
         return ipywidgets.IntSlider(
             value=0, min=0, max=self.n - 1, step=1, description=description, **kwargs
         )
+
+    def to_xarray(self, *args, **kwargs):
+        """Export ``micromagneticdata.Drive`` as ``xarray.DataArray``
+
+        The method depends on ``discretisedfield.Field.to_xarray`` and derives the
+        last four dimensions ``x``, ``y``, ``z``, and ``comp`` in the output
+        ``xarray.DataArray`` from it. The arguments and named arguments to this method
+        are passed on to ``discretisedfield.Field.to_xarray``.
+
+        Depending on type of driver, the dimensions and coordinates of the output may
+        change. If the number of stored steps in the ``micromagneticdata.Drive`` are
+        more than one, the output contains an extra dimension named after
+        ``micromagneticdata.Drive.table.x`` with proper coordinate values. For the case
+        of ``HysteresisDriver``,  the new dimension has four coordinates, namely
+        ``B_hysteresis``, ``Bx_hysteresis``, ``By_hysteresis``, and
+        ``Bz_hysteresis``. The first represents the norm of the hysteresis field, while
+        the rest three represents the components along the respective axes. For a
+        ``micromagneticdata.Drive`` with a single ``discretisedfield.Field``, the value
+        of the single ``discretisedfield.Field.to_xarray`` is returned.
+
+        ``micromagneticdata.Drive.info`` is returned as the output ``xarray.DataArray``
+        attributes, besides the ones derived from
+        ``discretisedfield.Field.to_xarray``.
+
+        Parameters
+        ----------
+        args: any
+
+            Arguments to ``discretisedfield.Field.to_xarray``
+
+        kwargs: any
+
+            Named arguments to ``discretisedfield.Field.to_xarray``
+
+        Returns
+        -------
+        xarray.DataArray
+
+            ``micromagneticdata.Drive`` as ``xarray.DataArray``
+
+        Examples
+        --------
+        1. Drive to DataArray
+
+        >>> import os
+        >>> import micromagneticdata as md
+        ...
+        >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
+        ...                                'tests', 'test_sample')
+        >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
+        >>> xr_drive = drive.to_xarray(name='Mag')
+        >>> xr_drive
+        <xarray.DataArray 'Mag' (t: 25, x: 20, y: 10, z: 4, comp: 3)>
+        ...
+
+        2. Magnetization in a cell over time for ``TimeDriver``
+
+        >>> xr_drive.isel(x=2, y=2, z=2)
+        <xarray.DataArray 'Mag' (t: 25, comp: 3)>
+        ...
+
+        """
+        if len(self._step_files) == 1:
+            darray = self[0].to_xarray(*args, **kwargs)
+        else:
+            field_darrays = (field.to_xarray(*args, **kwargs) for field in self)
+            darray = xr.concat(field_darrays, dim=self.table.data[self.table.x])
+            darray[self.table.x].attrs["units"] = self.table.units[self.table.x]
+            if self.info["driver"] == "HysteresisDriver":
+                for i in "xyz":
+                    darray = darray.assign_coords(
+                        {
+                            f"B{i}_hysteresis": (
+                                "B_hysteresis",
+                                self.table.data[f"B{i}_hysteresis"],
+                            )
+                        }
+                    )
+                    darray[f"B{i}_hysteresis"].attrs["units"] = self.table.units[
+                        f"B{i}_hysteresis"
+                    ]
+
+        return darray.assign_attrs(**self.info)
