@@ -98,6 +98,8 @@ class TestDrive:
         for d1, d2 in [(0, 3), (0, 6), (3, 6)]:
             with pytest.raises(ValueError):
                 self.data[d1] << self.data[d2]
+        with pytest.raises(TypeError):
+            self.data[0] << 1
 
     def test_to_xarray(self):
         for drive in self.data:

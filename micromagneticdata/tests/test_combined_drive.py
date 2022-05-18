@@ -100,6 +100,8 @@ class TestDrive:
             self.combined_drives[0] << self.data[3]
         with pytest.raises(ValueError):
             self.combined_drives[0] << self.combined_drives[1]
+        with pytest.raises(TypeError):
+            self.combined_drives[0] << 1
 
     def test_to_xarray(self):
         for drive in self.combined_drives:
