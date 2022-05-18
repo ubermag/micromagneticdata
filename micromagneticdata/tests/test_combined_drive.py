@@ -65,8 +65,8 @@ class TestDrive:
 
     def test_n(self):
         assert self.combined_drives[0].n == 50
-        assert self.combined_drives[1].n == 2
-        assert self.combined_drives[2].n == 42
+        assert self.combined_drives[1].n == 15
+        assert self.combined_drives[2].n == 82
 
     def test_getitem(self):
         for i in range(self.combined_drives[1].n):
@@ -83,14 +83,22 @@ class TestDrive:
         # drives 0, 1, 2, 4: TimeDriver
         # drives 3, 5: MinDriver
         # drives 6: HysteresisDriver
-        for d1, d2 in itertools.chain(
-            zip(self.combined_drives, self.combined_drives),
-            zip(self.combined_drives, [self.data[0], self.data[3], self.data[6]]),
-            zip([self.data[0], self.data[3], self.data[6]], self.combined_drives),
+        for d1, d2, n_drives in itertools.chain(
+            zip(self.combined_drives, self.combined_drives, [6, 4, 4]),
+            zip(
+                self.combined_drives,
+                [self.data[0], self.data[3], self.data[6]],
+                [4, 3, 3],
+            ),
+            zip(
+                [self.data[0], self.data[3], self.data[6]],
+                self.combined_drives,
+                [4, 3, 3],
+            ),
         ):
             combined = d1 << d2
             assert isinstance(combined, md.CombinedDrive)
-            assert len(combined.drives) > len(d1.drives)
+            assert len(combined.drives) == n_drives
             assert combined.info["driver"] == d1.info["driver"]
             assert combined.x == d1.x
             assert len(combined.table.data) == combined.n
