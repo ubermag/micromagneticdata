@@ -19,7 +19,7 @@ class TestDrive:
         self.name = "system_name"
         self.data = md.Data(name=self.name, dirname=self.dirname)
         self.combined_drives = [
-            self.data[0] << self.data[1],
+            self.data[0] << self.data[1] << self.data[2],
             self.data[3] << self.data[5],
             self.data[6] << self.data[6],
         ]
@@ -90,7 +90,7 @@ class TestDrive:
             combined = d1 << d2
             assert isinstance(combined, md.CombinedDrive)
             assert len(combined.drives) > len(d1.drives)
-            assert combined.info["driver"] == self.data[d1].info["driver"]
+            assert combined.info["driver"] == d1.info["driver"]
             assert combined.x == self.data[d1].x
             assert len(combined.table.data) == combined.n
 
