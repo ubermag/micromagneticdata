@@ -272,5 +272,5 @@ class Drive(md.AbstractDrive):
         if isinstance(other, self.__class__):
             return md.CombinedDrive(self, other)
         elif isinstance(other, md.CombinedDrive):
-            return md.CombinedDrives(self, other.drives)
+            return md.CombinedDrive(self, other.drives)
         raise TypeError(f"Invalid type {other=}.")
