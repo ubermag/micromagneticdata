@@ -86,6 +86,7 @@ class TestDrive:
         for d1, d2 in itertools.chain(
             zip(self.combined_drives, self.combined_drives),
             zip(self.combined_drives, [self.data[0], self.data[3], self.data[6]]),
+            zip([self.data[0], self.data[3], self.data[6]], self.combined_drives),
         ):
             combined = d1 << d2
             assert isinstance(combined, md.CombinedDrive)
