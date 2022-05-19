@@ -89,7 +89,7 @@ class CombinedDrive(md.AbstractDrive):
 
         """
         drives = ",\n".join(f"  {drive!r}" for drive in self.drives)
-        return f"CombinedDrive(\n{drives}\n)"
+        return f"{self.__class__.__name__}(\n{drives}\n)"
 
     @property
     def info(self):
