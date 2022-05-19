@@ -68,13 +68,13 @@ class TestDrive:
             assert drive.table.x == drive.x
 
     def test_n(self):
-        assert self.combined_drives[0].n == 50
-        assert self.combined_drives[1].n == 15
-        assert self.combined_drives[2].n == 82
+        assert tuple(drive.n for drive in self.combined_drives) == (50, 15, 82)
 
     def test_getitem(self):
-        for i in range(self.combined_drives[1].n):
-            assert isinstance(self.combined_drives[1][i], df.Field)
+        assert all(
+            isinstance(self.combined_drives[1][i], df.Field)
+            for i in range(self.combined_drives[1].n)
+        )
 
     def test_iter(self):
         for drive in self.combined_drives:

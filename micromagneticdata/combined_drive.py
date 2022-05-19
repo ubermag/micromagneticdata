@@ -88,7 +88,7 @@ class CombinedDrive(md.AbstractDrive):
         Drive(...)
 
         """
-        drives = ",\n".join(f"  {repr(drive)}" for drive in self.drives)
+        drives = ",\n".join(f"  {drive!r}" for drive in self.drives)
         return f"CombinedDrive(\n{drives}\n)"
 
     @property
@@ -154,9 +154,7 @@ class CombinedDrive(md.AbstractDrive):
 
     @functools.cached_property
     def _step_files(self):
-        return functools.reduce(
-            operator.add, (drive._step_files for drive in self.drives)
-        )
+        return sum((drive._step_files for drive in self.drives), start=[])
 
     def __lshift__(self, other):
         if isinstance(other, md.Drive):

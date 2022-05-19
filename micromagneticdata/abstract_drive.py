@@ -141,7 +141,7 @@ class AbstractDrive(abc.ABC):
         25
 
         """
-        return len(self.table.data.index)
+        return len(self.table.data)
 
     @property
     @abc.abstractmethod
@@ -199,8 +199,7 @@ class AbstractDrive(abc.ABC):
         [...]
 
         """
-        for filename in self._step_files:
-            yield df.Field.fromfile(filename)
+        yield from map(df.Field.fromfile, self._step_files)
 
     @abc.abstractmethod
     def __lshift__(self, other):
