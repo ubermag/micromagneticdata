@@ -14,7 +14,7 @@ class AbstractDrive(abc.ABC):
     @abc.abstractmethod
     def __repr__(self):
         """Representation string."""
-        pass
+        pass  # pragma: no cover
 
     @property
     def x(self):
