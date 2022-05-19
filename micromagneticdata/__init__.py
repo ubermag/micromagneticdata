@@ -2,6 +2,8 @@
 import pkg_resources
 import pytest
 
+from .abstract_drive import AbstractDrive
+from .combined_drive import CombinedDrive
 from .data import Data
 from .drive import Drive
 

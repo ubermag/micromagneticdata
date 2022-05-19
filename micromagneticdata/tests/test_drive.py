@@ -83,6 +83,24 @@ class TestDrive:
         for drive in self.data:
             assert isinstance(drive.slider(), ipywidgets.IntSlider)
 
+    def test_lshift(self):
+        # drives 0, 1, 2, 4: TimeDriver
+        # drives 3, 5: MinDriver
+        # drives 6: HysteresisDriver
+        for d1, d2 in [(0, 1), (3, 5), (6, 6)]:
+            combined = self.data[d1] << self.data[d2]
+            assert isinstance(combined, md.CombinedDrive)
+            assert len(combined.drives) == 2
+            assert combined.info["driver"] == self.data[d1].info["driver"]
+            assert combined.x == self.data[d1].x
+            assert len(combined.table.data) == combined.n
+
+        for d1, d2 in [(0, 3), (0, 6), (3, 6)]:
+            with pytest.raises(ValueError):
+                self.data[d1] << self.data[d2]
+        with pytest.raises(TypeError):
+            self.data[0] << 1
+
     def test_to_xarray(self):
         for drive in self.data:
             assert isinstance(drive.to_xarray(), xr.DataArray)
