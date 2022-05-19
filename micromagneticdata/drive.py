@@ -64,12 +64,13 @@ class Drive(md.AbstractDrive):
         self.name = name
         self.number = number
         self.dirname = dirname
-        self.path = os.path.join(dirname, name, f"drive-{number}")
-        self.x = x
 
+        self.path = os.path.join(dirname, name, f"drive-{number}")
         if not os.path.exists(self.path):
             msg = f"Directory {self.path=} does not exist."
             raise IOError(msg)
+
+        self.x = x
 
     @property
     def _m0_path(self):
