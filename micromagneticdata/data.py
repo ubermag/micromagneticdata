@@ -169,7 +169,11 @@ class Data:
         Drive(...)
 
         """
-        return md.Drive(name=self.name, number=item % self.n, dirname=self.dirname)
+        return md.Drive(
+            name=self.name,
+            number=[i for i in range(self.n)][item],
+            dirname=self.dirname,
+        )
 
     def __iter__(self):
         """Iterator.
