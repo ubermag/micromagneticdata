@@ -152,7 +152,7 @@ class CombinedDrive(md.AbstractDrive):
         """
         return self._table
 
-    @functools.cached_property
+    @property
     def _step_files(self):
         return sum((drive._step_files for drive in self.drives), start=[])
 
