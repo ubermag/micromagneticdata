@@ -136,8 +136,8 @@ class Data:
     def __getitem__(self, item):
         """Get drive with number ``item``.
 
-        If a negative value is passed as ``item``, ``item % self.n`` frive is
-        returned. For example, passing ``-1`` would return the last drive.
+        If a negative value is passed as ``item``, the count starts from the end. For
+        example, passing ``-1`` would return the last drive.
 
         Parameters
         ----------
@@ -169,7 +169,11 @@ class Data:
         Drive(...)
 
         """
-        return md.Drive(name=self.name, number=item % self.n, dirname=self.dirname)
+        return md.Drive(
+            name=self.name,
+            number=range(self.n)[item],
+            dirname=self.dirname,
+        )
 
     def __iter__(self):
         """Iterator.
