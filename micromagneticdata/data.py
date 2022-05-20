@@ -171,7 +171,7 @@ class Data:
         """
         return md.Drive(
             name=self.name,
-            number=[i for i in range(self.n)][item],
+            number=range(self.n)[item],
             dirname=self.dirname,
         )
 
