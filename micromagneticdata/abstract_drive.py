@@ -320,3 +320,7 @@ class AbstractDrive(abc.ABC):
                     ]
 
         return darray.assign_attrs(**self.info)
+
+    @property
+    def hv(self):
+        return df.plotting.Hv(self.to_xarray())
