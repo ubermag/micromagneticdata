@@ -323,4 +323,33 @@ class AbstractDrive(abc.ABC):
 
     @property
     def hv(self):
+        """Plot interface, Holoviews/hvplot based.
+
+        This property provides access to the different plotting methods. It is also
+        callable to quickly generate plots. It is based on
+        ``discretisedfield.plotting.Hv``. For more details and the available methods
+        refer to the documentation linked below.
+
+        .. seealso::
+
+            :py:func:`~discretisedfield.plotting.Hv.__call__`
+            :py:func:`~discretisedfield.plotting.Hv.scalar`
+            :py:func:`~discretisedfield.plotting.Hv.vector`
+            :py:func:`~discretisedfield.plotting.Hv.contour`
+
+        Examples
+        --------
+
+        1. Visualising a drive using ``hv``.
+
+        >>> import os
+        >>> import micromagneticdata as md
+        ...
+        >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
+        ...                                'tests', 'test_sample')
+        >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
+        >>> drive.hv(kdims=['x', 'y'])
+        :DynamicMap...
+
+        """
         return df.plotting.Hv(self.to_xarray())
