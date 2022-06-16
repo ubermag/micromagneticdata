@@ -70,9 +70,6 @@ class Drive(md.AbstractDrive):
             msg = f"Directory {self.path=} does not exist."
             raise IOError(msg)
 
-        if os.path.exists(os.path.join(self.path, f"{name}.out")):
-            self.mumax_path = os.path.join(self.path, f"{name}.out")
-
         self.x = x
 
     @property
@@ -137,96 +134,12 @@ class Drive(md.AbstractDrive):
             return json.load(f)
 
     @property
-    def mif(self):
-        """MIF file.
-        This property returns a string with the content of MIF file.
-
-        Returns
-        -------
-        str
-            MIF file content.
-
-        Examples
-        --------
-        1. Getting MIF file.
-        >>> import os
-        >>> import micromagneticdata as md
-        ...
-        >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
-        ...                                'tests', 'test_sample')
-        >>> drive = md.Drive(name='system_name', number=6, dirname=dirname)
-        >>> drive.mif
-        '# MIF 2...'
-        """
-        with open(os.path.join(self.path, f"{self.name}.mif")) as f:
-            return f.read()
-
-    @property
-    def mx3(self):
-        """mx3 file. TODO
-        This property returns a string with the content of MIF file.
-
-        Returns
-        -------
-        str
-            MIF file content.
-
-        Examples
-        --------
-        1. Getting MIF file.
-        >>> import os
-        >>> import micromagneticdata as md
-        ...
-        >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
-        ...                                'tests', 'test_sample')
-        >>> drive = md.Drive(name='system_name', number=6, dirname=dirname)
-        >>> drive.mif
-        '# MIF 2...'
-        """
-        with open(os.path.join(self.path, f"{self.name}.mx3")) as f:
-            return f.read()
-
-    @property
     def table(self):
-        """Table object.
-
-        This property returns an ``ubermagtable.Table`` object. As an
-        independent variable ``x``, the column chosen via ``x`` property is
-        selected.
-
-        Returns
-        -------
-        ubermagtable.Table
-
-            Table object.
-
-        Examples
-        --------
-        1. Getting table object.
-
-        >>> import os
-        >>> import micromagneticdata as md
-        ...
-        >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
-        ...                                'tests', 'test_sample')
-        >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
-        >>> drive.table
-                       E...
-
-        """
-        if hasattr(self, 'mumax_path'):
-            return ut.Table.fromfile(os.path.join(self.mumax_path,
-                                                  "table.txt"), x=self.x)
-        else:
-            return ut.Table.fromfile(os.path.join(self.path,
-                                                  f"{self.name}.odt"), x=self.x)
+        """Table object."""
 
     @property
     def _step_files(self):
-        if hasattr(self, 'mumax_path'):
-            return sorted(glob.iglob(os.path.join(self.mumax_path, "*.ovf")))
-        else:
-            return sorted(glob.iglob(os.path.join(self.path, f"{self.name}*.omf")))
+        """List of filenames of individual snapshots."""
 
     def ovf2vtk(self, dirname=None):
         """OVF to VTK conversion.

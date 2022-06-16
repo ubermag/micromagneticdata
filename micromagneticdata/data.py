@@ -169,11 +169,19 @@ class Data:
         Drive(...)
 
         """
-        return md.Drive(
-            name=self.name,
-            number=range(self.n)[item],
-            dirname=self.dirname,
-        )
+        path = os.path.join(self.dirname, self.name, f"drive-{range(self.n)[item]}")
+        if os.path.exists(os.path.join(path, f"{self.name}.out")):
+            return md.Mumax3Drive(
+                name=self.name,
+                number=range(self.n)[item],
+                dirname=self.dirname,
+            )
+        else:
+            return md.OOMMFDrive(
+                name=self.name,
+                number=range(self.n)[item],
+                dirname=self.dirname,
+            )
 
     def __iter__(self):
         """Iterator.
