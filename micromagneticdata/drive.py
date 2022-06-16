@@ -214,16 +214,18 @@ class Drive(md.AbstractDrive):
                        E...
 
         """
-        if hasattr(self, 'mumax_path'):
-            return ut.Table.fromfile(os.path.join(self.mumax_path,
-                                                  "table.txt"), x=self.x)
+        if hasattr(self, "mumax_path"):
+            return ut.Table.fromfile(
+                os.path.join(self.mumax_path, "table.txt"), x=self.x
+            )
         else:
-            return ut.Table.fromfile(os.path.join(self.path,
-                                                  f"{self.name}.odt"), x=self.x)
+            return ut.Table.fromfile(
+                os.path.join(self.path, f"{self.name}.odt"), x=self.x
+            )
 
     @property
     def _step_files(self):
-        if hasattr(self, 'mumax_path'):
+        if hasattr(self, "mumax_path"):
             return sorted(glob.iglob(os.path.join(self.mumax_path, "*.ovf")))
         else:
             return sorted(glob.iglob(os.path.join(self.path, f"{self.name}*.omf")))
