@@ -12,11 +12,6 @@ import micromagneticdata as md
 
 
 @uu.inherit_docs
-@ts.typesystem(
-    name=ts.Typed(expected_type=str),
-    number=ts.Scalar(expected_type=int, unsigned=True),
-    dirname=ts.Typed(expected_type=str),
-)
 class OOMMFDrive(md.Drive):
     """Drive class.
 
