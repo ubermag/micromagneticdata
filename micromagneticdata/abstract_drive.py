@@ -103,7 +103,7 @@ class AbstractDrive(abc.ABC):
         Field(...)
 
         """
-        return df.Field.fromfile(self._m0_path)
+        return df.Field.fromfile(str(self._m0_path))
 
     @property
     @abc.abstractmethod

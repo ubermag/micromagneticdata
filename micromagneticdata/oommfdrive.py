@@ -1,6 +1,3 @@
-import glob
-import os
-
 import ubermagtable as ut
 import ubermagutil as uu
 
@@ -56,15 +53,13 @@ class OOMMFDrive(md.Drive):
 
     @property
     def _step_files(self):
-        return sorted(glob.iglob(os.path.join(self.drive_path, f"{self.name}*.omf")))
+        return sorted(self.drive_path.glob(f"{self.name}*.omf"))
 
     @property
     def input_script(self):
-        with open(os.path.join(self.drive_path, f"{self.name}.mif")) as f:
+        with (self.drive_path / f"{self.name}".mif).open() as f:
             return f.read()
 
     @property
     def table(self):
-        return ut.Table.fromfile(
-            os.path.join(self.drive_path, f"{self.name}.odt"), x=self.x
-        )
+        return ut.Table.fromfile(str(self.drive_path / f"{self.name}.odt"), x=self.x)

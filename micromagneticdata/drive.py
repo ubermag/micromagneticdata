@@ -67,22 +67,20 @@ class Drive(md.AbstractDrive):
         OOMMFDrive.
 
         """
-        path = pathlib.Path(f"{dirname}/{name}/drive-{number}")
-        if (path / f"{name}.out").exists():
+        if pathlib.Path(f"{dirname}/{name}/drive-{number}/{name}.out").exists():
             return super().__new__(md.Mumax3Drive)
         else:
             return super().__new__(md.OOMMFDrive)
 
     def __init__(self, name, number, dirname="./", x=None):
+        self.drive_path = pathlib.Path(f"{dirname}/{name}/drive-{number}")
+        if not self.drive_path.exists():
+            msg = f"Directory {self.drive_path!r} does not exist."
+            raise IOError(msg)
+
         self.name = name
         self.number = number
         self.dirname = dirname
-
-        self.drive_path = os.path.join(dirname, name, f"drive-{number}")
-        if not os.path.exists(self.drive_path):
-            msg = f"Directory {self.drive_path=} does not exist."
-            raise IOError(msg)
-
         self.x = x
 
     @property
@@ -92,7 +90,7 @@ class Drive(md.AbstractDrive):
 
     @property
     def _m0_path(self):
-        return os.path.join(self.drive_path, "m0.omf")
+        return self.drive_path / "m0.omf"
 
     def __repr__(self):
         """Representation string.
@@ -148,7 +146,7 @@ class Drive(md.AbstractDrive):
         {...}
 
         """
-        with open(os.path.join(self.drive_path, "info.json")) as f:
+        with (self.drive_path / "info.json").open() as f:
             return json.load(f)
 
     @property
@@ -229,7 +227,7 @@ class Drive(md.AbstractDrive):
 
         """
         if dirname is None:
-            dirname = self.drive_path
+            dirname = str(self.drive_path)
         for i, filename in enumerate(self._step_files):
             vtkfilename = "drive-{}-{:07d}.vtk".format(self.number, i)
             df.Field.fromfile(filename).write(os.path.join(dirname, vtkfilename))

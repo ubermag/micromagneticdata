@@ -1,6 +1,3 @@
-import glob
-import os
-
 import ubermagtable as ut
 import ubermagutil as uu
 
@@ -54,22 +51,20 @@ class Mumax3Drive(md.Drive):
     def __init__(self, name, number, dirname="./", x=None):
         super().__init__(name, number, dirname, x)
 
-        self._mumax_output_path = os.path.join(self.drive_path, f"{name}.out")
-        if not os.path.exists(self._mumax_output_path):
-            msg = f"Output directory {self._mumax_output_path} does not exist."
+        self._mumax_output_path = self.drive_path / f"{name}.out"
+        if not self._mumax_output_path.exists():
+            msg = f"Output directory {self._mumax_output_path!r} does not exist."
             raise IOError(msg)
 
     @property
     def _step_files(self):
-        return sorted(glob.iglob(os.path.join(self._mumax_output_path, "*.ovf")))
+        return sorted(self._mumax_output_path.glob("*.ovf"))
 
     @property
     def input_script(self):
-        with open(os.path.join(self.drive_path, f"{self.name}.mx3")) as f:
+        with (self.drive_path / f"{self.name}.mx3").open() as f:
             return f.read()
 
     @property
     def table(self):
-        return ut.Table.fromfile(
-            os.path.join(self._mumax_output_path, "table.txt"), x=self.x
-        )
+        return ut.Table.fromfile(str(self._mumax_output_path, "table.txt"), x=self.x)
