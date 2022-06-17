@@ -63,3 +63,31 @@ class OOMMFDrive(md.Drive):
     @property
     def table(self):
         return ut.Table.fromfile(str(self.drive_path / f"{self.name}.odt"), x=self.x)
+
+    def __repr__(self):
+        """Representation string.
+
+        Returns
+        -------
+        str
+
+            Representation string.
+
+        Examples
+        --------
+        1. Representation string.
+
+        >>> import os
+        >>> import micromagneticdata as md
+        ...
+        >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
+        ...                                'tests', 'test_sample')
+        >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
+        >>> drive
+        Drive(...)
+
+        """
+        return (
+            f"OOMMFDrive(name='{self.name}', number={self.number}, "
+            f"dirname='{self.dirname}', x='{self.x}')"
+        )

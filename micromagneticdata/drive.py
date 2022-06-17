@@ -84,41 +84,8 @@ class Drive(md.AbstractDrive):
         self.x = x
 
     @property
-    @abc.abstractmethod
-    def _step_files(self):
-        """List of filenames of individual snapshots."""
-
-    @property
     def _m0_path(self):
         return self.drive_path / "m0.omf"
-
-    def __repr__(self):
-        """Representation string.
-
-        Returns
-        -------
-        str
-
-            Representation string.
-
-        Examples
-        --------
-        1. Representation string.
-
-        >>> import os
-        >>> import micromagneticdata as md
-        ...
-        >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
-        ...                                'tests', 'test_sample')
-        >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
-        >>> drive
-        Drive(...)
-
-        """
-        return (
-            f"Drive(name='{self.name}', number={self.number}, "
-            f"dirname='{self.dirname}', x='{self.x}')"
-        )
 
     @property
     def info(self):

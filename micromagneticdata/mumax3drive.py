@@ -68,3 +68,31 @@ class Mumax3Drive(md.Drive):
     @property
     def table(self):
         return ut.Table.fromfile(str(self._mumax_output_path, "table.txt"), x=self.x)
+
+    def __repr__(self):
+        """Representation string.
+
+        Returns
+        -------
+        str
+
+            Representation string.
+
+        Examples
+        --------
+        1. Representation string.
+
+        >>> import os
+        >>> import micromagneticdata as md
+        ...
+        >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
+        ...                                'tests', 'test_sample')
+        >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
+        >>> drive
+        Drive(...)
+
+        """
+        return (
+            f"Mumax3Drive(name='{self.name}', number={self.number}, "
+            f"dirname='{self.dirname}', x='{self.x}')"
+        )
