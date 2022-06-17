@@ -47,8 +47,8 @@ class TestDrive:
 
     def test_mif(self):
         for drive in self.data:
-            assert isinstance(drive.mif, str)
-            assert "MIF" in drive.mif
+            assert isinstance(drive.input_script, str)
+            assert "MIF" in drive.input_script
 
     def test_m0(self):
         for drive in self.data:

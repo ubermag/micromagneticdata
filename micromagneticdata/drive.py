@@ -1,10 +1,10 @@
-import glob
+import abc
 import json
 import os
+import pathlib
 
 import discretisedfield as df
 import ipywidgets
-import ubermagtable as ut
 import ubermagutil as uu
 import ubermagutil.typesystem as ts
 
@@ -60,21 +60,39 @@ class Drive(md.AbstractDrive):
 
     """
 
+    def __new__(cls, name, number, dirname=".", x=None):
+        """Create a new OOMMFDrive or Mumax3Drive depending on the directory structure.
+
+        If a subdirectory <name>.out exists a Mumax3Drive is created else an
+        OOMMFDrive.
+
+        """
+        path = pathlib.Path(f"{dirname}/{name}/drive-{number}")
+        if (path / f"{name}.out").exists():
+            return super().__new__(md.Mumax3Drive)
+        else:
+            return super().__new__(md.OOMMFDrive)
+
     def __init__(self, name, number, dirname="./", x=None):
         self.name = name
         self.number = number
         self.dirname = dirname
 
-        self.path = os.path.join(dirname, name, f"drive-{number}")
-        if not os.path.exists(self.path):
-            msg = f"Directory {self.path=} does not exist."
+        self.drive_path = os.path.join(dirname, name, f"drive-{number}")
+        if not os.path.exists(self.drive_path):
+            msg = f"Directory {self.drive_path=} does not exist."
             raise IOError(msg)
 
         self.x = x
 
     @property
+    @abc.abstractmethod
+    def _step_files(self):
+        """List of filenames of individual snapshots."""
+
+    @property
     def _m0_path(self):
-        return os.path.join(self.path, "m0.omf")
+        return os.path.join(self.drive_path, "m0.omf")
 
     def __repr__(self):
         """Representation string.
@@ -130,16 +148,66 @@ class Drive(md.AbstractDrive):
         {...}
 
         """
-        with open(os.path.join(self.path, "info.json")) as f:
+        with open(os.path.join(self.drive_path, "info.json")) as f:
             return json.load(f)
 
     @property
-    def table(self):
-        """Table object."""
+    @abc.abstractmethod
+    def input_script(self):
+        """MIF file.
+        This property returns a string with the content of MIF file.
+
+        Returns
+        -------
+        str
+            MIF file content.
+
+        Examples
+        --------
+        1. Getting MIF file.
+        >>> import os
+        >>> import micromagneticdata as md
+        ...
+        >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
+        ...                                'tests', 'test_sample')
+        >>> drive = md.Drive(name='system_name', number=6, dirname=dirname)
+        >>> drive.input_script
+        '# MIF 2...'
+
+        2. Getting mx3 file
+
+        TODO add mumax3 output to the pre-computed data
+        """
 
     @property
-    def _step_files(self):
-        """List of filenames of individual snapshots."""
+    @abc.abstractmethod
+    def table(self):
+        """Table object.
+
+        This property returns an ``ubermagtable.Table`` object. As an
+        independent variable ``x``, the column chosen via ``x`` property is
+        selected.
+
+        Returns
+        -------
+        ubermagtable.Table
+
+            Table object.
+
+        Examples
+        --------
+        1. Getting table object.
+
+        >>> import os
+        >>> import micromagneticdata as md
+        ...
+        >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
+        ...                                'tests', 'test_sample')
+        >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
+        >>> drive.table
+        E...
+
+        """
 
     def ovf2vtk(self, dirname=None):
         """OVF to VTK conversion.
@@ -161,7 +229,7 @@ class Drive(md.AbstractDrive):
 
         """
         if dirname is None:
-            dirname = self.path
+            dirname = self.drive_path
         for i, filename in enumerate(self._step_files):
             vtkfilename = "drive-{}-{:07d}.vtk".format(self.number, i)
             df.Field.fromfile(filename).write(os.path.join(dirname, vtkfilename))
