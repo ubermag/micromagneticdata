@@ -5,6 +5,8 @@ import ubermagutil as uu
 
 import micromagneticdata as md
 
+from .abstract_drive import AbstractDrive
+
 
 @uu.inherit_docs
 class CombinedDrive(md.AbstractDrive):
@@ -55,6 +57,14 @@ class CombinedDrive(md.AbstractDrive):
         # self.name = name
         # self.number = number
         self.x = self.table.x
+
+    @AbstractDrive.x.setter
+    def x(self, value):
+        if value in self.table.data.columns:
+            self._x = value
+        else:
+            msg = f"Column {value=} does not exist in data."
+            raise ValueError(msg)
 
     @property
     def _m0_path(self):

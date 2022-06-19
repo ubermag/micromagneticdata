@@ -3,6 +3,8 @@ import ubermagutil as uu
 
 import micromagneticdata as md
 
+from .abstract_drive import AbstractDrive
+
 
 @uu.inherit_docs
 class Mumax3Drive(md.Drive):
@@ -56,9 +58,21 @@ class Mumax3Drive(md.Drive):
             msg = f"Output directory {self._mumax_output_path!r} does not exist."
             raise IOError(msg)
 
+    @AbstractDrive.x.setter
+    def x(self, value):
+        if value is None:
+            # self.info["driver"] in ["TimeDriver", "RelaxDriver", "MinDriver"]:
+            self._x = "t"
+        else:
+            if value in self.table.data.columns:
+                self._x = value
+            else:
+                msg = f"Column {value=} does not exist in data."
+                raise ValueError(msg)
+
     @property
     def _step_files(self):
-        return sorted(self._mumax_output_path.glob("*.ovf"))
+        return sorted(map(str, self._mumax_output_path.glob("*.ovf")))
 
     @property
     def calculator_script(self):
@@ -93,7 +107,7 @@ class Mumax3Drive(md.Drive):
         E...
 
         """
-        return ut.Table.fromfile(str(self._mumax_output_path, "table.txt"), x=self.x)
+        return ut.Table.fromfile(str(self._mumax_output_path / "table.txt"), x=self.x)
 
     def __repr__(self):
         """Representation string.

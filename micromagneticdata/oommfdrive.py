@@ -3,6 +3,8 @@ import ubermagutil as uu
 
 import micromagneticdata as md
 
+from .abstract_drive import AbstractDrive
+
 
 @uu.inherit_docs
 class OOMMFDrive(md.Drive):
@@ -51,13 +53,30 @@ class OOMMFDrive(md.Drive):
     def __init__(self, name, number, dirname="./", x=None):
         super().__init__(name, number, dirname, x)
 
+    @AbstractDrive.x.setter
+    def x(self, value):
+        if value is None:
+            if self.info["driver"] == "TimeDriver":
+                self._x = "t"
+            elif self.info["driver"] == "MinDriver":
+                self._x = "iteration"
+            elif self.info["driver"] == "HysteresisDriver":
+                self._x = "B_hysteresis"
+        else:
+            if value in self.table.data.columns:
+                self._x = value
+                print(self._x)
+            else:
+                msg = f"Column {value=} does not exist in data."
+                raise ValueError(msg)
+
     @property
     def _step_files(self):
-        return sorted(self.drive_path.glob(f"{self.name}*.omf"))
+        return sorted(map(str, self.drive_path.glob(f"{self.name}*.omf")))
 
     @property
     def calculator_script(self):
-        with (self.drive_path / f"{self.name}".mif).open() as f:
+        with (self.drive_path / f"{self.name}.mif").open() as f:
             return f.read()
 
     @property
