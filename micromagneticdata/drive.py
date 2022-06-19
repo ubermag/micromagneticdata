@@ -118,7 +118,7 @@ class Drive(md.AbstractDrive):
 
     @property
     @abc.abstractmethod
-    def input_script(self):
+    def calculator_script(self):
         """MIF file.
         This property returns a string with the content of MIF file.
 
@@ -136,7 +136,7 @@ class Drive(md.AbstractDrive):
         >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
         ...                                'tests', 'test_sample')
         >>> drive = md.Drive(name='system_name', number=6, dirname=dirname)
-        >>> drive.input_script
+        >>> drive.calculator_script
         '# MIF 2...'
 
         2. Getting mx3 file
@@ -163,11 +163,10 @@ class Drive(md.AbstractDrive):
         >>> drive.ovf2vtk()
 
         """
-        if dirname is None:
-            dirname = str(self.drive_path)
+        dirname = pathlib.Path(dirname) if dirname is not None else self.drive_path
         for i, filename in enumerate(self._step_files):
-            vtkfilename = "drive-{}-{:07d}.vtk".format(self.number, i)
-            df.Field.fromfile(filename).write(os.path.join(dirname, vtkfilename))
+            vtkfilename = dirname / "drive-{self.number}-{i:07d}.vtk"
+            df.Field.fromfile(filename).write(str(vtkfilename))
 
     def slider(self, description="step", **kwargs):
         """Widget for selecting individual steps.
