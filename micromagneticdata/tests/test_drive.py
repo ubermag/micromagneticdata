@@ -23,7 +23,7 @@ class TestDrive:
 
         # Exception
         with pytest.raises(IOError):
-            drive = md.Drive(name=self.name, number=9, dirname=self.dirname)
+            drive = md.Drive(name=self.name, number=11, dirname=self.dirname)
 
     def test_repr(self):
         for drive in self.data:
@@ -46,9 +46,16 @@ class TestDrive:
             assert drive.info["drive_number"] == i
 
     def test_mif(self):
-        for drive in self.data:
-            assert isinstance(drive.input_script, str)
-            assert "MIF" in drive.input_script
+        for i in range(7):
+            drive = self.data[i]
+            assert isinstance(drive.calculator_script, str)
+            assert "MIF" in drive.calculator_script
+
+    def test_mx3(self):
+        for i in range(7, 10):
+            drive = self.data[i]
+            assert isinstance(drive.calculator_script, str)
+            assert "tableadd" in drive.calculator_script
 
     def test_m0(self):
         for drive in self.data:
