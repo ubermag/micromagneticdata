@@ -65,7 +65,6 @@ class OOMMFDrive(md.Drive):
         else:
             if value in self.table.data.columns:
                 self._x = value
-                print(self._x)
             else:
                 msg = f"Column {value=} does not exist in data."
                 raise ValueError(msg)
