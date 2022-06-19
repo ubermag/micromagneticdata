@@ -61,7 +61,7 @@ class Mumax3Drive(md.Drive):
         return sorted(self._mumax_output_path.glob("*.ovf"))
 
     @property
-    def input_script(self):
+    def calculator_script(self):
         with (self.drive_path / f"{self.name}.mx3").open() as f:
             return f.read()
 

@@ -56,7 +56,7 @@ class OOMMFDrive(md.Drive):
         return sorted(self.drive_path.glob(f"{self.name}*.omf"))
 
     @property
-    def input_script(self):
+    def calculator_script(self):
         with (self.drive_path / f"{self.name}".mif).open() as f:
             return f.read()
 
