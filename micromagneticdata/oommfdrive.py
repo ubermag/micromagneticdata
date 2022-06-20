@@ -8,9 +8,11 @@ from .abstract_drive import AbstractDrive
 
 @uu.inherit_docs
 class OOMMFDrive(md.Drive):
-    """Drive class.
+    """Drive class for OOMMFDrives (created automatically).
 
-    This class provides utility for the analysis of individual drives.
+    This class provides utility for the analysis of individual OOMMF drives. It should
+    not be created explicitly. Instead, use ``micromagneticdata.Drive`` which
+    automatically creates a ``drive`` object of the correct sub-type.
 
     Parameters
     ----------

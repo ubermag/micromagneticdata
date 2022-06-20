@@ -10,7 +10,7 @@ from .abstract_drive import AbstractDrive
 
 @uu.inherit_docs
 class CombinedDrive(md.AbstractDrive):
-    """Drive class.
+    """Drive class for stacked drives.
 
     This class provides utility for the analysis of individual drives.
 
