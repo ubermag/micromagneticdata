@@ -102,7 +102,32 @@ class AbstractDrive(abc.ABC):
     @property
     @abc.abstractmethod
     def table(self):
-        """Table object."""
+        """Table object.
+
+        This property returns an ``ubermagtable.Table`` object. As an
+        independent variable ``x``, the column chosen via ``x`` property is
+        selected.
+
+        Returns
+        -------
+        ubermagtable.Table
+
+            Table object.
+
+        Examples
+        --------
+        1. Getting table object.
+
+        >>> import os
+        >>> import micromagneticdata as md
+        ...
+        >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
+        ...                                'tests', 'test_sample')
+        >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
+        >>> drive.table  # doctest: +SKIP
+        E...
+
+        """
 
     @property
     def n(self):
