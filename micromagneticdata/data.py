@@ -128,7 +128,7 @@ class Data:
         ...                                'tests', 'test_sample')
         >>> data = md.Data(name='system_name', dirname=dirname)
         >>> data.n
-        7
+        10
 
         """
         return len(list(glob.iglob(os.path.join(self.path, "drive-*"))))
@@ -162,11 +162,11 @@ class Data:
         ...                                'tests', 'test_sample')
         >>> data = md.Data(name='system_name', dirname=dirname)
         >>> data.n
-        7
+        10
         >>> data[0]  # first (0th) drive
-        Drive(...)
+        OOMMFDrive(...)
         >>> data[-1]  # last (6th) drive
-        Drive(...)
+        Mumax3Drive(...)
 
         """
         return md.Drive(
@@ -197,9 +197,9 @@ class Data:
         ...                                'tests', 'test_sample')
         >>> data = md.Data(name='system_name', dirname=dirname)
         >>> data.n
-        7
+        10
         >>> len(list(data))
-        7
+        10
 
         """
         for i in range(self.n):

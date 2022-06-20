@@ -26,17 +26,17 @@ class TestData:
 
     def test_info(self):
         assert isinstance(self.data.info, pd.DataFrame)
-        assert len(self.data.info.index) == 7
+        assert len(self.data.info.index) == 10
 
     def test_n(self):
-        assert self.data.n == 7
+        assert self.data.n == 10
 
     def test_getitem(self):
-        for i in [-2, -1, 0, 1, 2, 3, 4, 5, 6]:
+        for i in [-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]:
             assert isinstance(self.data[i], md.Drive)
 
     def test_iter(self):
-        assert len(list(self.data)) == 7
+        assert len(list(self.data)) == 10
 
     def test_selector(self):
         assert isinstance(self.data.selector(), ipywidgets.BoundedIntText)

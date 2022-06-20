@@ -1,0 +1,25 @@
+// Mesh
+SetGridSize(20, 20, 1)
+SetCellSize(5e-09, 5e-09, 5e-09)
+
+// Magnetisation
+m.LoadFile("m0.omf")
+Msat.setregion(0, 800000.0000000001)
+
+regions.LoadFile("mumax3_regions.omf")
+
+// Exchange energy
+Aex = 1.3e-11
+tableadd(E_exch)
+// Demag
+enabledemag = true
+tableadd(E_demag)
+tableadd(E_total)
+tableadd(dt)
+tableadd(maxtorque)
+alpha = 0.2
+relax()
+
+save(m_full)
+tablesave()
+
