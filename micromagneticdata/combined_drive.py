@@ -90,7 +90,7 @@ class CombinedDrive(md.AbstractDrive):
         ...                                'tests', 'test_sample')
         >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
         >>> drive
-        Drive(...)
+        OOMMFDrive(...)
 
         """
         drives = ",\n".join(f"  {drive!r}" for drive in self.drives)

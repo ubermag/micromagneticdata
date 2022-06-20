@@ -102,8 +102,8 @@ class Mumax3Drive(md.Drive):
         ...
         >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
         ...                                'tests', 'test_sample')
-        >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
-        >>> drive.table
+        >>> drive = md.Drive(name='system_name', number=7, dirname=dirname)
+        >>> drive.table  # doctest: +SKIP
         E...
 
         """
@@ -127,9 +127,9 @@ class Mumax3Drive(md.Drive):
         ...
         >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
         ...                                'tests', 'test_sample')
-        >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
+        >>> drive = md.Drive(name='system_name', number=7, dirname=dirname)
         >>> drive
-        Drive(...)
+        Mumax3Drive(...)
 
         """
         return (

@@ -102,7 +102,7 @@ class OOMMFDrive(md.Drive):
         >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
         ...                                'tests', 'test_sample')
         >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
-        >>> drive.table
+        >>> drive.table  # doctest: +SKIP
         E...
 
         """
@@ -128,7 +128,7 @@ class OOMMFDrive(md.Drive):
         ...                                'tests', 'test_sample')
         >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
         >>> drive
-        Drive(...)
+        OOMMFDrive(...)
 
         """
         return (
