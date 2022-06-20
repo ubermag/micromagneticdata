@@ -169,7 +169,7 @@ class Drive(md.AbstractDrive):
         """
         dirname = pathlib.Path(dirname) if dirname is not None else self.drive_path
         for i, filename in enumerate(self._step_files):
-            vtkfilename = dirname / "drive-{self.number}-{i:07d}.vtk"
+            vtkfilename = dirname / f"drive-{self.number}-{i:07d}.vtk"
             df.Field.fromfile(filename).write(str(vtkfilename))
 
     def slider(self, description="step", **kwargs):
