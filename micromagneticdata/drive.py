@@ -1,10 +1,9 @@
-import glob
+import abc
 import json
-import os
+import pathlib
 
 import discretisedfield as df
 import ipywidgets
-import ubermagtable as ut
 import ubermagutil as uu
 import ubermagutil.typesystem as ts
 
@@ -57,52 +56,40 @@ class Drive(md.AbstractDrive):
     >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
     ...                                'tests', 'test_sample')
     >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
+    >>> drive
+    OOMMFDrive(...)
+    >>> drive = md.Drive(name='system_name', number=9, dirname=dirname)
+    >>> drive
+    Mumax3Drive(...)
 
     """
 
+    def __new__(cls, name, number, dirname=".", x=None):
+        """Create a new OOMMFDrive or Mumax3Drive depending on the directory structure.
+
+        If a subdirectory <name>.out exists a Mumax3Drive is created else an
+        OOMMFDrive.
+
+        """
+        if pathlib.Path(f"{dirname}/{name}/drive-{number}/{name}.out").exists():
+            return super().__new__(md.Mumax3Drive)
+        else:
+            return super().__new__(md.OOMMFDrive)
+
     def __init__(self, name, number, dirname="./", x=None):
+        self.drive_path = pathlib.Path(f"{dirname}/{name}/drive-{number}")
+        if not self.drive_path.exists():
+            msg = f"Directory {self.drive_path!r} does not exist."
+            raise IOError(msg)
+
         self.name = name
         self.number = number
         self.dirname = dirname
-
-        self.path = os.path.join(dirname, name, f"drive-{number}")
-        if not os.path.exists(self.path):
-            msg = f"Directory {self.path=} does not exist."
-            raise IOError(msg)
-
         self.x = x
 
     @property
     def _m0_path(self):
-        return os.path.join(self.path, "m0.omf")
-
-    def __repr__(self):
-        """Representation string.
-
-        Returns
-        -------
-        str
-
-            Representation string.
-
-        Examples
-        --------
-        1. Representation string.
-
-        >>> import os
-        >>> import micromagneticdata as md
-        ...
-        >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
-        ...                                'tests', 'test_sample')
-        >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
-        >>> drive
-        Drive(...)
-
-        """
-        return (
-            f"Drive(name='{self.name}', number={self.number}, "
-            f"dirname='{self.dirname}', x='{self.x}')"
-        )
+        return self.drive_path / "m0.omf"
 
     @property
     def info(self):
@@ -130,11 +117,12 @@ class Drive(md.AbstractDrive):
         {...}
 
         """
-        with open(os.path.join(self.path, "info.json")) as f:
+        with (self.drive_path / "info.json").open() as f:
             return json.load(f)
 
     @property
-    def mif(self):
+    @abc.abstractmethod
+    def calculator_script(self):
         """MIF file.
         This property returns a string with the content of MIF file.
 
@@ -152,45 +140,13 @@ class Drive(md.AbstractDrive):
         >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
         ...                                'tests', 'test_sample')
         >>> drive = md.Drive(name='system_name', number=6, dirname=dirname)
-        >>> drive.mif
+        >>> drive.calculator_script
         '# MIF 2...'
+
+        2. Getting mx3 file
+
+        TODO add mumax3 output to the pre-computed data
         """
-        with open(os.path.join(self.path, f"{self.name}.mif")) as f:
-            return f.read()
-
-    @property
-    def table(self):
-        """Table object.
-
-        This property returns an ``ubermagtable.Table`` object. As an
-        independent variable ``x``, the column chosen via ``x`` property is
-        selected.
-
-        Returns
-        -------
-        ubermagtable.Table
-
-            Table object.
-
-        Examples
-        --------
-        1. Getting table object.
-
-        >>> import os
-        >>> import micromagneticdata as md
-        ...
-        >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
-        ...                                'tests', 'test_sample')
-        >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
-        >>> drive.table
-                       E...
-
-        """
-        return ut.Table.fromfile(os.path.join(self.path, f"{self.name}.odt"), x=self.x)
-
-    @property
-    def _step_files(self):
-        return sorted(glob.iglob(os.path.join(self.path, f"{self.name}*.omf")))
 
     def ovf2vtk(self, dirname=None):
         """OVF to VTK conversion.
@@ -211,11 +167,10 @@ class Drive(md.AbstractDrive):
         >>> drive.ovf2vtk()
 
         """
-        if dirname is None:
-            dirname = self.path
+        dirname = pathlib.Path(dirname) if dirname is not None else self.drive_path
         for i, filename in enumerate(self._step_files):
-            vtkfilename = "drive-{}-{:07d}.vtk".format(self.number, i)
-            df.Field.fromfile(filename).write(os.path.join(dirname, vtkfilename))
+            vtkfilename = dirname / f"drive-{self.number}-{i:07d}.vtk"
+            df.Field.fromfile(filename).write(str(vtkfilename))
 
     def slider(self, description="step", **kwargs):
         """Widget for selecting individual steps.

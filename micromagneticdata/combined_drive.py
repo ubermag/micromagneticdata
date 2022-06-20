@@ -5,15 +5,12 @@ import ubermagutil as uu
 
 import micromagneticdata as md
 
+from .abstract_drive import AbstractDrive
+
 
 @uu.inherit_docs
-# @ts.typesystem(
-#     name=ts.Typed(expected_type=str),
-#     number=ts.Scalar(expected_type=int, unsigned=True),
-#     dirname=ts.Typed(expected_type=str),
-# )
 class CombinedDrive(md.AbstractDrive):
-    """Drive class.
+    """Drive class for stacked drives.
 
     This class provides utility for the analysis of individual drives.
 
@@ -61,6 +58,14 @@ class CombinedDrive(md.AbstractDrive):
         # self.number = number
         self.x = self.table.x
 
+    @AbstractDrive.x.setter
+    def x(self, value):
+        if value in self.table.data.columns:
+            self._x = value
+        else:
+            msg = f"Column {value=} does not exist in data."
+            raise ValueError(msg)
+
     @property
     def _m0_path(self):
         return self.drives[0]._m0_path
@@ -85,7 +90,7 @@ class CombinedDrive(md.AbstractDrive):
         ...                                'tests', 'test_sample')
         >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
         >>> drive
-        Drive(...)
+        OOMMFDrive(...)
 
         """
         drives = ",\n".join(f"  {drive!r}" for drive in self.drives)
