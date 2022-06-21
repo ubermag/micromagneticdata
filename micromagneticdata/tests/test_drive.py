@@ -129,3 +129,30 @@ class TestDrive:
                     )
                     for i in "xyz"
                 )
+
+    def test_hv(self):
+        for drive in self.data:
+            # some drives have only one z layer -> only xy plane
+            drive.hv(kdims=["x", "y"])
+        # time drives: 0, 1, 2, 4
+        plot = self.data[0].hv(kdims=["y", "z"], vdims=["y", "z"])
+        assert len(plot.kdims) == 2
+        assert "x" in plot.kdims
+        assert "t" in plot.kdims
+
+        plot = self.data[0].hv.scalar(kdims=["x", "t"])
+        assert len(plot.kdims) == 3
+        assert "comp" in plot.kdims
+        assert "y" in plot.kdims
+        assert "z" in plot.kdims
+
+        plot = self.data[0].hv.vector(kdims=["x", "t"], vdims=["x", None], cdim="z")
+        assert len(plot.kdims) == 2
+        assert "y" in plot.kdims
+        assert "z" in plot.kdims
+
+        plot = self.data[2].hv.contour(kdims=["x", "t"])
+        assert len(plot.kdims) == 3
+        assert "comp" in plot.kdims
+        assert "y" in plot.kdims
+        assert "z" in plot.kdims
