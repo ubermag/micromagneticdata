@@ -1,6 +1,7 @@
 import abc
 
 import discretisedfield as df
+import numpy as np
 import xarray as xr
 
 
@@ -316,8 +317,19 @@ class AbstractDrive(abc.ABC):
         if len(self._step_files) == 1:
             darray = self[0].to_xarray(*args, **kwargs)
         else:
-            field_darrays = (field.to_xarray(*args, **kwargs) for field in self)
-            darray = xr.concat(field_darrays, dim=self.table.data[self.table.x])
+            # xr.stack (below) is too slow and needs a lot of memory
+            # field_darrays = (field.to_xarray(*args, **kwargs) for field in self)
+            # darray = xr.concat(field_darrays, dim=self.table.data[self.table.x])
+            array = np.empty(
+                (self.n, *self[0].mesh.n, self.m0.dim), dtype=self[0].array.dtype
+            )
+            for i, field in enumerate(self):
+                array[i] = field.array
+            coords = dict(self[0].to_xarray().coords)
+            coords[self.table.x] = self.table.data[self.table.x]
+            darray = xr.DataArray(
+                array, coords=coords, dims=[self.table.x, *self[0].to_xarray().dims]
+            )
             darray[self.table.x].attrs["units"] = self.table.units[self.table.x]
             if self.info["driver"] == "HysteresisDriver":
                 for i in "xyz":
@@ -333,7 +345,7 @@ class AbstractDrive(abc.ABC):
                         f"B{i}_hysteresis"
                     ]
 
-        return darray.assign_attrs(**self.info)
+        return darray.assign_attrs(**self[0].to_xarray().attrs, **self.info)
 
     @property
     def hv(self):
