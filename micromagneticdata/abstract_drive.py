@@ -256,8 +256,8 @@ class AbstractDrive(abc.ABC):
     def to_xarray(self, *args, **kwargs):
         """Export ``micromagneticdata.Drive`` as ``xarray.DataArray``
 
-        The method depends on ``discretisedfield.Field.to_xarray`` and derives the
-        last four dimensions ``x``, ``y``, ``z``, and ``comp`` in the output
+        The method depends on ``discretisedfield.Field.to_xarray`` and derives the last
+        four dimensions ``x``, ``y``, ``z``, and ``comp`` in the output
         ``xarray.DataArray`` from it. The arguments and named arguments to this method
         are passed on to ``discretisedfield.Field.to_xarray``.
 
@@ -265,16 +265,15 @@ class AbstractDrive(abc.ABC):
         change. If the number of stored steps in the ``micromagneticdata.Drive`` are
         more than one, the output contains an extra dimension named after
         ``micromagneticdata.Drive.table.x`` with proper coordinate values. For the case
-        of ``HysteresisDriver``,  the new dimension has four coordinates, namely
-        ``B_hysteresis``, ``Bx_hysteresis``, ``By_hysteresis``, and
-        ``Bz_hysteresis``. The first represents the norm of the hysteresis field, while
-        the rest three represents the components along the respective axes. For a
+        of ``HysteresisDriver``, the new dimension has four coordinates, namely
+        ``B_hysteresis``, ``Bx_hysteresis``, ``By_hysteresis``, and ``Bz_hysteresis``.
+        The first represents the norm of the hysteresis field, while the rest three
+        represents the components along the respective axes. For a
         ``micromagneticdata.Drive`` with a single ``discretisedfield.Field``, the value
         of the single ``discretisedfield.Field.to_xarray`` is returned.
 
         ``micromagneticdata.Drive.info`` is returned as the output ``xarray.DataArray``
-        attributes, besides the ones derived from
-        ``discretisedfield.Field.to_xarray``.
+        attributes, besides the ones derived from ``discretisedfield.Field.to_xarray``.
 
         Parameters
         ----------
