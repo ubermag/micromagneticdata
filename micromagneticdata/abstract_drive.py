@@ -317,18 +317,19 @@ class AbstractDrive(abc.ABC):
         if len(self._step_files) == 1:
             darray = self[0].to_xarray(*args, **kwargs)
         else:
-            # xr.stack (below) is too slow and needs a lot of memory
+            # xr.stack (below) is too slow and needs twice the amount of memory
             # field_darrays = (field.to_xarray(*args, **kwargs) for field in self)
             # darray = xr.concat(field_darrays, dim=self.table.data[self.table.x])
             array = np.empty(
-                (self.n, *self[0].mesh.n, self.m0.dim), dtype=self[0].array.dtype
+                (self.n, *self[0].mesh.n, self[0].dim), dtype=self[0].array.dtype
             )
             for i, field in enumerate(self):
                 array[i] = field.array
-            coords = dict(self[0].to_xarray().coords)
+            field_0 = self[0].to_xarray(*args, **kwargs)
+            coords = dict(field_0.coords)
             coords[self.table.x] = self.table.data[self.table.x]
             darray = xr.DataArray(
-                array, coords=coords, dims=[self.table.x, *self[0].to_xarray().dims]
+                array, coords=coords, dims=[self.table.x, *field_0.dims]
             )
             darray[self.table.x].attrs["units"] = self.table.units[self.table.x]
             if self.info["driver"] == "HysteresisDriver":
@@ -344,8 +345,10 @@ class AbstractDrive(abc.ABC):
                     darray[f"B{i}_hysteresis"].attrs["units"] = self.table.units[
                         f"B{i}_hysteresis"
                     ]
+            darray.name = field_0.name
+            darray.assign_attrs(**field_0.attrs)
 
-        return darray.assign_attrs(**self[0].to_xarray().attrs, **self.info)
+        return darray.assign_attrs(**self.info)
 
     @property
     def hv(self):
