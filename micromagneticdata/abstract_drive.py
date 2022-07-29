@@ -1,4 +1,5 @@
 import abc
+import contextlib
 
 import discretisedfield as df
 import numpy as np
@@ -186,7 +187,10 @@ class AbstractDrive(abc.ABC):
         Field(...)
 
         """
-        return df.Field.fromfile(filename=self._step_files[item])
+        output = df.Field.fromfile(filename=self._step_files[item])
+        with contextlib.suppress(FileNotFoundError):
+            output.mesh.load_subregions(self.drive_path / "m0.omf.subregions.json")
+        return output
 
     def __iter__(self):
         """Iterator.
