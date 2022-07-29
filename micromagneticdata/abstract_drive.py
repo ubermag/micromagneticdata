@@ -188,7 +188,7 @@ class AbstractDrive(abc.ABC):
 
         """
         output = df.Field.fromfile(filename=self._step_files[item])
-        with contextlib.suppress(FileExistsError):
+        with contextlib.suppress(FileNotFoundError):
             output.mesh.load_subregions(self._m0_path)
         return output
 
