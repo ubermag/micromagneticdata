@@ -94,7 +94,7 @@ class AbstractDrive(abc.ABC):
         Field(...)
 
         """
-        return df.Field.fromfile(str(self._m0_path))
+        return df.Field.fromfile(self._m0_path)
 
     @property
     @abc.abstractmethod
@@ -188,8 +188,8 @@ class AbstractDrive(abc.ABC):
 
         """
         output = df.Field.fromfile(filename=self._step_files[item])
-        with contextlib.suppress(FileNotFoundError):
-            output.mesh.load_subregions(self.drive_path / "m0.omf.subregions.json")
+        with contextlib.suppress(FileExistsError):
+            output.mesh.load_subregions(self._m0_path)
         return output
 
     def __iter__(self):
