@@ -77,6 +77,7 @@ class Drive(md.AbstractDrive):
             return super().__new__(md.OOMMFDrive)
 
     def __init__(self, name, number, dirname="./", x=None):
+        super().__init__()
         self.drive_path = pathlib.Path(f"{dirname}/{name}/drive-{number}")
         if not self.drive_path.exists():
             msg = f"Directory {self.drive_path!r} does not exist."

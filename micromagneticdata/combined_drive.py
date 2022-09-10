@@ -43,6 +43,7 @@ class CombinedDrive(md.AbstractDrive):
     """
 
     def __init__(self, *drives):
+        super().__init__()
         if len(drives) < 2:
             raise ValueError("At least two drives must be pased.")
         for drive in drives:

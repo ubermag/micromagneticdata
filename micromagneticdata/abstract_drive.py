@@ -13,6 +13,9 @@ class AbstractDrive(abc.ABC):
 
     """
 
+    def __init__(self):
+        self._callbacks = []
+
     @abc.abstractmethod
     def __repr__(self):
         """Representation string."""
@@ -187,10 +190,10 @@ class AbstractDrive(abc.ABC):
         Field(...)
 
         """
-        output = df.Field.fromfile(filename=self._step_files[item])
+        field = df.Field.fromfile(filename=self._step_files[item])
         with contextlib.suppress(FileNotFoundError):
-            output.mesh.load_subregions(self._m0_path)
-        return output
+            field.mesh.load_subregions(self._m0_path)
+        return self._apply_callbacks(field)
 
     def __iter__(self):
         """Iterator.
@@ -218,7 +221,30 @@ class AbstractDrive(abc.ABC):
         [...]
 
         """
-        yield from map(df.Field.fromfile, self._step_files)
+        for field in map(df.Field.fromfile, self._step_files):
+            with contextlib.suppress(FileNotFoundError):
+                field.mesh.load_subregions(self._m0_path)
+            yield self._apply_callbacks(field)
+
+    @property
+    def callbacks(self):
+        """Return all registered callbacks."""
+        return self._callbacks
+
+    def register_callback(self, callback):
+        """Register a callback to which a field is passed before being returned."""
+        if not callable(callback):
+            raise TypeError("Argument is not callable.")
+        self._callbacks.append(callback)
+
+    def clear_callbacks(self):
+        """Remove all callbacks."""
+        self._callbacks = []
+
+    def _apply_callbacks(self, field):
+        for callback in self._callbacks:
+            field = callback(field)
+        return field
 
     @abc.abstractmethod
     def __lshift__(self, other):
@@ -328,9 +354,14 @@ class AbstractDrive(abc.ABC):
             )
             for i, field in enumerate(self):
                 array[i] = field.array
+            # remove "comp" dimension for scalar fields
+            if self[0].dim == 1:
+                array = np.squeeze(array, axis=-1)
+
             field_0 = self[0].to_xarray(*args, **kwargs)
             coords = dict(field_0.coords)
             coords[self.table.x] = self.table.data[self.table.x]
+
             darray = xr.DataArray(
                 array, coords=coords, dims=[self.table.x, *field_0.dims]
             )
