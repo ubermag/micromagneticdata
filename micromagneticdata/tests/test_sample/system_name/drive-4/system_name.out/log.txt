@@ -1,0 +1,32 @@
+//mumax 3.10 [linux_amd64 go1.14(gc) CUDA-11.0]
+//GPU info: NVIDIA GeForce GTX 850M(4046MB), CUDA Driver 11.7, cc=5.0, using cc=50 PTX
+//(c) Arne Vansteenkiste, Dynamat LAB, Ghent University, Belgium
+//This is free software without any warranty. See license.txt
+//********************************************************************//
+//  If you use mumax in any work or publication,                      //
+//  we kindly ask you to cite the references in references.bib        //
+//********************************************************************//
+//output directory: system_name.out/
+OutputFormat = OVF2_BINARY
+SetGridSize(20, 10, 4)
+SetCellSize(5e-09, 5e-09, 5e-09)
+m.LoadFile("/home/martin/PhD/repos/ubermag-devtools/repos/micromagneticdata/micromagneticdata/tests/test_sample/system_name/drive-4/m0.omf")
+Msat.setregion(0, 799999.9999999997)
+regions.LoadFile("/home/martin/PhD/repos/ubermag-devtools/repos/micromagneticdata/micromagneticdata/tests/test_sample/system_name/drive-4/mumax3_regions.omf")
+Aex = 1.3e-11
+tableadd(E_exch)
+B_ext.add(LoadFile("B_ext.ovf"), 1)
+tableadd(E_Zeeman)
+enabledemag = false
+tableadd(E_total)
+tableadd(dt)
+tableadd(maxtorque)
+minimize()
+save(m_full)
+tablesave()
+//********************************************************************//
+//Please cite the following references, relevant for your simulation. //
+//See bibtex file in output folder for justification.                 //
+//********************************************************************//
+//   * Vansteenkiste et al., AIP Adv. 4, 107133 (2014).
+//   * Exl et al., J. Appl. Phys. 115, 17D118 (2014).

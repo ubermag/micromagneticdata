@@ -22,6 +22,7 @@ dirname = "./test_sample"
 def clean():
     """Remove any previous simulation directories."""
     if os.path.exists(dirname):
+        print(">>> Removing old test samples")
         shutil.rmtree(dirname)
 
 
