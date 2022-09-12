@@ -431,7 +431,7 @@ class AbstractDrive(abc.ABC):
 
     @property
     def _hv_key_dims(self):
-        key_dims = self.m0._hv_key_dims
+        key_dims = self[0]._hv_key_dims
         if len(self.table.data) > 1:
             key_dims[self.x] = {
                 "data": self.table.data[self.x].to_numpy(),
