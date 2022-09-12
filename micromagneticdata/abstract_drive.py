@@ -415,4 +415,26 @@ class AbstractDrive(abc.ABC):
         :DynamicMap...
 
         """
-        return df.plotting.Hv(self.to_xarray())
+        return df.plotting.Hv(self._hv_key_dims, self._hv_data_selection)
+
+    def _hv_data_selection(self, **kwargs):
+        if self.x in self._hv_key_dims:
+            if self.x not in kwargs:
+                raise NotImplementedError(
+                    f"The dimension {self.x} cannot be a key dimension"
+                )
+            value = kwargs.pop(self.x)
+            n = self.table.data.loc[self.table.data[self.x] == value].index[0]
+        else:
+            n = -1
+        return self[n]._hv_data_selection(**kwargs)
+
+    @property
+    def _hv_key_dims(self):
+        key_dims = self.m0._hv_key_dims
+        if len(self.table.data) > 1:
+            key_dims[self.x] = {
+                "data": self.table.data[self.x].to_numpy(),
+                "unit": self.table.units[self.x],
+            }
+        return key_dims
