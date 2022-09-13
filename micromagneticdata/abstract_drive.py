@@ -4,6 +4,7 @@ import contextlib
 import discretisedfield as df
 import numpy as np
 import xarray as xr
+from discretisedfield.plotting.util import hv_key_dim
 
 
 class AbstractDrive(abc.ABC):
@@ -433,8 +434,8 @@ class AbstractDrive(abc.ABC):
     def _hv_key_dims(self):
         key_dims = self[0]._hv_key_dims
         if len(self.table.data) > 1:
-            key_dims[self.x] = {
-                "data": self.table.data[self.x].to_numpy(),
-                "unit": self.table.units[self.x],
-            }
+            key_dims[self.x] = hv_key_dim(
+                self.table.data[self.x].to_numpy(),
+                self.table.units[self.x],
+            )
         return key_dims
