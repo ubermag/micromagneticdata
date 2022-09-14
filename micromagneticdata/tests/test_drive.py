@@ -180,3 +180,49 @@ class TestDrive:
             assert np.min(field.array) >= -1.0
 
         assert len(processed.callbacks) == 2
+
+    def test_cache(self, monkeypatch):
+        ref = self.data[0]
+        drive = md.Drive(ref.name, ref.number, ref.dirname, ref.x, use_cache=True)
+
+        assert len(list(drive)) == 25
+        assert isinstance(drive[0], df.Field)
+        assert isinstance(drive.table, ut.Table)
+
+        with monkeypatch.context() as m:
+            m.setattr(drive.__class__, "_step_file_glob", ["a.omf", "b.omf"])
+            m.setattr(drive.__class__, "_table_path", "wrong_path")
+
+            assert len(drive._step_files) == 25
+            assert isinstance(drive[0], df.Field)
+            assert isinstance(drive.table, ut.Table)
+
+            drive.use_cache = False
+
+            assert drive._step_files == ["a.omf", "b.omf"]
+            with pytest.raises(FileNotFoundError):
+                drive[0]
+            with pytest.raises(FileNotFoundError):
+                drive.table
+
+            drive.use_cache = True  # check new caching (no old cache)
+
+            assert drive._step_files == ["a.omf", "b.omf"]
+            with pytest.raises(FileNotFoundError):
+                drive[0]
+            with pytest.raises(FileNotFoundError):
+                drive.table
+
+        # caching has effects outside monkeypatch context
+        assert drive._step_files == ["a.omf", "b.omf"]
+        with pytest.raises(FileNotFoundError):
+            drive[0]
+        # no table object is cached
+        assert isinstance(drive.table, ut.Table)
+
+        drive.use_cache = False  # remove cached monkeypatch
+        drive.use_cache = True  # check new caching (no old cache)
+
+        assert len(list(drive)) == 25
+        assert isinstance(drive[0], df.Field)
+        assert isinstance(drive.table, ut.Table)

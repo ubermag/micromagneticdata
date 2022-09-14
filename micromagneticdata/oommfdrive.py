@@ -1,4 +1,3 @@
-import ubermagtable as ut
 import ubermagutil as uu
 
 import micromagneticdata as md
@@ -52,8 +51,8 @@ class OOMMFDrive(md.Drive):
 
     """
 
-    def __init__(self, name, number, dirname="./", x=None, **kwargs):
-        super().__init__(name, number, dirname, x, **kwargs)
+    def __init__(self, name, number, dirname="./", x=None, use_cache=False, **kwargs):
+        super().__init__(name, number, dirname, x, use_cache, **kwargs)
 
     @AbstractDrive.x.setter
     def x(self, value):
@@ -71,17 +70,17 @@ class OOMMFDrive(md.Drive):
                 raise ValueError(f"Column {value=} does not exist in data.")
 
     @property
-    def _step_files(self):
-        return sorted(map(str, self.drive_path.glob(f"{self.name}*.omf")))
+    def _table_path(self):
+        return self.drive_path / f"{self.name}.odt"
+
+    @property
+    def _step_file_glob(self):
+        return self.drive_path.glob(f"{self.name}*.omf")
 
     @property
     def calculator_script(self):
         with (self.drive_path / f"{self.name}.mif").open() as f:
             return f.read()
-
-    @property
-    def table(self):
-        return ut.Table.fromfile(str(self.drive_path / f"{self.name}.odt"), x=self.x)
 
     def __repr__(self):
         """Representation string.

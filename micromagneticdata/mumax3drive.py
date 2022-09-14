@@ -1,6 +1,5 @@
 import pathlib
 
-import ubermagtable as ut
 import ubermagutil as uu
 
 import micromagneticdata as md
@@ -56,7 +55,7 @@ class Mumax3Drive(md.Drive):
 
     """
 
-    def __init__(self, name, number, dirname="./", x=None, **kwargs):
+    def __init__(self, name, number, dirname="./", x=None, use_cache=False, **kwargs):
         self._mumax_output_path = pathlib.Path(
             f"{dirname}/{name}/drive-{number}/{name}.out"
         )  # required to initialise self.x in super
@@ -65,7 +64,7 @@ class Mumax3Drive(md.Drive):
                 f"Output directory {self._mumax_output_path!r} does not exist."
             )
 
-        super().__init__(name, number, dirname, x, **kwargs)
+        super().__init__(name, number, dirname, x, use_cache, **kwargs)
 
     @AbstractDrive.x.setter
     def x(self, value):
@@ -79,17 +78,17 @@ class Mumax3Drive(md.Drive):
                 raise ValueError(f"Column {value=} does not exist in data.")
 
     @property
-    def _step_files(self):
-        return sorted(map(str, self._mumax_output_path.glob("*.ovf")))
+    def _table_path(self):
+        return self._mumax_output_path / "table.txt"
+
+    @property
+    def _step_file_glob(self):
+        return self._mumax_output_path.glob("*.ovf")
 
     @property
     def calculator_script(self):
         with (self.drive_path / f"{self.name}.mx3").open() as f:
             return f.read()
-
-    @property
-    def table(self):
-        return ut.Table.fromfile(str(self._mumax_output_path / "table.txt"), x=self.x)
 
     def __repr__(self):
         """Representation string.

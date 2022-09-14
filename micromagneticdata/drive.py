@@ -4,6 +4,7 @@ import pathlib
 
 import discretisedfield as df
 import ipywidgets
+import ubermagtable as ut
 import ubermagutil as uu
 import ubermagutil.typesystem as ts
 
@@ -67,7 +68,7 @@ class Drive(md.AbstractDrive):
 
     """
 
-    def __new__(cls, name, number, dirname=".", x=None, **kwargs):
+    def __new__(cls, name, number, dirname=".", x=None, use_cache=False, **kwargs):
         """Create a new OOMMFDrive or Mumax3Drive depending on the directory structure.
 
         If a subdirectory <name>.out exists a Mumax3Drive is created else an
@@ -79,21 +80,65 @@ class Drive(md.AbstractDrive):
         else:
             return super().__new__(md.OOMMFDrive)
 
-    def __init__(self, name, number, dirname="./", x=None, **kwargs):
+    def __init__(self, name, number, dirname="./", x=None, use_cache=False, **kwargs):
         super().__init__(**kwargs)
         self.drive_path = pathlib.Path(f"{dirname}/{name}/drive-{number}")
         if not self.drive_path.exists():
             msg = f"Directory {self.drive_path!r} does not exist."
             raise IOError(msg)
 
+        # use kwargs to not expose additional "internal" arguments to users
+        self._step_file_list = kwargs.pop("step_files", [])
+        self._table = kwargs.pop("table", None)
+
+        self.use_cache = use_cache
         self.name = name
         self.number = number
         self.dirname = dirname
         self.x = x
 
     @property
+    def use_cache(self):
+        return self._use_cache
+
+    @use_cache.setter
+    def use_cache(self, use_cache):
+        if not use_cache:
+            self._step_file_list = []
+            self._table = None
+        self._use_cache = use_cache
+
+    @property
     def _m0_path(self):
         return self.drive_path / "m0.omf"
+
+    @property
+    @abc.abstractmethod
+    def _table_path(self):
+        pass
+
+    @property
+    def table(self):
+        if not self.use_cache:
+            return ut.Table.fromfile(str(self._table_path), x=self.x)
+
+        if self._table is None:
+            self._table = ut.Table.fromfile(str(self._table_path), x=self.x)
+        return self._table
+
+    @property
+    @abc.abstractmethod
+    def _step_file_glob(self):
+        pass
+
+    @property
+    def _step_files(self):
+        if not self.use_cache:
+            return sorted(self._step_file_glob)
+
+        if not self._step_file_list:
+            self._step_file_list = sorted(self._step_file_glob)
+        return self._step_file_list
 
     @property
     def info(self):
