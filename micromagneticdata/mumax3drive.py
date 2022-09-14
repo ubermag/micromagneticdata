@@ -1,3 +1,5 @@
+import pathlib
+
 import ubermagtable as ut
 import ubermagutil as uu
 
@@ -53,12 +55,15 @@ class Mumax3Drive(md.Drive):
     """
 
     def __init__(self, name, number, dirname="./", x=None, **kwargs):
-        super().__init__(name, number, dirname, x, **kwargs)
-
-        self._mumax_output_path = self.drive_path / f"{name}.out"
+        self._mumax_output_path = pathlib.Path(
+            f"{dirname}/{name}/drive-{number}/{name}.out"
+        )  # required to initialise self.x in super
         if not self._mumax_output_path.exists():
-            msg = f"Output directory {self._mumax_output_path!r} does not exist."
-            raise IOError(msg)
+            raise IOError(
+                f"Output directory {self._mumax_output_path!r} does not exist."
+            )
+
+        super().__init__(name, number, dirname, x, **kwargs)
 
     @AbstractDrive.x.setter
     def x(self, value):
