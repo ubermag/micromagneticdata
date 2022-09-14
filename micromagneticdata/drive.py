@@ -295,4 +295,7 @@ class Drive(md.AbstractDrive):
             dirname=self.dirname,
             x=self.x,
             callbacks=self.callbacks + [callback],
+            use_cache=self.use_cache,
+            step_files=self._step_files,
+            table=self.table,
         )
