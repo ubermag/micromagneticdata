@@ -139,3 +139,22 @@ class TestDrive:
                     )
                     for i in "xyz"
                 )
+
+    def test_register_callback(self):
+        for drive in self.combined_drives:
+            drive_orientation = drive.register_callback(lambda field: field.orientation)
+            assert isinstance(drive_orientation, drive.__class__)
+            assert len(drive_orientation._callbacks) == 1
+            for field in drive_orientation:
+                assert np.max(field.array) <= 1.0
+                assert np.min(field.array) >= -1.0
+
+        drive = self.combined_drives[0]
+        processed = drive.register_callback(lambda f: f.orientation)
+        processed = processed.register_callback(lambda f: f.x)
+        for field in processed:
+            assert field.dim == 1
+            assert np.max(field.array) <= 1.0
+            assert np.min(field.array) >= -1.0
+
+        assert len(processed.callbacks) == 2
