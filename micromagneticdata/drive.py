@@ -210,7 +210,8 @@ class Drive(md.AbstractDrive):
         )
 
     def __lshift__(self, other):
-        if isinstance(other, self.__class__):
+        if isinstance(other, md.Drive):
+            # no use of self.__class__ to allow combining Mumax3 and OOMMF runs
             return md.CombinedDrive(self, other)
         elif isinstance(other, md.CombinedDrive):
             return md.CombinedDrive(self, *other.drives)
