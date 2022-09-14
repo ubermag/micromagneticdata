@@ -48,17 +48,20 @@ class Drive(md.AbstractDrive):
 
     Examples
     --------
-    1. Getting drive object.
+    1. Getting drive object from data object.
 
     >>> import os
     >>> import micromagneticdata as md
     ...
     >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
     ...                                'tests', 'test_sample')
-    >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
+    >>> drive = md.Data(name='system_name', dirname=dirname)[0]
     >>> drive
     OOMMFDrive(...)
-    >>> drive = md.Drive(name='system_name', number=9, dirname=dirname)
+
+    2. Getting drive objet directly.
+
+    >>> drive = md.Drive(name='system_name', number=1, dirname=dirname)
     >>> drive
     Mumax3Drive(...)
 

@@ -50,7 +50,9 @@ class Mumax3Drive(md.Drive):
     ...
     >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
     ...                                'tests', 'test_sample')
-    >>> drive = md.Drive(name='system_name', number=7, dirname=dirname)
+    >>> drive = md.Drive(name='system_name', number=1, dirname=dirname)
+    >>> drive
+    Mumax3Drive(...)
 
     """
 
@@ -107,9 +109,9 @@ class Mumax3Drive(md.Drive):
         ...
         >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
         ...                                'tests', 'test_sample')
-        >>> drive = md.Drive(name='system_name', number=7, dirname=dirname)
+        >>> drive = md.Drive(name='system_name', number=1, dirname=dirname)
         >>> drive
-        Mumax3Drive(...)
+        Mumax3Drive(name='system_name', number=1, dirname='.../test_sample', x='t')
 
         """
         return (

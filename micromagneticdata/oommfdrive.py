@@ -103,7 +103,7 @@ class OOMMFDrive(md.Drive):
         ...                                'tests', 'test_sample')
         >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
         >>> drive
-        OOMMFDrive(...)
+        OOMMFDrive(name='system_name', number=0, dirname='.../test_sample', x='t')
 
         """
         return (

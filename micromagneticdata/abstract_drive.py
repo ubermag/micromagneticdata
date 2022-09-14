@@ -53,7 +53,7 @@ class AbstractDrive(abc.ABC):
         ...
         >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
         ...                                'tests', 'test_sample')
-        >>> drive = md.Drive(name='system_name', number=6, dirname=dirname)
+        >>> drive = md.Data(name='hysteresis', dirname=dirname)[0]
         >>> drive.x
         'B_hysteresis'
         >>> drive.x = 'Bx_hysteresis'
