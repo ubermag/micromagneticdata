@@ -216,3 +216,14 @@ class Drive(md.AbstractDrive):
         elif isinstance(other, md.CombinedDrive):
             return md.CombinedDrive(self, *other.drives)
         raise TypeError(f"Invalid type {other=}.")
+
+    def register_callback(self, callback):
+        if not callable(callback):
+            raise TypeError("Argument is not callable.")
+        return self.__class__(
+            name=self.name,
+            number=self.number,
+            dirname=self.dirname,
+            x=self.x,
+            callbacks=self.callbacks + [callback],
+        )

@@ -42,8 +42,8 @@ class CombinedDrive(md.AbstractDrive):
 
     """
 
-    def __init__(self, *drives):
-        super().__init__()
+    def __init__(self, *drives, **kwargs):
+        super().__init__(**kwargs)
         if len(drives) < 2:
             raise ValueError("At least two drives must be pased.")
         for drive in drives:
@@ -168,3 +168,11 @@ class CombinedDrive(md.AbstractDrive):
         elif isinstance(other, self.__class__):
             return self.__class__(*self.drives, *other.drives)
         raise TypeError(f"Invalid type {other=}.")
+
+    def register_callback(self, callback):
+        if not callable(callback):
+            raise TypeError("Argument is not callable.")
+        return self.__class__(
+            *self.drives,
+            callbacks=self.callbacks + [callback],
+        )
