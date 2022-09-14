@@ -46,13 +46,13 @@ class TestDrive:
             assert drive.info["drive_number"] == i
 
     def test_mif(self):
-        for i in range(7):
+        for i in [0, 5, 6]:
             drive = self.data[i]
             assert isinstance(drive.calculator_script, str)
             assert "MIF" in drive.calculator_script
 
     def test_mx3(self):
-        for i in range(7, 10):
+        for i in [1, 2, 3, 4]:
             drive = self.data[i]
             assert isinstance(drive.calculator_script, str)
             assert "tableadd" in drive.calculator_script
@@ -91,10 +91,11 @@ class TestDrive:
             assert isinstance(drive.slider(), ipywidgets.IntSlider)
 
     def test_lshift(self):
-        # drives 0, 1, 2, 4: TimeDriver
-        # drives 3, 5: MinDriver
-        # drives 6: HysteresisDriver
-        for d1, d2 in [(0, 1), (3, 5), (6, 6)]:
+        # TimeDriver: 0, 1, 2, 5
+        # MinDriver: 4, 6
+        # RelaxDriver: 3
+        # HysteresisDriver: 7 [CURRENTLY MISSING IN THE DATASET]
+        for d1, d2 in [(0, 1), (6, 6), (3, 3)]:
             combined = self.data[d1] << self.data[d2]
             assert isinstance(combined, md.CombinedDrive)
             assert len(combined.drives) == 2
@@ -102,7 +103,11 @@ class TestDrive:
             assert combined.x == self.data[d1].x
             assert len(combined.table.data) == combined.n
 
-        for d1, d2 in [(0, 3), (0, 6), (3, 6)]:
+        for d1, d2 in [(0, 6), (3, 6), (4, 6)]:
+            # TODO
+            # (0, 3), (0, 4) should be added and fail
+            # (4, 6) mixes OOMMF and Mumax3 min drive which does not work because
+            # they have different independent variables
             with pytest.raises(ValueError):
                 self.data[d1] << self.data[d2]
         with pytest.raises(TypeError):
