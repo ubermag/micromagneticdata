@@ -1,5 +1,6 @@
 import abc
 import json
+import numbers
 import pathlib
 
 import discretisedfield as df
@@ -81,15 +82,15 @@ class Drive(md.AbstractDrive):
             return super().__new__(md.OOMMFDrive)
 
     def __init__(self, name, number, dirname="./", x=None, use_cache=False, **kwargs):
+        # use kwargs to not expose additional "internal" arguments to users
+        self._step_file_list = kwargs.pop("step_files", [])
+        self._table = kwargs.pop("table", None)
+
         super().__init__(**kwargs)
         self.drive_path = pathlib.Path(f"{dirname}/{name}/drive-{number}")
         if not self.drive_path.exists():
             msg = f"Directory {self.drive_path!r} does not exist."
             raise IOError(msg)
-
-        # use kwargs to not expose additional "internal" arguments to users
-        self._step_file_list = kwargs.pop("step_files", [])
-        self._table = kwargs.pop("table", None)
 
         self.use_cache = use_cache
         self.name = name
@@ -139,6 +140,26 @@ class Drive(md.AbstractDrive):
         if not self._step_file_list:
             self._step_file_list = sorted(self._step_file_glob)
         return self._step_file_list
+
+    def __getitem__(self, item):
+        if isinstance(item, numbers.Integral):
+            return super().__getitem__(item)
+        elif isinstance(item, slice):
+            step_files = self._step_files[item]
+            table = self.table
+            table.data = table.data.iloc[item].reset_index()
+            return self.__class__(
+                self.name,
+                self.number,
+                self.dirname,
+                self.x,
+                use_cache=True,
+                callbacks=self.callbacks,
+                step_files=step_files,
+                table=table,
+            )
+        else:
+            raise TypeError(f"{type(item)=} is not supported")
 
     @property
     def info(self):
