@@ -52,8 +52,8 @@ class Mumax3Drive(md.Drive):
 
     """
 
-    def __init__(self, name, number, dirname="./", x=None):
-        super().__init__(name, number, dirname, x)
+    def __init__(self, name, number, dirname="./", x=None, **kwargs):
+        super().__init__(name, number, dirname, x, **kwargs)
 
         self._mumax_output_path = self.drive_path / f"{name}.out"
         if not self._mumax_output_path.exists():
@@ -66,11 +66,10 @@ class Mumax3Drive(md.Drive):
             # self.info["driver"] in ["TimeDriver", "RelaxDriver", "MinDriver"]:
             self._x = "t"
         else:
-            if value in self.table.data.columns:
-                self._x = value
-            else:
-                msg = f"Column {value=} does not exist in data."
-                raise ValueError(msg)
+            # self.table reads self.x so self._x has to be defined first
+            self._x = value
+            if value not in self.table.data.columns:
+                raise ValueError(f"Column {value=} does not exist in data.")
 
     @property
     def _step_files(self):

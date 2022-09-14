@@ -14,8 +14,8 @@ class AbstractDrive(abc.ABC):
 
     """
 
-    def __init__(self):
-        self._callbacks = []
+    def __init__(self, callbacks=None):
+        self._callbacks = callbacks or []
 
     @abc.abstractmethod
     def __repr__(self):
@@ -236,11 +236,13 @@ class AbstractDrive(abc.ABC):
         """Register a callback to which a field is passed before being returned."""
         if not callable(callback):
             raise TypeError("Argument is not callable.")
-        self._callbacks.append(callback)
-
-    def clear_callbacks(self):
-        """Remove all callbacks."""
-        self._callbacks = []
+        return self.__class__(
+            name=self.name,
+            number=self.number,
+            dirname=self.dirname,
+            x=self.x,
+            callbacks=self.callbacks + [callback],
+        )
 
     def _apply_callbacks(self, field):
         for callback in self._callbacks:

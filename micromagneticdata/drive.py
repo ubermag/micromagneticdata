@@ -64,7 +64,7 @@ class Drive(md.AbstractDrive):
 
     """
 
-    def __new__(cls, name, number, dirname=".", x=None):
+    def __new__(cls, name, number, dirname=".", x=None, **kwargs):
         """Create a new OOMMFDrive or Mumax3Drive depending on the directory structure.
 
         If a subdirectory <name>.out exists a Mumax3Drive is created else an
@@ -76,8 +76,8 @@ class Drive(md.AbstractDrive):
         else:
             return super().__new__(md.OOMMFDrive)
 
-    def __init__(self, name, number, dirname="./", x=None):
-        super().__init__()
+    def __init__(self, name, number, dirname="./", x=None, **kwargs):
+        super().__init__(**kwargs)
         self.drive_path = pathlib.Path(f"{dirname}/{name}/drive-{number}")
         if not self.drive_path.exists():
             msg = f"Directory {self.drive_path!r} does not exist."

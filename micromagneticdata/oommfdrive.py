@@ -52,8 +52,8 @@ class OOMMFDrive(md.Drive):
 
     """
 
-    def __init__(self, name, number, dirname="./", x=None):
-        super().__init__(name, number, dirname, x)
+    def __init__(self, name, number, dirname="./", x=None, **kwargs):
+        super().__init__(name, number, dirname, x, **kwargs)
 
     @AbstractDrive.x.setter
     def x(self, value):
@@ -65,11 +65,10 @@ class OOMMFDrive(md.Drive):
             elif self.info["driver"] == "HysteresisDriver":
                 self._x = "B_hysteresis"
         else:
-            if value in self.table.data.columns:
-                self._x = value
-            else:
-                msg = f"Column {value=} does not exist in data."
-                raise ValueError(msg)
+            self._x = value
+            # self.table reads self.x so self._x has to be defined first
+            if value not in self.table.data.columns:
+                raise ValueError(f"Column {value=} does not exist in data.")
 
     @property
     def _step_files(self):
