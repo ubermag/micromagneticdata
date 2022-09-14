@@ -1,4 +1,5 @@
 import abc
+import copy
 import json
 import numbers
 import pathlib
@@ -146,7 +147,7 @@ class Drive(md.AbstractDrive):
             return super().__getitem__(item)
         elif isinstance(item, slice):
             step_files = self._step_files[item]
-            table = self.table
+            table = copy.copy(self.table)
             table.data = table.data.iloc[item].reset_index()
             return self.__class__(
                 self.name,
