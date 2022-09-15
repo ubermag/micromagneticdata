@@ -110,7 +110,7 @@ class Mumax3Drive(md.Drive):
         ...                                'tests', 'test_sample')
         >>> drive = md.Drive(name='system_name', number=1, dirname=dirname)
         >>> drive
-        Mumax3Drive(name='system_name', number=1, dirname='.../test_sample', x='t')
+        Mumax3Drive(name='system_name', number=1, dirname='...test_sample', x='t')
 
         """
         return (
