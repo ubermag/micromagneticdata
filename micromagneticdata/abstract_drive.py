@@ -173,9 +173,9 @@ class AbstractDrive(abc.ABC):
 
         Returns
         -------
-        int
+        discretisedfield.Field
 
-            Step number.
+            Magnetisation field.
 
         Examples
         --------

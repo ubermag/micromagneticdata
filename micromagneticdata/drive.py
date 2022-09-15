@@ -143,6 +143,51 @@ class Drive(md.AbstractDrive):
         return self._step_file_list
 
     def __getitem__(self, item):
+        """Magnetisation field of an individual step or subpart of the drive.
+
+        If an ``int`` is passed a single magnetisation field (discretisedfield.Field
+        object) is returned.
+
+        If a slice is passed a new drive object with the magnetisation steps defined via
+        the slice is returned.
+
+        Returns
+        -------
+        discretisedfield.Field
+
+            Magnetisation field if an int is passed.
+
+        micromagneticdata.Drive
+
+            Drive with selected data if a slice is passed.
+
+        Examples
+        --------
+        1. Getting the field of a particular step.
+
+        >>> import os
+        >>> import micromagneticdata as md
+        ...
+        >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
+        ...                                'tests', 'test_sample')
+        >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
+        >>> drive[5]
+        Field(...)
+
+        2. Selecting a part of the drive.
+        >>> import os
+        >>> import micromagneticdata as md
+        ...
+        >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
+        ...                                'tests', 'test_sample')
+        >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
+        >>> selection = drive[:8:2]
+        >>> selection
+        OOMMFDrive(...)
+        >>> selection.n
+        4
+
+        """
         if isinstance(item, numbers.Integral):
             return super().__getitem__(item)
         elif isinstance(item, slice):
