@@ -71,9 +71,43 @@ class TestDrive:
             assert isinstance(drive.n, int)
         assert self.data[0].n == 25
 
-    def test_getitem(self):
+    def test_getitem_int(self):
         for i in range(self.data[0].n):
             assert isinstance(self.data[0][i], df.Field)
+
+    def test_getitem_slice(self):
+        drive = self.data[0]
+        assert drive.n == 25
+
+        sel = drive[:]
+        assert isinstance(sel, md.Drive)
+        assert sel.n == 25
+        assert len(list(sel)) == 25
+        assert sel.use_cache
+
+        sel = drive[:1]
+        assert isinstance(sel, md.Drive)
+        assert sel.n == 1
+        assert len(list(sel)) == 1
+        assert sel.use_cache
+
+        sel = drive[:-3]
+        assert isinstance(sel, md.Drive)
+        assert sel.n == 22
+        assert len(list(sel)) == 22
+        assert sel.use_cache
+
+        sel = drive[4:8]
+        assert isinstance(sel, md.Drive)
+        assert sel.n == 4
+        assert len(list(sel)) == 4
+        assert sel.use_cache
+
+        sel = drive[::2]
+        assert isinstance(sel, md.Drive)
+        assert sel.n == 13
+        assert len(list(sel)) == 13
+        assert sel.use_cache
 
     def test_iter(self):
         for drive in self.data:
