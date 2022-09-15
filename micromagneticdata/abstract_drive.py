@@ -2,6 +2,7 @@ import abc
 import contextlib
 
 import discretisedfield as df
+import discretisedfield.plotting as dfp
 import numpy as np
 import xarray as xr
 from discretisedfield.plotting.util import hv_key_dim
@@ -410,7 +411,7 @@ class AbstractDrive(abc.ABC):
         :DynamicMap...
 
         """
-        return df.plotting.Hv(self._hv_key_dims, self._hv_data_selection)
+        return dfp.Hv(self._hv_key_dims, self._hv_data_selection, self._hv_vdims_guess)
 
     def _hv_data_selection(self, **kwargs):
         if self.x in self._hv_key_dims:
@@ -423,6 +424,12 @@ class AbstractDrive(abc.ABC):
         else:
             n = -1
         return self[n]._hv_data_selection(**kwargs)
+
+    def _hv_vdims_guess(self, kdims):
+        """Try to find vector components matching the given kdims."""
+        if self.x in kdims:
+            return None
+        return self[0]._hv_vdims_guess(kdims)
 
     @property
     def _hv_key_dims(self):
