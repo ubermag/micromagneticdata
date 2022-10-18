@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 import ubermagtable as ut
 import xarray as xr
+from discretisedfield.tests.test_field import check_hv
 
 import micromagneticdata as md
 
@@ -158,3 +159,25 @@ class TestDrive:
             assert np.min(field.array) >= -1.0
 
         assert len(processed.callbacks) == 2
+
+    def test_hv(self):
+        # time drive
+        check_hv(
+            self.combined_drives[0].hv(kdims=["y", "z"], vdims=["y", "z"]),
+            ["DynamicMap [x,t]", "Image [y,z]", "VectorField [y,z]"],
+        )
+        check_hv(
+            self.combined_drives[0].hv.scalar(kdims=["y", "z"]),
+            ["DynamicMap [x,comp,t]", "Image [y,z]"],
+        )
+
+        with pytest.raises(NotImplementedError):
+            check_hv(self.combined_drives[0].hv.scalar(kdims=["x", "t"]), ...)
+
+        # min drive with steps
+        check_hv(
+            self.combined_drives[2]
+            .register_callback(lambda f: f.plane("y"))
+            .hv.vector(kdims=["x", "z"]),
+            ["DynamicMap [iteration]", "VectorField [x,z]"],
+        )

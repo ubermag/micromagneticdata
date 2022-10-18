@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 import ubermagtable as ut
 import xarray as xr
+from discretisedfield.tests.test_field import check_hv
 
 import micromagneticdata as md
 
@@ -168,31 +169,32 @@ class TestDrive:
                 )
 
     def test_hv(self):
-        for drive in self.data:
-            # some drives have only one z layer -> only xy plane
-            drive.hv(kdims=["x", "y"])
-        # time drives: 0, 1, 2, 4
-        plot = self.data[0].hv(kdims=["y", "z"], vdims=["y", "z"])
-        assert len(plot.kdims) == 2
-        assert "x" in plot.kdims
-        assert "t" in plot.kdims
+        # time drive
+        check_hv(
+            self.data[0].hv(kdims=["y", "z"], vdims=["y", "z"]),
+            ["DynamicMap [x,t]", "Image [y,z]", "VectorField [y,z]"],
+        )
+        check_hv(
+            self.data[0].hv.scalar(kdims=["y", "z"]),
+            ["DynamicMap [x,comp,t]", "Image [y,z]"],
+        )
 
-        plot = self.data[0].hv.scalar(kdims=["x", "t"])
-        assert len(plot.kdims) == 3
-        assert "comp" in plot.kdims
-        assert "y" in plot.kdims
-        assert "z" in plot.kdims
+        with pytest.raises(NotImplementedError):
+            check_hv(self.data[0].hv.scalar(kdims=["x", "t"]), ...)
 
-        plot = self.data[0].hv.vector(kdims=["x", "t"], vdims=["x", None], cdim="z")
-        assert len(plot.kdims) == 2
-        assert "y" in plot.kdims
-        assert "z" in plot.kdims
+        # min drive
+        check_hv(
+            self.data[4]
+            .register_callback(lambda f: f.plane("z"))
+            .hv.vector(kdims=["x", "y"]),
+            ["VectorField [x,y]"],
+        )
 
-        plot = self.data[2].hv.contour(kdims=["x", "t"])
-        assert len(plot.kdims) == 3
-        assert "comp" in plot.kdims
-        assert "y" in plot.kdims
-        assert "z" in plot.kdims
+        # min drive with steps
+        check_hv(
+            self.data[6].hv.vector(kdims=["x", "y"]),
+            ["DynamicMap [z,iteration]", "VectorField [x,y]"],
+        )
 
     def test_register_callback(self):
         for drive in self.data:
