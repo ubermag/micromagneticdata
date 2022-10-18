@@ -71,9 +71,13 @@ class OOMMFDrive(md.Drive):
             elif self.info["driver"] == "HysteresisDriver":
                 self._x = "B_hysteresis"
         else:
-            self._x = value
             # self.table reads self.x so self._x has to be defined first
+            if hasattr(self, "_x"):
+                # store old value to reset in case value is invalid
+                _x = self._x
+            self._x = value
             if value not in self.table.data.columns:
+                self._x = _x
                 raise ValueError(f"Column {value=} does not exist in data.")
 
     @property
