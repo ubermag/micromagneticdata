@@ -293,6 +293,13 @@ class Drive(md.AbstractDrive):
         This method iterates through all magnetisation fields in the drive and
         generates a VTK file for each of them.
 
+        Parameters
+        ----------
+
+        dirname : pathlib.Path
+
+            Directory in which files are saved.
+
         Examples
         --------
         1. Iterating drive.

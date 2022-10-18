@@ -1,5 +1,4 @@
 import os
-import tempfile
 
 import discretisedfield as df
 import ipywidgets
@@ -116,9 +115,8 @@ class TestDrive:
 
         assert len(list(self.data[0])) == 25
 
-    def test_ovf2vtk(self):
-        with tempfile.TemporaryDirectory() as tmpdir:
-            self.data[0].ovf2vtk(dirname=tmpdir)
+    def test_ovf2vtk(self, tmp_path):
+        self.data[0].ovf2vtk(dirname=tmp_path)
 
     def test_slider(self):
         for drive in self.data:
