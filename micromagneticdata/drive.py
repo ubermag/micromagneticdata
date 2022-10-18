@@ -43,6 +43,13 @@ class Drive(md.AbstractDrive):
         Independent variable column name. Defaults to ``None`` and depending on
         the driver used, one is found automatically.
 
+    use_cache : bool, optional
+
+        If ``True`` the Drive object will read tabular data and the names and number of
+        magnetisation files only once. Note: this prevents Drive to detect new data when
+        looking at the output of a running simulation. If set to ``False`` the data is
+        read every time the user accesses it. Defaults to ``False``.
+
     Raises
     ------
     IOError
@@ -83,7 +90,7 @@ class Drive(md.AbstractDrive):
             return super().__new__(md.OOMMFDrive)
 
     def __init__(self, name, number, dirname="./", x=None, use_cache=False, **kwargs):
-        # use kwargs to not expose additional "internal" arguments to users
+        # use kwargs to not expose the following additional internal arguments to users
         self._step_file_list = kwargs.pop("step_files", [])
         self._table = kwargs.pop("table", None)
 
@@ -101,6 +108,20 @@ class Drive(md.AbstractDrive):
 
     @property
     def use_cache(self):
+        """Use caching for scalar data and the list of magnetisation files.
+
+        The existing cache is cleared when set to ``False``.
+
+        Parameters
+        ----------
+        use_cache : bool
+
+            If ``True`` the Drive object will read tabular data and the names and number
+            of magnetisation files only once. Note: this prevents Drive to detect new
+            data when looking at the output of a running simulation. If set to ``False``
+            the data is read every time the user accesses it. Defaults to ``False``.
+
+        """
         return self._use_cache
 
     @use_cache.setter
@@ -146,10 +167,12 @@ class Drive(md.AbstractDrive):
         """Magnetisation field of an individual step or subpart of the drive.
 
         If an ``int`` is passed a single magnetisation field (discretisedfield.Field
-        object) is returned.
+        object) is returned. Additional callbacks (if registered) are applied to this
+        field before it is returned.
 
         If a slice is passed a new drive object with the magnetisation steps defined via
-        the slice is returned.
+        the slice is returned. Additional callbacks (if registered) are passed to the
+        new drive object.
 
         Returns
         -------

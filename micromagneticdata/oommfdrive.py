@@ -32,6 +32,13 @@ class OOMMFDrive(md.Drive):
         Independent variable column name. Defaults to ``None`` and depending on
         the driver used, one is found automatically.
 
+    use_cache : bool, optional
+
+        If ``True`` the Drive object will read tabular data and the names and number of
+        magnetisation files only once. Note: this prevents Drive to detect new data when
+        looking at the output of a running simulation. If set to ``False`` the data is
+        read every time the user accesses it. Defaults to ``False``.
+
     Raises
     ------
     IOError

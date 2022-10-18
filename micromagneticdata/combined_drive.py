@@ -18,6 +18,10 @@ class CombinedDrive(md.AbstractDrive):
     ----------
     drives : List[Drive]
 
+    kwargs
+
+       Additional keyword arguments that are passed to AbstractDrive()
+
     Raises
     ------
     ValueError

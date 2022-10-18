@@ -422,6 +422,7 @@ class AbstractDrive(abc.ABC):
         return dfp.Hv(self._hv_key_dims, self._hv_data_selection, self._hv_vdims_guess)
 
     def _hv_data_selection(self, **kwargs):
+        """Select one field for plotting in holoviews."""
         if self.x in self._hv_key_dims:
             if self.x not in kwargs:
                 raise NotImplementedError(
@@ -441,6 +442,12 @@ class AbstractDrive(abc.ABC):
 
     @property
     def _hv_key_dims(self):
+        """Key dimensions for holoviews.
+
+        Key dimensions are the independent variable of the drive and all field key
+        dimensions.
+
+        """
         key_dims = self[0]._hv_key_dims
         if len(self.table.data) > 1:
             key_dims[self.x] = hv_key_dim(
