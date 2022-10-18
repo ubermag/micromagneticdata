@@ -13,6 +13,14 @@ class AbstractDrive(abc.ABC):
 
     This class provides utility for the analysis of individual drives.
 
+    Parameters
+    ----------
+
+    callbacks : list of callables, optional
+
+        List of callback functions that are applied to individual fields of the drive
+        when accessing them.
+
     """
 
     def __init__(self, callbacks=None):
