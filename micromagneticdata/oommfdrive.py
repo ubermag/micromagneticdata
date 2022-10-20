@@ -1,4 +1,3 @@
-import ubermagtable as ut
 import ubermagutil as uu
 
 import micromagneticdata as md
@@ -33,6 +32,13 @@ class OOMMFDrive(md.Drive):
         Independent variable column name. Defaults to ``None`` and depending on
         the driver used, one is found automatically.
 
+    use_cache : bool, optional
+
+        If ``True`` the Drive object will read tabular data and the names and number of
+        magnetisation files only once. Note: this prevents Drive to detect new data when
+        looking at the output of a running simulation. If set to ``False`` the data is
+        read every time the user accesses it. Defaults to ``False``.
+
     Raises
     ------
     IOError
@@ -52,8 +58,8 @@ class OOMMFDrive(md.Drive):
 
     """
 
-    def __init__(self, name, number, dirname="./", x=None):
-        super().__init__(name, number, dirname, x)
+    def __init__(self, name, number, dirname="./", x=None, use_cache=False, **kwargs):
+        super().__init__(name, number, dirname, x, use_cache, **kwargs)
 
     @AbstractDrive.x.setter
     def x(self, value):
@@ -65,24 +71,27 @@ class OOMMFDrive(md.Drive):
             elif self.info["driver"] == "HysteresisDriver":
                 self._x = "B_hysteresis"
         else:
-            if value in self.table.data.columns:
-                self._x = value
-            else:
-                msg = f"Column {value=} does not exist in data."
-                raise ValueError(msg)
+            # self.table reads self.x so self._x has to be defined first
+            if hasattr(self, "_x"):
+                # store old value to reset in case value is invalid
+                _x = self._x
+            self._x = value
+            if value not in self.table.data.columns:
+                self._x = _x
+                raise ValueError(f"Column {value=} does not exist in data.")
 
     @property
-    def _step_files(self):
-        return sorted(map(str, self.drive_path.glob(f"{self.name}*.omf")))
+    def _table_path(self):
+        return self.drive_path / f"{self.name}.odt"
+
+    @property
+    def _step_file_glob(self):
+        return self.drive_path.glob(f"{self.name}*.omf")
 
     @property
     def calculator_script(self):
         with (self.drive_path / f"{self.name}.mif").open() as f:
             return f.read()
-
-    @property
-    def table(self):
-        return ut.Table.fromfile(str(self.drive_path / f"{self.name}.odt"), x=self.x)
 
     def __repr__(self):
         """Representation string.
@@ -104,7 +113,7 @@ class OOMMFDrive(md.Drive):
         ...                                'tests', 'test_sample')
         >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
         >>> drive
-        OOMMFDrive(...)
+        OOMMFDrive(name='system_name', number=0, dirname='...test_sample', x='t')
 
         """
         return (

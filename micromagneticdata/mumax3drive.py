@@ -1,4 +1,5 @@
-import ubermagtable as ut
+import pathlib
+
 import ubermagutil as uu
 
 import micromagneticdata as md
@@ -33,6 +34,13 @@ class Mumax3Drive(md.Drive):
         Independent variable column name. Defaults to ``None`` and depending on
         the driver used, one is found automatically.
 
+    use_cache : bool, optional
+
+        If ``True`` the Drive object will read tabular data and the names and number of
+        magnetisation files only once. Note: this prevents Drive to detect new data when
+        looking at the output of a running simulation. If set to ``False`` the data is
+        read every time the user accesses it. Defaults to ``False``.
+
     Raises
     ------
     IOError
@@ -48,17 +56,22 @@ class Mumax3Drive(md.Drive):
     ...
     >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
     ...                                'tests', 'test_sample')
-    >>> drive = md.Drive(name='system_name', number=7, dirname=dirname)
+    >>> drive = md.Drive(name='system_name', number=1, dirname=dirname)
+    >>> drive
+    Mumax3Drive(...)
 
     """
 
-    def __init__(self, name, number, dirname="./", x=None):
-        super().__init__(name, number, dirname, x)
-
-        self._mumax_output_path = self.drive_path / f"{name}.out"
+    def __init__(self, name, number, dirname="./", x=None, use_cache=False, **kwargs):
+        self._mumax_output_path = pathlib.Path(
+            f"{dirname}/{name}/drive-{number}/{name}.out"
+        )  # required to initialise self.x in super
         if not self._mumax_output_path.exists():
-            msg = f"Output directory {self._mumax_output_path!r} does not exist."
-            raise IOError(msg)
+            raise IOError(
+                f"Output directory {self._mumax_output_path!r} does not exist."
+            )
+
+        super().__init__(name, number, dirname, x, use_cache, **kwargs)
 
     @AbstractDrive.x.setter
     def x(self, value):
@@ -66,24 +79,27 @@ class Mumax3Drive(md.Drive):
             # self.info["driver"] in ["TimeDriver", "RelaxDriver", "MinDriver"]:
             self._x = "t"
         else:
-            if value in self.table.data.columns:
-                self._x = value
-            else:
-                msg = f"Column {value=} does not exist in data."
-                raise ValueError(msg)
+            # self.table reads self.x so self._x has to be defined first
+            if hasattr(self, "_x"):
+                # store old value to reset in case value is invalid
+                _x = self._x
+            self._x = value
+            if value not in self.table.data.columns:
+                self._x = _x
+                raise ValueError(f"Column {value=} does not exist in data.")
 
     @property
-    def _step_files(self):
-        return sorted(map(str, self._mumax_output_path.glob("*.ovf")))
+    def _table_path(self):
+        return self._mumax_output_path / "table.txt"
+
+    @property
+    def _step_file_glob(self):
+        return self._mumax_output_path.glob("*.ovf")
 
     @property
     def calculator_script(self):
         with (self.drive_path / f"{self.name}.mx3").open() as f:
             return f.read()
-
-    @property
-    def table(self):
-        return ut.Table.fromfile(str(self._mumax_output_path / "table.txt"), x=self.x)
 
     def __repr__(self):
         """Representation string.
@@ -103,9 +119,9 @@ class Mumax3Drive(md.Drive):
         ...
         >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
         ...                                'tests', 'test_sample')
-        >>> drive = md.Drive(name='system_name', number=7, dirname=dirname)
+        >>> drive = md.Drive(name='system_name', number=1, dirname=dirname)
         >>> drive
-        Mumax3Drive(...)
+        Mumax3Drive(name='system_name', number=1, dirname='...test_sample', x='t')
 
         """
         return (

@@ -12,6 +12,7 @@ class TestData:
         self.dirname = os.path.join(os.path.dirname(__file__), "test_sample")
         self.name = "system_name"
         self.data = md.Data(name=self.name, dirname=self.dirname)
+        self.N_SAMPLES = 7
 
     def test_init(self):
         assert isinstance(self.data, md.Data)
@@ -26,17 +27,17 @@ class TestData:
 
     def test_info(self):
         assert isinstance(self.data.info, pd.DataFrame)
-        assert len(self.data.info.index) == 10
+        assert len(self.data.info.index) == self.N_SAMPLES
 
     def test_n(self):
-        assert self.data.n == 10
+        assert self.data.n == self.N_SAMPLES
 
     def test_getitem(self):
-        for i in [-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]:
+        for i in range(-self.N_SAMPLES, self.N_SAMPLES):
             assert isinstance(self.data[i], md.Drive)
 
     def test_iter(self):
-        assert len(list(self.data)) == 10
+        assert len(list(self.data)) == self.N_SAMPLES
 
     def test_selector(self):
         assert isinstance(self.data.selector(), ipywidgets.BoundedIntText)

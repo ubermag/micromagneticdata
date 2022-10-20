@@ -6,23 +6,27 @@ import numpy as np
 import pytest
 import ubermagtable as ut
 import xarray as xr
+from discretisedfield.tests.test_field import check_hv
 
 import micromagneticdata as md
 
 
 class TestDrive:
-    # drives 0, 1, 2, 4: TimeDriver
-    # drives 3, 5: MinDriver
-    # drives 6: HysteresisDriver
+    # TimeDriver: 0, 1, 2, 5
+    # MinDriver: 4, 6
+    # RelaxDriver: 3
+    # HysteresisDriver: 7 [CURRENTLY MISSING IN THE DATASET]
     def setup(self):
         self.dirname = os.path.join(os.path.dirname(__file__), "test_sample")
         self.name = "system_name"
         self.data = md.Data(name=self.name, dirname=self.dirname)
         self.combined_drives = [
             self.data[0] << self.data[1] << self.data[2],
-            self.data[3] << self.data[5],
+            self.data[3] << self.data[3],
             self.data[6] << self.data[6],
         ]
+        data = md.Data(name="hysteresis", dirname=self.dirname)
+        self.combined_drives.append(data[0] << data[0])
 
     def test_init(self):
         combined_drive = md.CombinedDrive(self.data[0], self.data[1])
@@ -54,6 +58,7 @@ class TestDrive:
             assert isinstance(combined.info["drive_numbers"], list)
             assert combined.info["driver"] in [
                 "MinDriver",
+                "RelaxDriver",
                 "TimeDriver",
                 "HysteresisDriver",
             ]
@@ -68,7 +73,7 @@ class TestDrive:
             assert drive.table.x == drive.x
 
     def test_n(self):
-        assert tuple(drive.n for drive in self.combined_drives) == (50, 15, 82)
+        assert tuple(drive.n for drive in self.combined_drives) == (290, 2, 28, 82)
 
     def test_getitem(self):
         assert all(
@@ -81,12 +86,13 @@ class TestDrive:
             for m in drive:
                 assert isinstance(m, df.Field)
 
-        assert len(list(self.combined_drives[0])) == 50
+        assert len(list(self.combined_drives[0])) == 290
 
     def test_lshift(self):
-        # drives 0, 1, 2, 4: TimeDriver
-        # drives 3, 5: MinDriver
-        # drives 6: HysteresisDriver
+        # TimeDriver: 0, 1, 2, 5
+        # MinDriver: 4, 6
+        # RelaxDriver: 3
+        # HysteresisDriver: 7 [CURRENTLY MISSING IN THE DATASET]
         for d1, d2, n_drives in itertools.chain(
             zip(self.combined_drives, self.combined_drives, [6, 4, 4]),
             zip(
@@ -109,9 +115,7 @@ class TestDrive:
 
         # different independent variable
         with pytest.raises(ValueError):
-            self.combined_drives[0] << self.data[3]
-        with pytest.raises(ValueError):
-            self.combined_drives[0] << self.combined_drives[1]
+            self.combined_drives[0] << self.data[6]
         with pytest.raises(TypeError):
             self.combined_drives[0] << 1
 
@@ -136,3 +140,44 @@ class TestDrive:
                     )
                     for i in "xyz"
                 )
+
+    def test_register_callback(self):
+        for drive in self.combined_drives:
+            drive_orientation = drive.register_callback(lambda field: field.orientation)
+            assert isinstance(drive_orientation, drive.__class__)
+            assert len(drive_orientation._callbacks) == 1
+            for field in drive_orientation:
+                assert np.max(field.array) <= 1.0
+                assert np.min(field.array) >= -1.0
+
+        drive = self.combined_drives[0]
+        processed = drive.register_callback(lambda f: f.orientation)
+        processed = processed.register_callback(lambda f: f.x)
+        for field in processed:
+            assert field.dim == 1
+            assert np.max(field.array) <= 1.0
+            assert np.min(field.array) >= -1.0
+
+        assert len(processed.callbacks) == 2
+
+    def test_hv(self):
+        # time drive
+        check_hv(
+            self.combined_drives[0].hv(kdims=["y", "z"], vdims=["y", "z"]),
+            ["DynamicMap [x,t]", "Image [y,z]", "VectorField [y,z]"],
+        )
+        check_hv(
+            self.combined_drives[0].hv.scalar(kdims=["y", "z"]),
+            ["DynamicMap [x,comp,t]", "Image [y,z]"],
+        )
+
+        with pytest.raises(NotImplementedError):
+            check_hv(self.combined_drives[0].hv.scalar(kdims=["x", "t"]), ...)
+
+        # min drive with steps
+        check_hv(
+            self.combined_drives[2]
+            .register_callback(lambda f: f.plane("y"))
+            .hv.vector(kdims=["x", "z"]),
+            ["DynamicMap [iteration]", "VectorField [x,z]"],
+        )

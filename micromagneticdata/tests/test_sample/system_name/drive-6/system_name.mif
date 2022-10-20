@@ -46,14 +46,6 @@ Specify Oxs_VecMagScalarField:m0_norm {
 Specify Oxs_CGEvolve:evolver {
 }
 
-# OxS_UZeeman
-Specify Oxs_UZeeman:hysteresis {
-  Hrange {
-    { 0 0 1000000.0 0 0 -1000000.0 20 }
-    { 0 0 -1000000.0 0 0 1000000.0 20 }
-  }
-}
-
 # MinDriver
 Specify Oxs_MinDriver {
   evolver :evolver
@@ -66,5 +58,5 @@ Specify Oxs_MinDriver {
 Destination table mmArchive
 Destination mags mmArchive
 
-Schedule DataTable table Stage 1
-Schedule Oxs_MinDriver::Magnetization mags Stage 1
+Schedule DataTable table Step 1
+Schedule Oxs_MinDriver::Magnetization mags Step 1

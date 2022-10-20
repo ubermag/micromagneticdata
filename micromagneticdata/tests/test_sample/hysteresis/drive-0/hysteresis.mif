@@ -1,0 +1,80 @@
+# MIF 2.2
+
+SetOptions {
+  basename hysteresis
+  scalar_output_format %.12g
+  scalar_field_output_format {binary 8}
+  vector_field_output_format {binary 8}
+}
+
+# BoxAtlas for main_atlas
+Specify Oxs_BoxAtlas:main_atlas {
+  xrange { -5e-08 5e-08 }
+  yrange { -5e-08 5e-08 }
+  zrange { -5e-08 5e-08 }
+  name main
+}
+
+# RectangularMesh
+Specify Oxs_RectangularMesh:mesh {
+  cellsize { 5e-09 5e-09 5e-09 }
+  atlas :main_atlas
+}
+
+# UniformExchange
+Specify Oxs_UniformExchange:exchange {
+  A 1e-12
+}
+
+# UniaxialAnisotropy
+Specify Oxs_UniaxialAnisotropy:uniaxialanisotropy {
+  K1 400000.0
+  axis {0 0 1}
+}
+
+# DMI of crystallographic class T
+Specify Oxs_DMI_T:dmi {
+  default_D 0.001
+  atlas :main_atlas
+  D {
+    main main 0.001
+  }
+}
+
+# m0 file
+Specify Oxs_FileVectorField:m0 {
+  file m0.omf
+  atlas :main_atlas
+}
+
+# m0_norm
+Specify Oxs_VecMagScalarField:m0_norm {
+    field :m0
+}
+
+# CGEvolver
+Specify Oxs_CGEvolve:evolver {
+}
+
+# OxS_UZeeman
+Specify Oxs_UZeeman:hysteresis {
+  Hrange {
+    { 0 0 -795774.7154594767 0 0 795774.7154594767 20 }
+    { 0 0 795774.7154594767 0 0 -795774.7154594767 20 }
+  }
+}
+
+# MinDriver
+Specify Oxs_MinDriver {
+  evolver :evolver
+  mesh :mesh
+  Ms :m0_norm
+  m0 :m0
+  stopping_mxHxm 0.1
+}
+
+Destination table mmArchive
+Destination mags mmArchive
+
+Schedule DataTable table Stage 1
+Schedule Oxs_MinDriver::Magnetization mags Stage 1

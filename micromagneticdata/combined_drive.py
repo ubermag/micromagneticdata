@@ -18,6 +18,10 @@ class CombinedDrive(md.AbstractDrive):
     ----------
     drives : List[Drive]
 
+    kwargs
+
+       Additional keyword arguments that are passed to AbstractDrive()
+
     Raises
     ------
     ValueError
@@ -42,7 +46,8 @@ class CombinedDrive(md.AbstractDrive):
 
     """
 
-    def __init__(self, *drives):
+    def __init__(self, *drives, **kwargs):
+        super().__init__(**kwargs)
         if len(drives) < 2:
             raise ValueError("At least two drives must be pased.")
         for drive in drives:
@@ -129,32 +134,6 @@ class CombinedDrive(md.AbstractDrive):
 
     @property
     def table(self):
-        """Table object.
-
-        This property returns an ``ubermagtable.Table`` object. As an
-        independent variable ``x``, the column chosen via ``x`` property is
-        selected.
-
-        Returns
-        -------
-        ubermagtable.Table
-
-            Table object.
-
-        Examples
-        --------
-        1. Getting table object.
-
-        >>> import os
-        >>> import micromagneticdata as md
-        ...
-        >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
-        ...                                'tests', 'test_sample')
-        >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
-        >>> drive.table
-                       E...
-
-        """
         return self._table
 
     @property
@@ -167,3 +146,11 @@ class CombinedDrive(md.AbstractDrive):
         elif isinstance(other, self.__class__):
             return self.__class__(*self.drives, *other.drives)
         raise TypeError(f"Invalid type {other=}.")
+
+    def register_callback(self, callback):
+        if not callable(callback):
+            raise TypeError("Argument is not callable.")
+        return self.__class__(
+            *self.drives,
+            callbacks=self.callbacks + [callback],
+        )

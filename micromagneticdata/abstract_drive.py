@@ -1,8 +1,11 @@
 import abc
+import contextlib
 
 import discretisedfield as df
+import discretisedfield.plotting as dfp
 import numpy as np
 import xarray as xr
+from discretisedfield.plotting.util import hv_key_dim
 
 
 class AbstractDrive(abc.ABC):
@@ -10,7 +13,18 @@ class AbstractDrive(abc.ABC):
 
     This class provides utility for the analysis of individual drives.
 
+    Parameters
+    ----------
+
+    callbacks : list of callables, optional
+
+        List of callback functions that are applied to individual fields of the drive
+        when accessing them.
+
     """
+
+    def __init__(self, callbacks=None):
+        self._callbacks = callbacks or []
 
     @abc.abstractmethod
     def __repr__(self):
@@ -48,7 +62,7 @@ class AbstractDrive(abc.ABC):
         ...
         >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
         ...                                'tests', 'test_sample')
-        >>> drive = md.Drive(name='system_name', number=6, dirname=dirname)
+        >>> drive = md.Data(name='hysteresis', dirname=dirname)[0]
         >>> drive.x
         'B_hysteresis'
         >>> drive.x = 'Bx_hysteresis'
@@ -93,7 +107,7 @@ class AbstractDrive(abc.ABC):
         Field(...)
 
         """
-        return df.Field.fromfile(str(self._m0_path))
+        return df.Field.fromfile(self._m0_path)
 
     @property
     @abc.abstractmethod
@@ -168,9 +182,9 @@ class AbstractDrive(abc.ABC):
 
         Returns
         -------
-        int
+        discretisedfield.Field
 
-            Step number.
+            Magnetisation field.
 
         Examples
         --------
@@ -186,7 +200,10 @@ class AbstractDrive(abc.ABC):
         Field(...)
 
         """
-        return df.Field.fromfile(filename=self._step_files[item])
+        field = df.Field.fromfile(filename=self._step_files[item])
+        with contextlib.suppress(FileNotFoundError):
+            field.mesh.load_subregions(self._m0_path)
+        return self._apply_callbacks(field)
 
     def __iter__(self):
         """Iterator.
@@ -214,7 +231,24 @@ class AbstractDrive(abc.ABC):
         [...]
 
         """
-        yield from map(df.Field.fromfile, self._step_files)
+        for field in map(df.Field.fromfile, self._step_files):
+            with contextlib.suppress(FileNotFoundError):
+                field.mesh.load_subregions(self._m0_path)
+            yield self._apply_callbacks(field)
+
+    @property
+    def callbacks(self):
+        """Return all registered callbacks."""
+        return self._callbacks
+
+    @abc.abstractmethod
+    def register_callback(self, callback):
+        """Register a callback to which a field is passed before being returned."""
+
+    def _apply_callbacks(self, field):
+        for callback in self._callbacks:
+            field = callback(field)
+        return field
 
     @abc.abstractmethod
     def __lshift__(self, other):
@@ -324,9 +358,14 @@ class AbstractDrive(abc.ABC):
             )
             for i, field in enumerate(self):
                 array[i] = field.array
+            # remove "comp" dimension for scalar fields
+            if self[0].dim == 1:
+                array = np.squeeze(array, axis=-1)
+
             field_0 = self[0].to_xarray(*args, **kwargs)
             coords = dict(field_0.coords)
             coords[self.table.x] = self.table.data[self.table.x]
+
             darray = xr.DataArray(
                 array, coords=coords, dims=[self.table.x, *field_0.dims]
             )
@@ -380,4 +419,39 @@ class AbstractDrive(abc.ABC):
         :DynamicMap...
 
         """
-        return df.plotting.Hv(self.to_xarray())
+        return dfp.Hv(self._hv_key_dims, self._hv_data_selection, self._hv_vdims_guess)
+
+    def _hv_data_selection(self, **kwargs):
+        """Select one field for plotting in holoviews."""
+        if self.x in self._hv_key_dims:
+            if self.x not in kwargs:
+                raise NotImplementedError(
+                    f"The dimension {self.x} cannot be a key dimension"
+                )
+            value = kwargs.pop(self.x)
+            n = self.table.data.loc[self.table.data[self.x] == value].index[0]
+        else:
+            n = -1
+        return self[n]._hv_data_selection(**kwargs)
+
+    def _hv_vdims_guess(self, kdims):
+        """Try to find vector components matching the given kdims."""
+        if self.x in kdims:
+            return None
+        return self[0]._hv_vdims_guess(kdims)
+
+    @property
+    def _hv_key_dims(self):
+        """Key dimensions for holoviews.
+
+        Key dimensions are the independent variable of the drive and all field key
+        dimensions.
+
+        """
+        key_dims = self[0]._hv_key_dims
+        if len(self.table.data) > 1:
+            key_dims[self.x] = hv_key_dim(
+                self.table.data[self.x].to_numpy(),
+                self.table.units[self.x],
+            )
+        return key_dims

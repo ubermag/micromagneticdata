@@ -42,21 +42,25 @@ Specify Oxs_VecMagScalarField:m0_norm {
     field :m0
 }
 
-# CGEvolver
-Specify Oxs_CGEvolve:evolver {
+# RungeKuttaEvolver
+Specify Oxs_RungeKuttaEvolve:evolver {
+  alpha 0.02
+  gamma_G 221276.14872118403
 }
 
-# MinDriver
-Specify Oxs_MinDriver {
+# TimeDriver
+Specify Oxs_TimeDriver {
   evolver :evolver
   mesh :mesh
   Ms :m0_norm
   m0 :m0
-  stopping_mxHxm 0.1
+  stopping_time 1e-12
+  stage_count 5
 }
 
 Destination table mmArchive
 Destination mags mmArchive
+Destination archive mmArchive
 
-Schedule DataTable table Step 1
-Schedule Oxs_MinDriver::Magnetization mags Step 1
+Schedule DataTable table Stage 1
+Schedule Oxs_TimeDriver::Magnetization mags Stage 1
