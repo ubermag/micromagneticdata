@@ -177,6 +177,7 @@ class AbstractDrive(abc.ABC):
     def _step_files(self):
         """List of filenames of individual snapshots."""
 
+    @abc.abstractmethod
     def __getitem__(self, item):
         """Magnetisation field of an individual step.
 
@@ -200,10 +201,6 @@ class AbstractDrive(abc.ABC):
         Field(...)
 
         """
-        field = df.Field.fromfile(filename=self._step_files[item])
-        with contextlib.suppress(FileNotFoundError):
-            field.mesh.load_subregions(self._m0_path)
-        return self._apply_callbacks(field)
 
     def __iter__(self):
         """Iterator.

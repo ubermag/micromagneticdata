@@ -1,4 +1,5 @@
 import functools
+import numbers
 import operator
 
 import ubermagutil as uu
@@ -139,6 +140,16 @@ class CombinedDrive(md.AbstractDrive):
     @property
     def _step_files(self):
         return sum((drive._step_files for drive in self.drives), start=[])
+
+    def __getitem__(self, item):
+        if not isinstance(item, numbers.Integral):
+            raise TypeError(f"{type(item)=} is not supported")
+        if item >= self.n or item < -self.n:
+            raise IndexError("List index out of range.")
+        for drive in self.drives:
+            if item < drive.n:
+                return self._apply_callbacks(drive[item])
+            item -= drive.n
 
     def __lshift__(self, other):
         if isinstance(other, md.Drive):
