@@ -1,4 +1,5 @@
 import abc
+import contextlib
 import copy
 import json
 import numbers
@@ -212,7 +213,10 @@ class Drive(md.AbstractDrive):
 
         """
         if isinstance(item, numbers.Integral):
-            return super().__getitem__(item)
+            field = df.Field.fromfile(filename=self._step_files[item])
+            with contextlib.suppress(FileNotFoundError):
+                field.mesh.load_subregions(self._m0_path)
+            return self._apply_callbacks(field)
         elif isinstance(item, slice):
             step_files = self._step_files[item]
             table = copy.copy(self.table)
