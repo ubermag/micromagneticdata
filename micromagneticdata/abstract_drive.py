@@ -200,7 +200,7 @@ class AbstractDrive(abc.ABC):
         Field(...)
 
         """
-        field = df.Field.fromfile(filename=self._step_files[item])
+        field = df.Field.from_file(filename=self._step_files[item])
         with contextlib.suppress(FileNotFoundError):
             field.mesh.load_subregions(self._m0_path)
         return self._apply_callbacks(field)
