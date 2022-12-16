@@ -107,7 +107,7 @@ class AbstractDrive(abc.ABC):
         Field(...)
 
         """
-        return df.Field.fromfile(self._m0_path)
+        return df.Field.from_file(self._m0_path)
 
     @property
     @abc.abstractmethod
@@ -231,7 +231,7 @@ class AbstractDrive(abc.ABC):
         [...]
 
         """
-        for field in map(df.Field.fromfile, self._step_files):
+        for field in map(df.Field.from_file, self._step_files):
             with contextlib.suppress(FileNotFoundError):
                 field.mesh.load_subregions(self._m0_path)
             yield self._apply_callbacks(field)
@@ -354,12 +354,12 @@ class AbstractDrive(abc.ABC):
             # field_darrays = (field.to_xarray(*args, **kwargs) for field in self)
             # darray = xr.concat(field_darrays, dim=self.table.data[self.table.x])
             array = np.empty(
-                (self.n, *self[0].mesh.n, self[0].dim), dtype=self[0].array.dtype
+                (self.n, *self[0].mesh.n, self[0].nvdim), dtype=self[0].array.dtype
             )
             for i, field in enumerate(self):
                 array[i] = field.array
             # remove "comp" dimension for scalar fields
-            if self[0].dim == 1:
+            if self[0].nvdim == 1:
                 array = np.squeeze(array, axis=-1)
 
             field_0 = self[0].to_xarray(*args, **kwargs)

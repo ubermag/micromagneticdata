@@ -209,7 +209,7 @@ class TestDrive:
         processed = drive.register_callback(lambda f: f.orientation)
         processed = processed.register_callback(lambda f: f.x)
         for field in processed:
-            assert field.dim == 1
+            assert field.nvdim == 1
             assert np.max(field.array) <= 1.0
             assert np.min(field.array) >= -1.0
 
