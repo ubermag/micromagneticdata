@@ -168,7 +168,7 @@ class TestDrive:
         )
         check_hv(
             self.combined_drives[0].hv.scalar(kdims=["y", "z"]),
-            ["DynamicMap [x,comp,t]", "Image [y,z]"],
+            ["DynamicMap [x,vdims,t]", "Image [y,z]"],
         )
 
         with pytest.raises(NotImplementedError):
@@ -177,7 +177,7 @@ class TestDrive:
         # min drive with steps
         check_hv(
             self.combined_drives[2]
-            .register_callback(lambda f: f.plane("y"))
+            .register_callback(lambda f: f.sel("y"))
             .hv.vector(kdims=["x", "z"]),
             ["DynamicMap [iteration]", "VectorField [x,z]"],
         )

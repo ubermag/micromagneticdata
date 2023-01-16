@@ -337,13 +337,13 @@ class AbstractDrive(abc.ABC):
         >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
         >>> xr_drive = drive.to_xarray(name='Mag')
         >>> xr_drive
-        <xarray.DataArray 'Mag' (t: 25, x: 20, y: 10, z: 4, comp: 3)>
+        <xarray.DataArray 'Mag' (t: 25, x: 20, y: 10, z: 4, vdims: 3)>
         ...
 
         2. Magnetization in a cell over time for ``TimeDriver``
 
         >>> xr_drive.isel(x=2, y=2, z=2)
-        <xarray.DataArray 'Mag' (t: 25, comp: 3)>
+        <xarray.DataArray 'Mag' (t: 25, vdims: 3)>
         ...
 
         """
