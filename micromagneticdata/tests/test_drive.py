@@ -176,7 +176,7 @@ class TestDrive:
         )
         check_hv(
             self.data[0].hv.scalar(kdims=["y", "z"]),
-            ["DynamicMap [x,comp,t]", "Image [y,z]"],
+            ["DynamicMap [x,vdims,t]", "Image [y,z]"],
         )
 
         with pytest.raises(NotImplementedError):
@@ -185,7 +185,7 @@ class TestDrive:
         # min drive
         check_hv(
             self.data[4]
-            .register_callback(lambda f: f.plane("z"))
+            .register_callback(lambda f: f.sel("z"))
             .hv.vector(kdims=["x", "y"]),
             ["VectorField [x,y]"],
         )
@@ -209,7 +209,7 @@ class TestDrive:
         processed = drive.register_callback(lambda f: f.orientation)
         processed = processed.register_callback(lambda f: f.x)
         for field in processed:
-            assert field.dim == 1
+            assert field.nvdim == 1
             assert np.max(field.array) <= 1.0
             assert np.min(field.array) >= -1.0
 
