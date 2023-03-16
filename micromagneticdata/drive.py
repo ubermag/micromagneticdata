@@ -273,6 +273,7 @@ class Drive(md.AbstractDrive):
         Examples
         --------
         1. Getting MIF file.
+
         >>> import os
         >>> import micromagneticdata as md
         ...
