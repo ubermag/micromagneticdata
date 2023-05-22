@@ -203,6 +203,7 @@ class AbstractDrive(abc.ABC):
         field = df.Field.from_file(filename=self._step_files[item])
         with contextlib.suppress(FileNotFoundError):
             field.mesh.load_subregions(self._m0_path)
+        field.valid = "norm"
         return self._apply_callbacks(field)
 
     def __iter__(self):
