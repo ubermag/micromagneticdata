@@ -420,10 +420,28 @@ class AbstractDrive(abc.ABC):
         :DynamicMap...
 
         """
-        return dfp.Hv(self._hv_key_dims, self._hv_data_selection, self._hv_vdims_guess)
+        return dfp.Hv(
+            self._hv_key_dims,
+            self._hv_data_selection,
+            self._hv_valid_callback,
+            vdim_guess_callback=self._hv_vdims_guess,
+        )
 
     def _hv_data_selection(self, **kwargs):
         """Select one field for plotting in holoviews."""
+        if self.x in self._hv_key_dims:
+            if self.x not in kwargs:
+                raise NotImplementedError(
+                    f"The dimension {self.x} cannot be a key dimension"
+                )
+            value = kwargs.pop(self.x)
+            n = self.table.data.loc[self.table.data[self.x] == value].index[0]
+        else:
+            n = -1
+        return self[n]._hv_data_selection(**kwargs)
+
+    def _hv_valid_callback(self, **kwargs):
+        """Select one valid for plotting in holoviews."""
         if self.x in self._hv_key_dims:
             if self.x not in kwargs:
                 raise NotImplementedError(
