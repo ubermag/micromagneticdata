@@ -16,7 +16,7 @@ class TestDrive:
     # MinDriver: 4, 6
     # RelaxDriver: 3
     # HysteresisDriver: 7 [CURRENTLY MISSING IN THE DATASET]
-    def setup(self):
+    def setup_method(self):
         self.dirname = os.path.join(os.path.dirname(__file__), "test_sample")
         self.name = "system_name"
         self.data = md.Data(name=self.name, dirname=self.dirname)
