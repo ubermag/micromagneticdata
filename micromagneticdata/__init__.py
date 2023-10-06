@@ -1,5 +1,6 @@
 """Analyse micromagnetic data."""
-import pkg_resources
+import importlib.metadata
+
 import pytest
 
 from .abstract_drive import AbstractDrive
@@ -9,7 +10,7 @@ from .drive import Drive
 from .mumax3drive import Mumax3Drive
 from .oommfdrive import OOMMFDrive
 
-__version__ = pkg_resources.get_distribution(__name__).version
+__version__ = importlib.metadata.version(__package__)
 
 
 def test():
