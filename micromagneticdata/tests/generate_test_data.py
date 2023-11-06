@@ -29,7 +29,7 @@ def clean():
 def test_sample():
     """Simple rectangular ferromagnetic sample in external magnetic field."""
     print(">>> Running test sample")
-    p1 = (0, 0, 0)
+    p1 = (-50e-9, -25e-9, 0)
     p2 = (100e-9, 50e-9, 20e-9)
     cell = (5e-9, 5e-9, 5e-9)
 
@@ -44,7 +44,7 @@ def test_sample():
     system = mm.System(name="system_name")
     system.energy = mm.Exchange(A=A) + mm.Zeeman(H=H)
     system.dynamics = mm.Precession(gamma0=mm.consts.gamma0) + mm.Damping(alpha=alpha)
-    system.m = df.Field(mesh, dim=3, value=(0.0, 0.25, 0.1), norm=Ms)
+    system.m = df.Field(mesh, nvdim=3, value=(0.0, 0.25, 0.1), norm=Ms)
 
     # OOMMF
     td = oc.TimeDriver()
@@ -97,7 +97,7 @@ def vortex():
         p1=(-L / 2, -L / 2, -thickness / 2), p2=(L / 2, L / 2, thickness / 2)
     )
     mesh = df.Mesh(region=region, cell=(5e-9, 5e-9, 5e-9))
-    system.m = df.Field(mesh, dim=3, value=m_init, norm=Ms)
+    system.m = df.Field(mesh, nvdim=3, value=m_init, norm=Ms)
 
     md = oc.MinDriver()
     md.drive(system, dirname=dirname)
@@ -132,7 +132,7 @@ def hysteresis():
         else:
             return 0
 
-    system.m = df.Field(mesh, dim=3, value=(0, 0, -1), norm=Ms_fun)
+    system.m = df.Field(mesh, nvdim=3, value=(0, 0, -1), norm=Ms_fun)
 
     Hmin = (0, 0, -1 / mm.consts.mu0)
     Hmax = (0, 0, 1 / mm.consts.mu0)
