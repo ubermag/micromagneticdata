@@ -1,5 +1,5 @@
 //mumax 3.10 [linux_amd64 go1.14(gc) CUDA-11.0]
-//GPU info: NVIDIA GeForce GTX 850M(4046MB), CUDA Driver 11.7, cc=5.0, using cc=50 PTX
+//GPU info: Quadro P1000(4006MB), CUDA Driver 11.4, cc=6.1, using cc=61 PTX
 //(c) Arne Vansteenkiste, Dynamat LAB, Ghent University, Belgium
 //This is free software without any warranty. See license.txt
 //********************************************************************//
@@ -8,14 +8,14 @@
 //********************************************************************//
 //output directory: system_name.out/
 OutputFormat = OVF2_BINARY
-SetGridSize(20, 10, 4)
+SetGridSize(30, 15, 4)
 SetCellSize(5e-09, 5e-09, 5e-09)
-m.LoadFile("/home/martin/PhD/repos/ubermag-devtools/repos/micromagneticdata/micromagneticdata/tests/test_sample/system_name/drive-2/m0.omf")
+m.LoadFile("/home/mlang/ubermag-devtools/repos/micromagneticdata/micromagneticdata/tests/test_sample/system_name/drive-2/m0.omf")
 Msat.setregion(0, 799999.9999999998)
-regions.LoadFile("/home/martin/PhD/repos/ubermag-devtools/repos/micromagneticdata/micromagneticdata/tests/test_sample/system_name/drive-2/mumax3_regions.omf")
+regions.LoadFile("/home/mlang/ubermag-devtools/repos/micromagneticdata/micromagneticdata/tests/test_sample/system_name/drive-2/mumax3_regions.omf")
 Aex = 1.3e-11
 tableadd(E_exch)
-B_ext.add(LoadFile("B_ext.ovf"), 1)
+B_ext.add(LoadFile("/home/mlang/ubermag-devtools/repos/micromagneticdata/micromagneticdata/tests/test_sample/system_name/drive-2/B_ext.ovf"), 1)
 tableadd(E_Zeeman)
 enabledemag = false
 tableadd(E_total)

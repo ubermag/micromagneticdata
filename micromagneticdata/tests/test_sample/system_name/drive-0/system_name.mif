@@ -9,8 +9,8 @@ SetOptions {
 
 # BoxAtlas for main_atlas
 Specify Oxs_BoxAtlas:main_atlas {
-  xrange { 0.0 1e-07 }
-  yrange { 0.0 5e-08 }
+  xrange { -5e-08 1e-07 }
+  yrange { -2.5e-08 5e-08 }
   zrange { 0.0 2e-08 }
   name main
 }
