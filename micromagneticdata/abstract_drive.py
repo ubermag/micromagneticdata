@@ -232,10 +232,10 @@ class AbstractDrive(abc.ABC):
         [...]
 
         """
-        for field in map(df.Field.from_file, self._step_files):
-            with contextlib.suppress(FileNotFoundError):
-                field.mesh.load_subregions(self._m0_path)
-            yield self._apply_callbacks(field)
+        # self.n and self._step_files might have different length from restart
+        # or if data is missing; therefore self._step_files is used
+        for i in range(len(self._step_files)):
+            yield self[i]
 
     @property
     def callbacks(self):
