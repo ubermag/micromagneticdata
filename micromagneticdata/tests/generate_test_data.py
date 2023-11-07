@@ -34,7 +34,10 @@ def test_sample():
     cell = (5e-9, 5e-9, 5e-9)
 
     region = df.Region(p1=p1, p2=p2)
-    mesh = df.Mesh(region=region, cell=cell)
+    # use the region also as subregion: discretisedfield will create the additional
+    # subregions json file and we can detect misalignment (translation) of the
+    # region from the calculators (e.g. Mumax3 always defines pmin at the origin)
+    mesh = df.Mesh(region=region, cell=cell, subregions={'total': region})
 
     Ms = 8e5
     A = 1.3e-11
