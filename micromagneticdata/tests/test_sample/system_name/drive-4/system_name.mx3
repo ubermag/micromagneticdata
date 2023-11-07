@@ -1,7 +1,7 @@
 OutputFormat = OVF2_BINARY
 
 // Mesh
-SetGridSize(30, 15, 4)
+SetGridSize(20, 10, 4)
 SetCellSize(5e-09, 5e-09, 5e-09)
 
 // Magnetisation

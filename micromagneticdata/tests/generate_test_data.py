@@ -30,7 +30,7 @@ def test_sample():
     """Simple rectangular ferromagnetic sample in external magnetic field."""
     print(">>> Running test sample")
     p1 = (-50e-9, -25e-9, 0)
-    p2 = (100e-9, 50e-9, 20e-9)
+    p2 = (50e-9, 25e-9, 20e-9)
     cell = (5e-9, 5e-9, 5e-9)
 
     region = df.Region(p1=p1, p2=p2)
