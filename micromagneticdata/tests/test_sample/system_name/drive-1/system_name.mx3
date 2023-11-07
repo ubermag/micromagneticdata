@@ -5,16 +5,16 @@ SetGridSize(20, 10, 4)
 SetCellSize(5e-09, 5e-09, 5e-09)
 
 // Magnetisation
-m.LoadFile("/home/martin/PhD/repos/ubermag-devtools/repos/micromagneticdata/micromagneticdata/tests/test_sample/system_name/drive-1/m0.omf")
+m.LoadFile("/home/mlang/ubermag-devtools/repos/micromagneticdata/micromagneticdata/tests/test_sample/system_name/drive-1/m0.omf")
 Msat.setregion(0, 799999.9999999999)
 
-regions.LoadFile("/home/martin/PhD/repos/ubermag-devtools/repos/micromagneticdata/micromagneticdata/tests/test_sample/system_name/drive-1/mumax3_regions.omf")
+regions.LoadFile("/home/mlang/ubermag-devtools/repos/micromagneticdata/micromagneticdata/tests/test_sample/system_name/drive-1/mumax3_regions.omf")
 
 // Exchange energy
 Aex = 1.3e-11
 tableadd(E_exch)
 // Zeeman
-B_ext.add(LoadFile("B_ext.ovf"), 1)
+B_ext.add(LoadFile("/home/mlang/ubermag-devtools/repos/micromagneticdata/micromagneticdata/tests/test_sample/system_name/drive-1/B_ext.ovf"), 1)
 tableadd(E_Zeeman)
 enabledemag = false
 

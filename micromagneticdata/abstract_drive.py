@@ -201,6 +201,11 @@ class AbstractDrive(abc.ABC):
 
         """
         field = df.Field.from_file(filename=self._step_files[item])
+        if not field.mesh.region.allclose(self.m0.mesh.region):
+            # mumax3 (and maybe others) do not preserve the position of the origin
+            field.mesh.translate(
+                self.m0.mesh.region.pmin - field.mesh.region.pmin, inplace=True
+            )
         with contextlib.suppress(FileNotFoundError):
             field.mesh.load_subregions(self._m0_path)
         field.valid = "norm"
@@ -232,10 +237,10 @@ class AbstractDrive(abc.ABC):
         [...]
 
         """
-        for field in map(df.Field.from_file, self._step_files):
-            with contextlib.suppress(FileNotFoundError):
-                field.mesh.load_subregions(self._m0_path)
-            yield self._apply_callbacks(field)
+        # self.n and self._step_files might have different length from restart
+        # or if data is missing; therefore self._step_files is used
+        for i in range(len(self._step_files)):
+            yield self[i]
 
     @property
     def callbacks(self):
