@@ -112,11 +112,11 @@ class Drive(md.AbstractDrive):
         #             """
         #         )
         #         raise RuntimeError(msg)
-        # else:
-        #     raise RuntimeError(
-        #         "No 'adapter' has been passed and the adapter could not be determined"
-        #         " automatically because no 'info.json' was found."
-        #     )
+        else:
+            raise RuntimeError(
+                "No 'adapter' has been passed and the adapter could not be determined"
+                " automatically because no 'info.json' was found."
+            )
 
         adapter_module = importlib.import_module(f"{adapter}._output_collecting_util")
         return super().__new__(adapter_module.Drive)
