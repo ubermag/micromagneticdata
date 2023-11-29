@@ -7,8 +7,6 @@ from .abstract_drive import AbstractDrive
 from .combined_drive import CombinedDrive
 from .data import Data
 from .drive import Drive
-from .mumax3drive import Mumax3Drive
-from .oommfdrive import OOMMFDrive
 
 __version__ = importlib.metadata.version(__package__)
 

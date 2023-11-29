@@ -1,12 +1,12 @@
 import abc
 import copy
+import importlib
 import json
 import numbers
 import pathlib
 
 import discretisedfield as df
 import ipywidgets
-import ubermagtable as ut
 import ubermagutil as uu
 import ubermagutil.typesystem as ts
 
@@ -78,21 +78,55 @@ class Drive(md.AbstractDrive):
     """
 
     def __new__(cls, name, number, dirname=".", x=None, use_cache=False, **kwargs):
-        """Create a new OOMMFDrive or Mumax3Drive depending on the directory structure.
+        """Create a new drive depending on the calculator.
 
-        If a subdirectory <name>.out exists a Mumax3Drive is created else an
-        OOMMFDrive.
+        Details of a drive can be calculator specific. Therefore, the individual
+        adapter classes have to provide the implementation for finding the relevant
+        data. The information about the adapter is inferred from the 'info.json' file
+        created by the driver. It can also be passed explicitly.
 
+        Simulations run with ubermag <= 2023.11 did not write 'adapter'. For those the
+        legacy behaviour is kept to determine whether it is an OOMMF or a Mumax3
+        simulation, which are the only calculators supported by then.
         """
-        if pathlib.Path(f"{dirname}/{name}/drive-{number}/{name}.out").exists():
-            return super().__new__(md.Mumax3Drive)
-        else:
-            return super().__new__(md.OOMMFDrive)
+        if "adapter" in kwargs:
+            adapter = kwargs["adapter"]
+        elif (f := pathlib.Path(f"{dirname}/{name}/drive-{number}/info.json")).exists():
+            info_json = json.load(f.open())
+            if "adapter" in info_json:
+                adapter = info_json["adapter"]
+            else:
+                # info files written with ubermag.__version__ <= 2023.11 do not contain
+                # 'adapter'; legacy data loading
+                if pathlib.Path(f"{dirname}/{name}/drive-{number}/{name}.out").exists():
+                    adapter = "mumax3c"
+                else:
+                    adapter = "oommfc"
+        #         msg = textwrap.dedent(
+        #             """
+        #             This simulation has been created with an older version of
+        #             Ubermag and needs manual modification. In the 'info.json' file
+        #             you have to add information about which ubermag package was used
+        #             to run the simulation in the form: '"adapter": "<package>"', e.g.
+        #             when you used OOMMF via oommfc add '"adapter": "oommfc"'.
+        #             """
+        #         )
+        #         raise RuntimeError(msg)
+        # else:
+        #     raise RuntimeError(
+        #         "No 'adapter' has been passed and the adapter could not be determined"
+        #         " automatically because no 'info.json' was found."
+        #     )
+
+        adapter_module = importlib.import_module(f"{adapter}._output_collecting_util")
+        return super().__new__(adapter_module.Drive)
 
     def __init__(self, name, number, dirname="./", x=None, use_cache=False, **kwargs):
         # use kwargs to not expose the following additional internal arguments to users
         self._step_file_list = kwargs.pop("step_files", [])
         self._table = kwargs.pop("table", None)
+
+        kwargs.pop("adapter", None)
 
         super().__init__(**kwargs)
         self.drive_path = pathlib.Path(f"{dirname}/{name}/drive-{number}")
@@ -142,12 +176,18 @@ class Drive(md.AbstractDrive):
 
     @property
     def table(self):
-        if not self.use_cache:
-            return ut.Table.fromfile(str(self._table_path), x=self.x)
+        if self.use_cache and self._table is not None:
+            return self._table
 
-        if self._table is None:
-            self._table = ut.Table.fromfile(str(self._table_path), x=self.x)
-        return self._table
+        # extract 'oommfc' from 'oommfc._output_collecting_util'
+        adapter = self.__class__.__module__.split(".")[0]
+        adapter_module = importlib.import_module(f"{adapter}._output_collecting_util")
+        table = adapter_module.table_from_file(str(self._table_path), x=self.x)
+
+        if self.use_cache:
+            self._table = table
+
+        return table
 
     @property
     @abc.abstractmethod
