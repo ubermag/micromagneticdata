@@ -38,7 +38,7 @@ class Data:
     >>> import os
     >>> import micromagneticdata as md
     ...
-    >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
+    >>> dirname = os.path.join(os.path.dirname(__file__),
     ...                                'tests', 'test_sample')
     >>> data = md.Data(name='system_name', dirname=dirname)
 
@@ -69,7 +69,7 @@ class Data:
         >>> import os
         >>> import micromagneticdata as md
         ...
-        >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
+        >>> dirname = os.path.join(os.path.dirname(__file__),
         ...                                'tests', 'test_sample')
         >>> data = md.Data(name='system_name', dirname=dirname)
         >>> data
@@ -99,7 +99,7 @@ class Data:
         >>> import os
         >>> import micromagneticdata as md
         ...
-        >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
+        >>> dirname = os.path.join(os.path.dirname(__file__),
         ...                                'tests', 'test_sample')
         >>> data = md.Data(name='system_name', dirname=dirname)
         >>> data.info
@@ -124,7 +124,7 @@ class Data:
         >>> import os
         >>> import micromagneticdata as md
         ...
-        >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
+        >>> dirname = os.path.join(os.path.dirname(__file__),
         ...                                'tests', 'test_sample')
         >>> data = md.Data(name='system_name', dirname=dirname)
         >>> data.n
@@ -158,7 +158,7 @@ class Data:
         >>> import os
         >>> import micromagneticdata as md
         ...
-        >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
+        >>> dirname = os.path.join(os.path.dirname(__file__),
         ...                                'tests', 'test_sample')
         >>> data = md.Data(name='system_name', dirname=dirname)
         >>> data.n
@@ -195,7 +195,7 @@ class Data:
         >>> import os
         >>> import micromagneticdata as md
         ...
-        >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
+        >>> dirname = os.path.join(os.path.dirname(__file__),
         ...                                'tests', 'test_sample')
         >>> data = md.Data(name='system_name', dirname=dirname)
         >>> data.n
@@ -232,7 +232,7 @@ class Data:
         >>> import os
         >>> import micromagneticdata as md
         ...
-        >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
+        >>> dirname = os.path.join(os.path.dirname(__file__),
         ...                                'tests', 'test_sample')
         >>> data = md.Data(name='system_name', dirname=dirname)
         >>> data.selector()
