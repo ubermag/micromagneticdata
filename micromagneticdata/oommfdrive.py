@@ -52,7 +52,7 @@ class OOMMFDrive(md.Drive):
     >>> import os
     >>> import micromagneticdata as md
     ...
-    >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
+    >>> dirname = os.path.join(os.path.dirname(__file__),
     ...                                'tests', 'test_sample')
     >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
 
@@ -109,7 +109,7 @@ class OOMMFDrive(md.Drive):
         >>> import os
         >>> import micromagneticdata as md
         ...
-        >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
+        >>> dirname = os.path.join(os.path.dirname(__file__),
         ...                                'tests', 'test_sample')
         >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
         >>> drive
