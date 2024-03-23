@@ -36,7 +36,8 @@ classifiers = [
 
 dependencies = [
     "discretisedfield>=0.90.0",
-    "ubermagtable>=0.61.3"
+    "ubermagtable>=0.61.3",
+    "importlib_metadata; python_version<'3.10'"
 ]
 
 [project.optional-dependencies]
