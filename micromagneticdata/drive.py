@@ -1,9 +1,9 @@
 import abc
 import copy
-import importlib
 import json
 import numbers
 import pathlib
+import sys
 
 import discretisedfield as df
 import ipywidgets
@@ -11,6 +11,11 @@ import ubermagutil as uu
 import ubermagutil.typesystem as ts
 
 import micromagneticdata as md
+
+if sys.version_info.minor < 10:
+    from importlib_metadata import entry_points
+else:
+    from importlib.metadata import entry_points
 
 
 @uu.inherit_docs
@@ -80,14 +85,20 @@ class Drive(md.AbstractDrive):
     def __new__(cls, name, number, dirname=".", x=None, use_cache=False, **kwargs):
         """Create a new drive depending on the calculator.
 
-        Details of a drive can be calculator specific. Therefore, the individual
-        adapter classes have to provide the implementation for finding the relevant
-        data. The information about the adapter is inferred from the 'info.json' file
-        created by the driver. It can also be passed explicitly.
+        Details of a drive can be calculator specific. Therefore, the individual adapter
+        classes have to provide the implementation for finding the relevant data. The
+        information about the adapter is inferred from the 'info.json' file created by
+        the driver, e.g. when using OOMMF via oommfc, the json file contains:::
 
-        Simulations run with ubermag <= 2023.11 did not write 'adapter'. For those the
-        legacy behaviour is kept to determine whether it is an OOMMF or a Mumax3
-        simulation, which are the only calculators supported by then.
+            "adapter": "oommfc"
+
+        A suitable adapter can also be passed explicitly.
+
+        Simulations computed with ubermag <= 2023.11 did not write 'adapter' in the
+        'info.json'. For those the legacy behaviour is kept to determine whether it is
+        an OOMMF or a Mumax3 simulation, which were the only supported calculators at
+        that time.
+
         """
         if "adapter" in kwargs:
             adapter = kwargs["adapter"]
@@ -102,24 +113,24 @@ class Drive(md.AbstractDrive):
                     adapter = "mumax3c"
                 else:
                     adapter = "oommfc"
-        #         msg = textwrap.dedent(
-        #             """
-        #             This simulation has been created with an older version of
-        #             Ubermag and needs manual modification. In the 'info.json' file
-        #             you have to add information about which ubermag package was used
-        #             to run the simulation in the form: '"adapter": "<package>"', e.g.
-        #             when you used OOMMF via oommfc add '"adapter": "oommfc"'.
-        #             """
-        #         )
-        #         raise RuntimeError(msg)
         else:
             raise RuntimeError(
                 "No 'adapter' has been passed and the adapter could not be determined"
                 " automatically because no 'info.json' was found."
             )
 
-        adapter_module = importlib.import_module(f"{adapter}._output_collecting_util")
-        return super().__new__(adapter_module.Drive)
+        drive_entry_points = entry_points(
+            group="micromagneticdata.output_collecting.Drive"
+        )
+
+        try:
+            CalculatorDrive = drive_entry_points[adapter].load()
+        except KeyError:
+            raise RuntimeError(
+                f"'{adapter}' must be installed to read the drive."
+            ) from None
+
+        return super().__new__(CalculatorDrive)
 
     def __init__(self, name, number, dirname="./", x=None, use_cache=False, **kwargs):
         # use kwargs to not expose the following additional internal arguments to users
@@ -139,6 +150,15 @@ class Drive(md.AbstractDrive):
         self.number = number
         self.dirname = dirname
         self.x = x
+
+    @property
+    def _adapter(self):
+        """
+        Name of the adapter package, e.g. oommfc, used to read the drive.
+        The information can be used to load additional entry points from that package.
+        """
+        # extract package name
+        return self.__class__.__module__.split(".")[0]
 
     @property
     def use_cache(self):
@@ -179,10 +199,10 @@ class Drive(md.AbstractDrive):
         if self.use_cache and self._table is not None:
             return self._table
 
-        # extract 'oommfc' from 'oommfc._output_collecting_util'
-        adapter = self.__class__.__module__.split(".")[0]
-        adapter_module = importlib.import_module(f"{adapter}._output_collecting_util")
-        table = adapter_module.table_from_file(str(self._table_path), x=self.x)
+        read_table = entry_points(
+            group="micromagneticdata.output_collecting.read_table"
+        )[self._adapter].load()
+        table = read_table(str(self._table_path), x=self.x)
 
         if self.use_cache:
             self._table = table
