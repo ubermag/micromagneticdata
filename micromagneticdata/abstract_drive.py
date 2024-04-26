@@ -107,9 +107,7 @@ class AbstractDrive(abc.ABC):
         Field(...)
 
         """
-        field = df.Field.from_file(self._m0_path)
-        field.valid = "norm"
-        return field
+        return df.Field.from_file(self._m0_path)
 
     @property
     @abc.abstractmethod
