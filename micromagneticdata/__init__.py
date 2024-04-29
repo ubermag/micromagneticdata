@@ -1,4 +1,5 @@
 """Analyse micromagnetic data."""
+
 import importlib.metadata
 
 import pytest
