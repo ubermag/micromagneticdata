@@ -98,7 +98,7 @@ class Drive(md.AbstractDrive):
         self.drive_path = pathlib.Path(f"{dirname}/{name}/drive-{number}")
         if not self.drive_path.exists():
             msg = f"Directory {self.drive_path!r} does not exist."
-            raise IOError(msg)
+            raise OSError(msg)
 
         self.use_cache = use_cache
         self.name = name

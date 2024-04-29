@@ -51,7 +51,7 @@ class Data:
 
         if not os.path.exists(self.path):
             msg = f"Directory {self.path=} cannot be found."
-            raise IOError(msg)
+            raise OSError(msg)
 
     def __repr__(self):
         """Representation string.

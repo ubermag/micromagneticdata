@@ -4,7 +4,6 @@ import operator
 import ubermagutil as uu
 
 import micromagneticdata as md
-
 from .abstract_drive import AbstractDrive
 
 
