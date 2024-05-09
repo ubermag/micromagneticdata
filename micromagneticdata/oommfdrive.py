@@ -86,7 +86,9 @@ class OOMMFDrive(md.Drive):
 
     @property
     def _step_file_glob(self):
-        return self.drive_path.glob(f"{self.name}*.omf")
+        step_files = self.drive_path.glob(f"{self.name}*.omf")
+        column = self.table.data["iteration"].to_numpy()
+        return filter(lambda step: int(step.stem.split("-")[-1]) in column, step_files)
 
     @property
     def calculator_script(self):
