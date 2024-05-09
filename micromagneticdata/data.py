@@ -38,8 +38,7 @@ class Data:
     >>> import os
     >>> import micromagneticdata as md
     ...
-    >>> dirname = os.path.join(os.path.dirname(__file__),
-    ...                                'tests', 'test_sample')
+    >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
     >>> data = md.Data(name='system_name', dirname=dirname)
 
     """
@@ -69,8 +68,7 @@ class Data:
         >>> import os
         >>> import micromagneticdata as md
         ...
-        >>> dirname = os.path.join(os.path.dirname(__file__),
-        ...                                'tests', 'test_sample')
+        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
         >>> data = md.Data(name='system_name', dirname=dirname)
         >>> data
         Data(...)
@@ -99,8 +97,7 @@ class Data:
         >>> import os
         >>> import micromagneticdata as md
         ...
-        >>> dirname = os.path.join(os.path.dirname(__file__),
-        ...                                'tests', 'test_sample')
+        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
         >>> data = md.Data(name='system_name', dirname=dirname)
         >>> data.info
            drive_number...
@@ -124,8 +121,7 @@ class Data:
         >>> import os
         >>> import micromagneticdata as md
         ...
-        >>> dirname = os.path.join(os.path.dirname(__file__),
-        ...                                'tests', 'test_sample')
+        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
         >>> data = md.Data(name='system_name', dirname=dirname)
         >>> data.n
         7
@@ -158,8 +154,7 @@ class Data:
         >>> import os
         >>> import micromagneticdata as md
         ...
-        >>> dirname = os.path.join(os.path.dirname(__file__),
-        ...                                'tests', 'test_sample')
+        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
         >>> data = md.Data(name='system_name', dirname=dirname)
         >>> data.n
         7
@@ -195,8 +190,7 @@ class Data:
         >>> import os
         >>> import micromagneticdata as md
         ...
-        >>> dirname = os.path.join(os.path.dirname(__file__),
-        ...                                'tests', 'test_sample')
+        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
         >>> data = md.Data(name='system_name', dirname=dirname)
         >>> data.n
         7
@@ -232,8 +226,7 @@ class Data:
         >>> import os
         >>> import micromagneticdata as md
         ...
-        >>> dirname = os.path.join(os.path.dirname(__file__),
-        ...                                'tests', 'test_sample')
+        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
         >>> data = md.Data(name='system_name', dirname=dirname)
         >>> data.selector()
         BoundedIntText(...)

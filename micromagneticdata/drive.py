@@ -63,8 +63,7 @@ class Drive(md.AbstractDrive):
     >>> import os
     >>> import micromagneticdata as md
     ...
-    >>> dirname = os.path.join(os.path.dirname(__file__),
-    ...                                'tests', 'test_sample')
+    >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
     >>> drive = md.Data(name='system_name', dirname=dirname)[0]
     >>> drive
     OOMMFDrive(...)
@@ -191,8 +190,7 @@ class Drive(md.AbstractDrive):
         >>> import os
         >>> import micromagneticdata as md
         ...
-        >>> dirname = os.path.join(os.path.dirname(__file__),
-        ...                                'tests', 'test_sample')
+        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
         >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
         >>> drive[5]
         Field(...)
@@ -201,8 +199,7 @@ class Drive(md.AbstractDrive):
         >>> import os
         >>> import micromagneticdata as md
         ...
-        >>> dirname = os.path.join(os.path.dirname(__file__),
-        ...                                'tests', 'test_sample')
+        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
         >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
         >>> selection = drive[:8:2]
         >>> selection
@@ -249,8 +246,7 @@ class Drive(md.AbstractDrive):
         >>> import os
         >>> import micromagneticdata as md
         ...
-        >>> dirname = os.path.join(os.path.dirname(__file__),
-        ...                                'tests', 'test_sample')
+        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
         >>> drive = md.Drive(name='system_name', number=6, dirname=dirname)
         >>> drive.info
         {...}
@@ -277,8 +273,7 @@ class Drive(md.AbstractDrive):
         >>> import os
         >>> import micromagneticdata as md
         ...
-        >>> dirname = os.path.join(os.path.dirname(__file__),
-        ...                                'tests', 'test_sample')
+        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
         >>> drive = md.Drive(name='system_name', number=6, dirname=dirname)
         >>> drive.calculator_script
         '# MIF 2...'
@@ -308,8 +303,7 @@ class Drive(md.AbstractDrive):
         >>> import os
         >>> import micromagneticdata as md
         ...
-        >>> dirname = os.path.join(os.path.dirname(__file__),
-        ...                                'tests', 'test_sample')
+        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
         >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
         >>> drive.ovf2vtk()
 
@@ -344,8 +338,7 @@ class Drive(md.AbstractDrive):
         >>> import os
         >>> import micromagneticdata as md
         ...
-        >>> dirname = os.path.join(os.path.dirname(__file__),
-        ...                                'tests', 'test_sample')
+        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
         >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
         >>> drive.slider()
         IntSlider(...)
