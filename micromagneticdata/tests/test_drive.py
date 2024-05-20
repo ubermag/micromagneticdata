@@ -237,7 +237,7 @@ class TestDrive:
             with pytest.raises(FileNotFoundError):
                 drive[0]
             with pytest.raises(FileNotFoundError):
-                drive.table
+                drive.table  # noqa: B018
 
             drive.use_cache = True  # check new caching (no old cache)
 
@@ -245,7 +245,7 @@ class TestDrive:
             with pytest.raises(FileNotFoundError):
                 drive[0]
             with pytest.raises(FileNotFoundError):
-                drive.table
+                drive.table  # noqa: B018
 
         # caching has effects outside monkeypatch context
         assert drive._step_files == ["a.omf", "b.omf"]

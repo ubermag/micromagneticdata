@@ -12,7 +12,7 @@ try:
 except OSError:
     import warnings
 
-    warnings.warn("Mumax3 is not available; using OOMMF instead")
+    warnings.warn("Mumax3 is not available; using OOMMF instead", stacklevel=2)
     import oommfc as mc
 
 
