@@ -57,6 +57,27 @@ class TestDrive:
             assert isinstance(drive.calculator_script, str)
             assert "tableadd" in drive.calculator_script
 
+    def test_valid(self):
+        dirname = os.path.join(os.path.dirname(__file__), "test_sample")
+        name = "hysteresis"
+        data = md.Data(name=name, dirname=dirname)
+        m0_field = data[0].m0
+        test_points = [
+            m0_field.mesh.point2index(m0_field.mesh.region.pmin),
+            m0_field.mesh.point2index(m0_field.mesh.region.center),
+            m0_field.mesh.point2index(m0_field.mesh.region.pmax),
+        ]
+        expected_validity = [False, True, False]
+        for point, expected in zip(test_points, expected_validity):
+            actual_valid = m0_field.valid[point]
+            assert actual_valid == expected
+
+        drive = data[0]
+        for d in drive:
+            for point, expected in zip(test_points, expected_validity):
+                actual_valid = d.valid[point]
+                assert actual_valid == expected
+
     def test_m0(self):
         for drive in self.data:
             assert isinstance(drive.m0, df.Field)

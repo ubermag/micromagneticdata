@@ -53,8 +53,7 @@ class Mumax3Drive(md.Drive):
     >>> import os
     >>> import micromagneticdata as md
     ...
-    >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
-    ...                                'tests', 'test_sample')
+    >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
     >>> drive = md.Drive(name='system_name', number=1, dirname=dirname)
     >>> drive
     Mumax3Drive(...)
@@ -116,8 +115,7 @@ class Mumax3Drive(md.Drive):
         >>> import os
         >>> import micromagneticdata as md
         ...
-        >>> dirname = dirname=os.path.join(os.path.dirname(__file__),
-        ...                                'tests', 'test_sample')
+        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
         >>> drive = md.Drive(name='system_name', number=1, dirname=dirname)
         >>> drive
         Mumax3Drive(name='system_name', number=1, dirname='...test_sample', x='t')
