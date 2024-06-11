@@ -40,7 +40,7 @@ class CombinedDrive(md.AbstractDrive):
     >>> import micromagneticdata as md
     ...
     >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-    >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
+    >>> drive = md.Drive(name='rectangle', number=0, dirname=dirname)
 
     """
 
@@ -90,7 +90,7 @@ class CombinedDrive(md.AbstractDrive):
         >>> import micromagneticdata as md
         ...
         >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> drive = md.Drive(name='system_name', number=0, dirname=dirname)
+        >>> drive = md.Drive(name='rectangle', number=0, dirname=dirname)
         >>> drive
         OOMMFDrive(...)
 
@@ -118,7 +118,7 @@ class CombinedDrive(md.AbstractDrive):
         >>> import micromagneticdata as md
         ...
         >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> drive = md.Drive(name='system_name', number=6, dirname=dirname)
+        >>> drive = md.Drive(name='rectangle', number=6, dirname=dirname)
         >>> drive.info
         {...}
 

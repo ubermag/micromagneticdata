@@ -44,7 +44,7 @@ def test_sample():
     H = (1e6, 0.0, 2e5)
     alpha = 0.02
 
-    system = mm.System(name="system_name")
+    system = mm.System(name="rectangle")
     system.energy = mm.Exchange(A=A) + mm.Zeeman(H=H)
     system.dynamics = mm.Precession(gamma0=mm.consts.gamma0) + mm.Damping(alpha=alpha)
     system.m = df.Field(mesh, nvdim=3, value=(0.0, 0.25, 0.1), norm=Ms)

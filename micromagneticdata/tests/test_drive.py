@@ -14,7 +14,7 @@ import micromagneticdata as md
 class TestDrive:
     def setup_method(self):
         self.dirname = os.path.join(os.path.dirname(__file__), "test_sample")
-        self.name = "system_name"
+        self.name = "rectangle"
         self.data = md.Data(name=self.name, dirname=self.dirname)
 
     def test_init(self):
