@@ -26,7 +26,7 @@ def clean():
         shutil.rmtree(dirname)
 
 
-def test_sample():
+def rectangle():
     """Simple rectangular ferromagnetic sample in external magnetic field."""
     print(">>> Running test sample")
     p1 = (-50e-9, -25e-9, 0)
@@ -61,7 +61,7 @@ def test_sample():
     try:
         rd = mc.RelaxDriver()
     except AttributeError:
-        rd = oc.MinDriver
+        rd = oc.MinDriver()
     rd.drive(system, dirname=dirname)  # drive-3
 
     md = mc.MinDriver()
@@ -146,6 +146,6 @@ def hysteresis():
 
 if __name__ == "__main__":
     clean()
-    test_sample()
+    rectangle()
     vortex()
     hysteresis()
