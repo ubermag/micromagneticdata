@@ -3,7 +3,6 @@ import pathlib
 import ubermagutil as uu
 
 import micromagneticdata as md
-
 from .abstract_drive import AbstractDrive
 
 
@@ -55,7 +54,7 @@ class Mumax3Drive(md.Drive):
     >>> import micromagneticdata as md
     ...
     >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-    >>> drive = md.Drive(name='system_name', number=1, dirname=dirname)
+    >>> drive = md.Drive(name='rectangle', number=1, dirname=dirname)
     >>> drive
     Mumax3Drive(...)
 
@@ -66,7 +65,7 @@ class Mumax3Drive(md.Drive):
             f"{dirname}/{name}/drive-{number}/{name}.out"
         )  # required to initialise self.x in super
         if not self._mumax_output_path.exists():
-            raise IOError(
+            raise OSError(
                 f"Output directory {self._mumax_output_path!r} does not exist."
             )
 
@@ -117,9 +116,9 @@ class Mumax3Drive(md.Drive):
         >>> import micromagneticdata as md
         ...
         >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> drive = md.Drive(name='system_name', number=1, dirname=dirname)
+        >>> drive = md.Drive(name='rectangle', number=1, dirname=dirname)
         >>> drive
-        Mumax3Drive(name='system_name', number=1, dirname='...test_sample', x='t')
+        Mumax3Drive(name='rectangle', number=1, dirname='...test_sample', x='t')
 
         """
         return (

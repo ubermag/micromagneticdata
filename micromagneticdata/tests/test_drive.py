@@ -14,7 +14,7 @@ import micromagneticdata as md
 class TestDrive:
     def setup_method(self):
         self.dirname = os.path.join(os.path.dirname(__file__), "test_sample")
-        self.name = "system_name"
+        self.name = "rectangle"
         self.data = md.Data(name=self.name, dirname=self.dirname)
 
     def test_init(self):
@@ -258,7 +258,7 @@ class TestDrive:
             with pytest.raises(FileNotFoundError):
                 drive[0]
             with pytest.raises(FileNotFoundError):
-                drive.table
+                drive.table  # noqa: B018
 
             drive.use_cache = True  # check new caching (no old cache)
 
@@ -266,7 +266,7 @@ class TestDrive:
             with pytest.raises(FileNotFoundError):
                 drive[0]
             with pytest.raises(FileNotFoundError):
-                drive.table
+                drive.table  # noqa: B018
 
         # caching has effects outside monkeypatch context
         assert drive._step_files == ["a.omf", "b.omf"]

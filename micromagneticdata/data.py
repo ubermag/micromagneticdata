@@ -39,7 +39,7 @@ class Data:
     >>> import micromagneticdata as md
     ...
     >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-    >>> data = md.Data(name='system_name', dirname=dirname)
+    >>> data = md.Data(name='rectangle', dirname=dirname)
 
     """
 
@@ -50,7 +50,7 @@ class Data:
 
         if not os.path.exists(self.path):
             msg = f"Directory {self.path=} cannot be found."
-            raise IOError(msg)
+            raise OSError(msg)
 
     def __repr__(self):
         """Representation string.
@@ -69,7 +69,7 @@ class Data:
         >>> import micromagneticdata as md
         ...
         >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> data = md.Data(name='system_name', dirname=dirname)
+        >>> data = md.Data(name='rectangle', dirname=dirname)
         >>> data
         Data(...)
 
@@ -98,7 +98,7 @@ class Data:
         >>> import micromagneticdata as md
         ...
         >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> data = md.Data(name='system_name', dirname=dirname)
+        >>> data = md.Data(name='rectangle', dirname=dirname)
         >>> data.info
            drive_number...
         """
@@ -122,7 +122,7 @@ class Data:
         >>> import micromagneticdata as md
         ...
         >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> data = md.Data(name='system_name', dirname=dirname)
+        >>> data = md.Data(name='rectangle', dirname=dirname)
         >>> data.n
         7
 
@@ -155,7 +155,7 @@ class Data:
         >>> import micromagneticdata as md
         ...
         >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> data = md.Data(name='system_name', dirname=dirname)
+        >>> data = md.Data(name='rectangle', dirname=dirname)
         >>> data.n
         7
         >>> data[0]  # first (0th) drive
@@ -191,7 +191,7 @@ class Data:
         >>> import micromagneticdata as md
         ...
         >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> data = md.Data(name='system_name', dirname=dirname)
+        >>> data = md.Data(name='rectangle', dirname=dirname)
         >>> data.n
         7
         >>> len(list(data))
@@ -227,7 +227,7 @@ class Data:
         >>> import micromagneticdata as md
         ...
         >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> data = md.Data(name='system_name', dirname=dirname)
+        >>> data = md.Data(name='rectangle', dirname=dirname)
         >>> data.selector()
         BoundedIntText(...)
 

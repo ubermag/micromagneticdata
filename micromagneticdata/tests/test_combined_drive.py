@@ -18,7 +18,7 @@ class TestDrive:
     # HysteresisDriver: 7 [CURRENTLY MISSING IN THE DATASET]
     def setup_method(self):
         self.dirname = os.path.join(os.path.dirname(__file__), "test_sample")
-        self.name = "system_name"
+        self.name = "rectangle"
         self.data = md.Data(name=self.name, dirname=self.dirname)
         self.combined_drives = [
             self.data[0] << self.data[1] << self.data[2],
