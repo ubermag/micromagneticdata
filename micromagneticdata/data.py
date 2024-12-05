@@ -1,20 +1,19 @@
 import glob
 import json
 import os
+from pathlib import Path
 
 import ipywidgets
 import pandas as pd
-import ubermagutil.typesystem as ts
 
 import micromagneticdata as md
 
 
-@ts.typesystem(name=ts.Typed(expected_type=str), dirname=ts.Typed(expected_type=str))
 class Data:
     """Computational magnetism data class.
 
-    It requires the name of the system to be passed. If `dirname` was used when
-    the system was driven, it can be passed here via ``dirname``.
+    It requires either the name of the system and optionally a directory `dirname` or
+    alternatively a full path to the system directory to locate the system's data.
 
     Parameters
     ----------
@@ -26,32 +25,67 @@ class Data:
 
         Directory in which system's data is saved. Defults to ``'./'``.
 
+    path : pathlib.Path
+
+        Full path to where the data is stored. Defaults to `None`.
+
     Raises
     ------
-    IOError
+    TypeError
 
-        If the system's directory cannot be found.
+        If the system's name or path cannot be found.
 
     Examples
     --------
-    1. Creating data object.
+    1. Creating data object using `path`
+
+    >>> from pathlib import Path
+    >>> import micromagneticdata as mdata
+    >>> path = Path(__file__).parent / 'tests' / 'test_sample' / 'rectangle'
+    >>> data = mdata.Data(path=path)
+
+    2. Creating data object using `name` and `dirname`
 
     >>> import os
-    >>> import micromagneticdata as md
-    ...
+    >>> import micromagneticdata as mdata
     >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-    >>> data = md.Data(name='rectangle', dirname=dirname)
+    >>> data = mdata.Data(name='rectangle', dirname=dirname)
 
     """
 
-    def __init__(self, name, dirname="./"):
-        self.name = name
-        self.dirname = dirname
-        self.path = os.path.join(dirname, name)
-
+    def __init__(self, name=None, dirname="./", path=None):
+        if path is not None:
+            if name is not None:
+                raise TypeError("'name' and 'path' cannot be used together.")
+            self.path = path
+        else:
+            if name is None:
+                raise TypeError("'name' must be provided if 'path' is not given.")
+            self.path = Path(dirname) / name
         if not os.path.exists(self.path):
-            msg = f"Directory {self.path=} cannot be found."
+            msg = f"Directory {self.path} cannot be found."
             raise OSError(msg)
+
+    @property
+    def path(self):
+        """Path to the simulation output."""
+        return self._path
+
+    @path.setter
+    def path(self, path):
+        if not isinstance(path, (str, Path)):
+            raise TypeError(f"Unsupported {type(path)=}; expected str or pathlib.Path")
+        self._path = Path(path).absolute()
+
+    @property
+    def name(self):
+        """System/directory name containing simulation data of all drives."""
+        return self.path.name
+
+    @property
+    def dirname(self):
+        """Path to system directory, same as ``data.path.parent``."""
+        return self.path.parent
 
     def __repr__(self):
         """Representation string.
@@ -66,16 +100,15 @@ class Data:
         --------
         1. Representation string.
 
-        >>> import os
-        >>> import micromagneticdata as md
-        ...
-        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> data = md.Data(name='rectangle', dirname=dirname)
+        >>> from pathlib import Path
+        >>> import micromagneticdata as mdata
+        >>> path = Path(__file__).parent / 'tests' / 'test_sample' / 'rectangle'
+        >>> data = mdata.Data(path=path)
         >>> data
-        Data(...)
+        Data(path='...rectangle')
 
         """
-        return f"Data(name='{self.name}', dirname='{self.dirname}')"
+        return f"Data(path='{self.path}')"
 
     @property
     def info(self):
@@ -95,11 +128,10 @@ class Data:
         --------
         1. Getting information about data.
 
-        >>> import os
-        >>> import micromagneticdata as md
-        ...
-        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> data = md.Data(name='rectangle', dirname=dirname)
+        >>> from pathlib import Path
+        >>> import micromagneticdata as mdata
+        >>> path = Path(__file__).parent / 'tests' / 'test_sample' / 'rectangle'
+        >>> data = mdata.Data(path=path)
         >>> data.info
            drive_number...
         """
@@ -138,11 +170,10 @@ class Data:
         --------
         1. Getting the number of drives.
 
-        >>> import os
-        >>> import micromagneticdata as md
-        ...
-        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> data = md.Data(name='rectangle', dirname=dirname)
+        >>> from pathlib import Path
+        >>> import micromagneticdata as mdata
+        >>> path = Path(__file__).parent / 'tests' / 'test_sample' / 'rectangle'
+        >>> data = mdata.Data(path=path)
         >>> data.n
         7
 
@@ -171,11 +202,10 @@ class Data:
         --------
         1. Getting drive.
 
-        >>> import os
-        >>> import micromagneticdata as md
-        ...
-        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> data = md.Data(name='rectangle', dirname=dirname)
+        >>> from pathlib import Path
+        >>> import micromagneticdata as mdata
+        >>> path = Path(__file__).parent / 'tests' / 'test_sample' / 'rectangle'
+        >>> data = mdata.Data(path=path)
         >>> data.n
         7
         >>> data[0]  # first (0th) drive
@@ -205,13 +235,13 @@ class Data:
 
         Examples
         --------
+
         1. Iterating data object.
 
-        >>> import os
-        >>> import micromagneticdata as md
-        ...
-        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> data = md.Data(name='rectangle', dirname=dirname)
+        >>> from pathlib import Path
+        >>> import micromagneticdata as mdata
+        >>> path = Path(__file__).parent / 'tests' / 'test_sample' / 'rectangle'
+        >>> data = mdata.Data(path=path)
         >>> data.n
         7
         >>> len(list(data))
@@ -243,13 +273,12 @@ class Data:
         --------
         1. Selection widget.
 
-        >>> import os
-        >>> import micromagneticdata as md
-        ...
-        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> data = md.Data(name='rectangle', dirname=dirname)
+        >>> from pathlib import Path
+        >>> import micromagneticdata as mdata
+        >>> path = Path(__file__).parent / 'tests' / 'test_sample' / 'rectangle'
+        >>> data = mdata.Data(path=path)
         >>> data.selector()
-        BoundedIntText(...)
+        BoundedIntText(value=0, description='drive', max=6)
 
         """
         return ipywidgets.BoundedIntText(
