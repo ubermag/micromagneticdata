@@ -153,6 +153,9 @@ class SkyrmionModeTrajectory:
     def get_bottom_core_positions(self, bottom_regions):
         return self.get_core_positions(bottom_regions, "Bottom Regions")
 
+    def get_top_core_positions(self, top_regions):
+        return self.get_core_positions(top_regions, "Top Regions")
+
     def get_top_layer(self):
         return (
             hv.Dataset(
