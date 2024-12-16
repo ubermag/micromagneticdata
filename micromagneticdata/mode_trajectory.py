@@ -73,15 +73,22 @@ class SkyrmionModeTrajectory:
         ]
 
     def final_visual(self):
-        return self.get_top_layer() * self.get_top_core_positions(
-            ["first_skyrmion_top_region", "second_skyrmion_top_region"]
-        ) * self.get_top_trajectory(
-            ["first_skyrmion_top_region", "second_skyrmion_top_region"]
-        ) + self.get_bottom_layer() * self.get_bottom_core_positions(
-            ["first_skyrmion_bottom_region", "second_skyrmion_bottom_region"]
-        ) * self.get_bottom_trajectory(
-            ["first_skyrmion_bottom_region", "second_skyrmion_bottom_region"]
-        )
+        return (
+            self.get_top_layer()
+            * self.get_top_core_positions(
+                ["first_skyrmion_top_region", "second_skyrmion_top_region"]
+            )
+            * self.get_top_trajectory(
+                ["first_skyrmion_top_region", "second_skyrmion_top_region"]
+            )
+            + self.get_bottom_layer()
+            * self.get_bottom_core_positions(
+                ["first_skyrmion_bottom_region", "second_skyrmion_bottom_region"]
+            )
+            * self.get_bottom_trajectory(
+                ["first_skyrmion_bottom_region", "second_skyrmion_bottom_region"]
+            )
+        ).cols(1)
 
     def get_layers(self):
         return self.get_top_layer() + self.get_bottom_layer()
