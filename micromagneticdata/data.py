@@ -1,4 +1,5 @@
 import glob
+import json
 import os
 
 import ipywidgets
@@ -102,7 +103,26 @@ class Data:
         >>> data.info
            drive_number...
         """
-        return pd.DataFrame.from_records([i.info for i in self])
+        records = []
+        for i in range(self.n):
+            try:
+                drive = self[i]
+                with (drive.drive_path / "info.json").open() as f:
+                    drive_info = json.load(f)
+                drive_info["info.json"] = "available"
+                records.append(drive_info)
+            except FileNotFoundError:
+                print(f"Warning: Missing info.json for drive-{i}")
+                records.append({"drive_number": i, "info.json": "missing"})
+            except json.JSONDecodeError:
+                print(f"Warning: Corrupt info.json for drive-{i}")
+                records.append({"drive_number": i, "info.json": "corrupt"})
+        all_columns = set(col for record in records for col in record)
+        for record in records:
+            for col in all_columns:
+                record.setdefault(col, pd.NA)
+
+        return pd.DataFrame.from_records(records)
 
     @property
     def n(self):
