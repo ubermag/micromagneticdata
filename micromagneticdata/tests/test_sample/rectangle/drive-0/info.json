@@ -1,1 +1,1 @@
-{"drive_number": 0, "date": "2024-06-11", "time": "14:14:32", "driver": "TimeDriver", "adapter": "oommfc", "t": 2.5e-11, "n": 25, "n_threads": null}
+{"drive_number": 0, "date": "2025-05-31", "time": "22:02:42", "start_time": "2025-05-31T22:02:42", "adapter": "oommfc", "adapter_version": "0.65.0", "driver": "TimeDriver", "t": 2.5e-11, "n": 25, "end_time": "2025-05-31T22:02:42", "elapsed_time": "00:00:01", "success": true}

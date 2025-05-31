@@ -1,1 +1,1 @@
-{"drive_number": 2, "date": "2024-06-11", "time": "14:14:39", "driver": "TimeDriver", "adapter": "mumax3c", "t": 5e-10, "n": 250}
+{"drive_number": 2, "date": "2025-05-31", "time": "22:02:42", "start_time": "2025-05-31T22:02:42", "adapter": "mumax3c", "adapter_version": "0.3.0", "driver": "TimeDriver", "t": 5e-10, "n": 250, "end_time": "2025-05-31T22:02:43", "elapsed_time": "00:00:01", "success": true}

@@ -1,4 +1,5 @@
 import os
+import textwrap
 
 import ipywidgets
 import pandas as pd
@@ -28,6 +29,37 @@ class TestData:
     def test_info(self):
         assert isinstance(self.data.info, pd.DataFrame)
         assert len(self.data.info.index) == self.N_SAMPLES
+
+    def test_info_missing_corrupt(self, tmp_path):
+        for i in range(3):
+            (tmp_path / "system" / f"drive-{i}").mkdir(parents=True)
+
+        # missing info.json for drive-0
+
+        # broken info.json for drive-1
+        (tmp_path / "system" / "drive-1" / "info.json").write_text('{"drive_number": 1')
+
+        # correct info.json for drive-2
+        info_text = textwrap.dedent(
+            """
+            {
+                "drive_number": 2,
+                "date": "2025-05-31",
+                "time": "20:29:33",
+                "start_time": "2025-05-31T20:29:33",
+                "adapter": "oommfc",
+                "adapter_version": "0.65.0",
+                "driver": "MinDriver",
+                "end_time": "2025-05-31T20:29:33",
+                "elapsed_time": "00:00:01",
+                "success": true}
+            """
+        )
+        (tmp_path / "system" / "drive-2" / "info.json").write_text(info_text)
+
+        data = md.Data(name="system", dirname=str(tmp_path))
+        info = data.info
+        assert info["info.json"].to_list() == ["missing", "corrupt", "available"]
 
     def test_n(self):
         assert self.data.n == self.N_SAMPLES
