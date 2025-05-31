@@ -17,7 +17,6 @@ import micromagneticdata as md
 @ts.typesystem(
     name=ts.Typed(expected_type=str),
     number=ts.Scalar(expected_type=int, unsigned=True),
-    dirname=ts.Typed(expected_type=str),
 )
 class Drive(md.AbstractDrive):
     """Drive class.
@@ -34,7 +33,7 @@ class Drive(md.AbstractDrive):
 
         Drive number.
 
-    dirname : str, optional
+    dirname : str, pathlib.Path, optional
 
         Directory in which system's data is saved. Defults to ``'./'``.
 
@@ -94,6 +93,7 @@ class Drive(md.AbstractDrive):
         self._table = kwargs.pop("table", None)
 
         super().__init__(**kwargs)
+        self.dirname = dirname
         self.drive_path = pathlib.Path(f"{dirname}/{name}/drive-{number}")
         if not self.drive_path.exists():
             msg = f"Directory {self.drive_path!r} does not exist."
@@ -102,8 +102,20 @@ class Drive(md.AbstractDrive):
         self.use_cache = use_cache
         self.name = name
         self.number = number
-        self.dirname = dirname
         self.x = x
+
+    @property
+    def dirname(self):
+        """Directory containing the system's data."""
+        return self._dirname
+
+    @dirname.setter
+    def dirname(self, dirname):
+        if not isinstance(dirname, (str, pathlib.Path)):
+            raise TypeError(
+                f"Wrong type '{type(dirname)}' for dirname, must be str or Path."
+            )
+        self._dirname = str(dirname)
 
     @property
     def use_cache(self):
