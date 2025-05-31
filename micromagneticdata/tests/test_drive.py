@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import discretisedfield as df
 import ipywidgets
@@ -18,8 +19,16 @@ class TestDrive:
         self.data = md.Data(name=self.name, dirname=self.dirname)
 
     def test_init(self):
+        # str for dirname
         drive = md.Drive(name=self.name, number=0, dirname=self.dirname)
         assert isinstance(drive, md.Drive)
+
+        # Path for dirname
+        drive2 = md.Drive(name=self.name, number=0, dirname=Path(self.dirname))
+        assert isinstance(drive2, md.Drive)
+        assert drive.name == drive2.name
+        assert drive.number == drive2.number
+        assert drive.dirname == drive2.dirname
 
         # Exception
         with pytest.raises(IOError):
