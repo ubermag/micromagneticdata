@@ -1,5 +1,6 @@
 import os
 import textwrap
+from pathlib import Path
 
 import ipywidgets
 import pandas as pd
@@ -18,7 +19,9 @@ class TestData:
     def test_init(self):
         assert isinstance(self.data, md.Data)
 
-        # Exception
+        with pytest.raises(IOError):
+            md.Data(path=Path(self.dirname) / "nonexistent")
+
         with pytest.raises(IOError):
             md.Data(name="wrong", dirname=self.dirname)
 
