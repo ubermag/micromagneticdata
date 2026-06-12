@@ -118,7 +118,7 @@ class Drive(md.AbstractDrive):
             )
 
         drive_entry_points = entry_points(
-            group="micromagneticdata.output_collecting.Drive"
+            group="micromagneticdata.plugins.CalculatorDrive"
         )
 
         try:
@@ -210,9 +210,9 @@ class Drive(md.AbstractDrive):
         if self.use_cache and self._table is not None:
             return self._table
 
-        read_table = entry_points(
-            group="micromagneticdata.output_collecting.read_table"
-        )[self._adapter].load()
+        read_table = entry_points(group="micromagneticdata.plugins.read_table")[
+            self._adapter
+        ].load()
         table = read_table(str(self._table_path), x=self.x)
 
         if self.use_cache:
