@@ -26,11 +26,6 @@ class AbstractDrive(abc.ABC):
     def __init__(self, callbacks=None):
         self._callbacks = callbacks or []
 
-    @abc.abstractmethod
-    def __repr__(self):
-        """Representation string."""
-        pass  # pragma: no cover
-
     @property
     def x(self):
         """Independent variable name.

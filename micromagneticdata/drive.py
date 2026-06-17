@@ -1,9 +1,9 @@
 import abc
 import copy
+import importlib.metadata
 import json
 import numbers
 import pathlib
-import sys
 
 import discretisedfield as df
 import ipywidgets
@@ -11,11 +11,6 @@ import ubermagutil as uu
 import ubermagutil.typesystem as ts
 
 import micromagneticdata as md
-
-if sys.version_info.minor < 10:
-    from importlib_metadata import entry_points
-else:
-    from importlib.metadata import entry_points
 
 
 @uu.inherit_docs
@@ -117,7 +112,7 @@ class Drive(md.AbstractDrive):
                 " automatically because no 'info.json' was found."
             )
 
-        drive_entry_points = entry_points(
+        drive_entry_points = importlib.metadata.entry_points(
             group="micromagneticdata.plugins.CalculatorDrive"
         )
 
@@ -148,6 +143,12 @@ class Drive(md.AbstractDrive):
         self.name = name
         self.number = number
         self.x = x
+
+    def __repr__(self):
+        return (
+            f"{self.__class__.__name__}(name='{self.name}', number={self.number}, "
+            f"dirname='{self.dirname}', x='{self.x}')"
+        )
 
     @property
     def dirname(self):
@@ -210,9 +211,9 @@ class Drive(md.AbstractDrive):
         if self.use_cache and self._table is not None:
             return self._table
 
-        read_table = entry_points(group="micromagneticdata.plugins.read_table")[
-            self._adapter
-        ].load()
+        read_table = importlib.metadata.entry_points(
+            group="micromagneticdata.plugins.read_table"
+        )[self._adapter].load()
         table = read_table(str(self._table_path), x=self.x)
 
         if self.use_cache:
@@ -422,7 +423,6 @@ class Drive(md.AbstractDrive):
 
     def __lshift__(self, other):
         if isinstance(other, md.Drive):
-            # no use of self.__class__ to allow combining Mumax3 and OOMMF runs
             return md.CombinedDrive(self, other)
         elif isinstance(other, md.CombinedDrive):
             return md.CombinedDrive(self, *other.drives)
