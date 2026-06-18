@@ -95,8 +95,12 @@ class Drive(md.AbstractDrive):
         """
         if "adapter" in kwargs:
             adapter = kwargs["adapter"]
+        if not (drive_dir := pathlib.Path(f"{dirname}/{name}/drive-{number}")).is_dir():
+            msg = f"Directory {drive_dir!r} does not exist."
+            raise OSError(msg)
+
         elif (f := pathlib.Path(f"{dirname}/{name}/drive-{number}/info.json")).exists():
-            info_json = json.load(f.open())
+            info_json = json.loads(f.read_text())
             if "adapter" in info_json:
                 adapter = info_json["adapter"]
             else:
@@ -135,9 +139,6 @@ class Drive(md.AbstractDrive):
         super().__init__(**kwargs)
         self.dirname = dirname
         self.drive_path = pathlib.Path(f"{dirname}/{name}/drive-{number}")
-        if not self.drive_path.exists():
-            msg = f"Directory {self.drive_path!r} does not exist."
-            raise OSError(msg)
 
         self.use_cache = use_cache
         self.name = name

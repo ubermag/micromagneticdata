@@ -5,6 +5,10 @@ import pytest
 import ubermagtable as ut
 
 
+def test_n(drive):
+    assert isinstance(drive.n, int)
+
+
 def test_x(drive, drive_x):
     assert isinstance(drive.x, str)
     assert drive.x == drive_x
@@ -13,11 +17,11 @@ def test_x(drive, drive_x):
         drive.x = "not_a_valid_column_name"
 
 
-def test_set_x(drive, drive_x, new_drive_column):
+def test_set_x(drive, drive_x, new_drive_x):
     assert drive.x == drive_x
-    drive.x = new_drive_column
+    drive.x = new_drive_x
 
-    assert drive.x == new_drive_column
+    assert drive.x == new_drive_x
 
 
 def test_calculator_script(drive, calculator_script_content):
