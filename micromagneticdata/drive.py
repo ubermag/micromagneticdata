@@ -59,19 +59,17 @@ class Drive(md.AbstractDrive):
     --------
     1. Getting drive object from data object.
 
-    >>> import os
     >>> import micromagneticdata as md
-    ...
-    >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-    >>> drive = md.Data(name='rectangle', dirname=dirname)[0]
+    >>> from micromagneticdata import sample_data
+    >>> drive = md.Data(name='rectangle', dirname=sample_data.dirname)[0]
     >>> drive
     OOMMFDrive(...)
 
-    2. Getting drive objet directly.
+    2. Getting drive object directly.
 
-    >>> drive = md.Drive(name='rectangle', number=1, dirname=dirname)
+    >>> drive = md.Drive(name='rectangle', number=0, dirname=sample_data.dirname)
     >>> drive
-    Mumax3Drive(...)
+    OOMMFDrive(...)
 
     """
 
@@ -124,7 +122,7 @@ class Drive(md.AbstractDrive):
             CalculatorDrive = drive_entry_points[adapter].load()
         except KeyError:
             raise RuntimeError(
-                f"'{adapter}' must be installed to read the drive."
+                f"'{adapter}' must be installed to read drive '{name}/drive-{number}'."
             ) from None
 
         return super().__new__(CalculatorDrive)
@@ -261,21 +259,17 @@ class Drive(md.AbstractDrive):
         --------
         1. Getting the field of a particular step.
 
-        >>> import os
-        >>> import micromagneticdata as md
-        ...
-        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> drive = md.Drive(name='rectangle', number=0, dirname=dirname)
+        >>> import micromagneticdata as mdata
+        >>> from micromagneticdata import sample_data
+        >>> drive = mdata.Drive(name='rectangle', number=0, dirname=sample_data.dirname)
         >>> drive[5]
         Field(...)
 
         2. Selecting a part of the drive.
-        >>> import os
-        >>> import micromagneticdata as md
-        ...
-        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> drive = md.Drive(name='rectangle', number=0, dirname=dirname)
-        >>> selection = drive[:8:2]
+
+        >>> drive.n
+        25
+        >>> selection = drive[:8:2]  # select elements 0, 2, 4, 6
         >>> selection
         OOMMFDrive(...)
         >>> selection.n
@@ -317,11 +311,9 @@ class Drive(md.AbstractDrive):
         --------
         1. Getting information about drive.
 
-        >>> import os
         >>> import micromagneticdata as md
-        ...
-        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> drive = md.Drive(name='rectangle', number=6, dirname=dirname)
+        >>> from micromagneticdata import sample_data
+        >>> drive = md.Drive(name='rectangle', number=0, dirname=sample_data.dirname)
         >>> drive.info
         {...}
 
@@ -333,28 +325,23 @@ class Drive(md.AbstractDrive):
     @abc.abstractmethod
     def calculator_script(self):
         """MIF file.
-        This property returns a string with the content of MIF file.
+        This property returns a string with the content of the calculator script.
 
         Returns
         -------
         str
-            MIF file content.
+            Calculator script file content.
 
         Examples
         --------
-        1. Getting MIF file.
+        1. Getting MIF file for OOMMF simulations.
 
-        >>> import os
         >>> import micromagneticdata as md
-        ...
-        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> drive = md.Drive(name='rectangle', number=6, dirname=dirname)
+        >>> from micromagneticdata import sample_data
+        >>> drive = md.Drive(name='rectangle', number=0, dirname=sample_data.dirname)
         >>> drive.calculator_script
         '# MIF 2...'
 
-        2. Getting mx3 file
-
-        TODO add mumax3 output to the pre-computed data
         """
 
     def ovf2vtk(self, dirname=None):
@@ -374,11 +361,9 @@ class Drive(md.AbstractDrive):
         --------
         1. Iterating drive.
 
-        >>> import os
         >>> import micromagneticdata as md
-        ...
-        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> drive = md.Drive(name='rectangle', number=0, dirname=dirname)
+        >>> from micromagneticdata import sample_data
+        >>> drive = md.Drive(name='rectangle', number=0, dirname=sample_data.dirname)
         >>> drive.ovf2vtk()
 
         """
@@ -409,11 +394,9 @@ class Drive(md.AbstractDrive):
         --------
         1. Slider widget.
 
-        >>> import os
         >>> import micromagneticdata as md
-        ...
-        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> drive = md.Drive(name='rectangle', number=0, dirname=dirname)
+        >>> from micromagneticdata import sample_data
+        >>> drive = md.Drive(name='rectangle', number=0, dirname=sample_data.dirname)
         >>> drive.slider()
         IntSlider(...)
 
