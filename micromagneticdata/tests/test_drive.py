@@ -1,18 +1,17 @@
 import importlib.metadata
-import json
 import os
 from pathlib import Path
 
 import discretisedfield as df
 import ipywidgets
 import numpy as np
-import pandas as pd
 import pytest
 import ubermagtable as ut
 import xarray as xr
 from discretisedfield.tests.test_field import check_hv
 
 import micromagneticdata as mdata
+from .mock_data import SampleDrive, create_drive, mock_entry_points
 from micromagneticdata.testing.drive import *  # noqa: F403
 
 
@@ -28,7 +27,7 @@ def drive(tmp_path, monkeypatch):
 
     system_name = "test_system"
     index = 0
-    _create_drive(tmp_path, system_name, index, n_steps=25)
+    create_drive(tmp_path, system_name, index, "t", n_steps=25)
     return SampleDrive(system_name, index, dirname=tmp_path)
 
 
@@ -48,104 +47,6 @@ def new_drive_x():
 def calculator_script_content():
     """Representative section of a calculator script."""
     return "run simulation"
-
-
-#####################
-
-# Mock data for tests in micromagneticadata; adapter packages don't need this section
-# and should instead test with real data
-
-
-class SampleDrive(mdata.Drive):
-    @mdata.AbstractDrive.x.setter
-    def x(self, value):
-        value = value or "t"
-        if value not in ["t", "mx", "my", "mz"]:
-            raise ValueError(f"Unsupported x={value}")
-        self._x = value
-
-    @property
-    def _table_path(self):
-        return self.drive_path / "table.csv"
-
-    @property
-    def _step_file_glob(self):
-        return self.drive_path.glob("m-*.hdf5")
-
-    @property
-    def calculator_script(self):
-        return (self.drive_path / "script.txt").read_text()
-
-
-def read_table(filename, x=None, rename=True):
-    return ut.Table(
-        pd.read_csv(filename), units={"t": "s", "mx": "", "my": "", "mz": ""}, x=x
-    )
-
-
-def mock_entry_points(group):
-    # micromagneticdata.Drive detects plugins to load a suitable drive.
-    # For testing we mock this to use the SampleDrive class.
-    if group == "micromagneticdata.plugins.CalculatorDrive":
-        return importlib.metadata.EntryPoints(
-            [
-                importlib.metadata.EntryPoint(
-                    name="micromagneticdata",
-                    value="micromagneticdata.tests.test_drive:SampleDrive",
-                    group="micromagneticdata.plugins.CalculatorDrive",
-                ),
-            ]
-        )
-    elif group == "micromagneticdata.plugins.read_table":
-        return importlib.metadata.EntryPoints(
-            [
-                importlib.metadata.EntryPoint(
-                    name="micromagneticdata",
-                    value="micromagneticdata.tests.test_drive:read_table",
-                    group="micromagneticdata.plugins.read_table",
-                ),
-            ]
-        )
-    else:
-        raise NotImplementedError(f"Group {group} not supported.")
-
-
-def _create_drive(base: Path, system_name, index, n_steps):
-    """Create a drive with 25 steps and metadata compatible with SampleDrive."""
-    drive_dir = base / system_name / f"drive-{index}"
-    drive_dir.mkdir(parents=True)
-    # minimalistic info json, incomplete but sufficient for tests
-    (drive_dir / "info.json").write_text(
-        json.dumps(
-            {
-                "drive_number": index,
-                "adapter": "micromagneticdata",
-                "driver": "SampleDriver",
-            }
-        )
-    )
-    # fake tabular data
-    pd.DataFrame(
-        {
-            "t": list(range(1, n_steps + 1)),
-            "mx": [0] * n_steps,
-            "my": [0] * n_steps,
-            "mz": [1] * n_steps,
-        }
-    ).to_csv(drive_dir / "table.csv")
-    m = df.Field(
-        mesh=df.Mesh(p1=(0, 0, 0), p2=(1, 1, 1), n=(5, 5, 5)),
-        nvdim=3,
-        value=(0, 1, 1),
-        norm=1e5,
-    )
-    # initial magnetisation
-    m.to_file(drive_dir / "m0.omf")
-    # fake output magnetisation
-    for i in range(1, n_steps + 1):
-        m.to_file(drive_dir / f"m-{i:03}.hdf5")
-    # fake simulation script for the calculator
-    (drive_dir / "script.txt").write_text("run simulation")
 
 
 #####################

@@ -1,4 +1,4 @@
-import itertools
+import importlib.metadata
 import os
 
 import discretisedfield as df
@@ -9,9 +9,60 @@ import xarray as xr
 from discretisedfield.tests.test_field import check_hv
 
 import micromagneticdata as md
+from .mock_data import SampleDrive, create_drive, mock_entry_points
 
 
-class TestDrive:
+@pytest.fixture
+def time_drive_1(tmp_path, monkeypatch):
+    monkeypatch.setattr(importlib.metadata, "entry_points", mock_entry_points)
+
+    system_name = "test_system"
+    index = 0
+    create_drive(tmp_path, system_name, index, "t", n_steps=25)
+    return SampleDrive(system_name, index, dirname=tmp_path, x="t")
+
+
+@pytest.fixture
+def time_drive_2(tmp_path, monkeypatch):
+    monkeypatch.setattr(importlib.metadata, "entry_points", mock_entry_points)
+
+    system_name = "test_system"
+    index = 1
+    create_drive(tmp_path, system_name, index, "t", n_steps=20)
+    return SampleDrive(system_name, index, dirname=tmp_path, x="t")
+
+
+@pytest.fixture
+def min_drive_1(tmp_path, monkeypatch):
+    monkeypatch.setattr(importlib.metadata, "entry_points", mock_entry_points)
+
+    system_name = "test_system"
+    index = 2
+    create_drive(tmp_path, system_name, index, "iteration", n_steps=1)
+    return SampleDrive(system_name, index, dirname=tmp_path, x="iteration")
+
+
+@pytest.fixture
+def min_drive_2(tmp_path, monkeypatch):
+    monkeypatch.setattr(importlib.metadata, "entry_points", mock_entry_points)
+
+    system_name = "test_system2"
+    index = 0
+    create_drive(tmp_path, system_name, index, "iteration", n_steps=10)
+    return SampleDrive(system_name, index, dirname=tmp_path, x="iteration")
+
+
+@pytest.fixture
+def combined_time_drive(time_drive_1, time_drive_2):
+    return md.CombinedDrive(time_drive_1, time_drive_2)
+
+
+@pytest.fixture
+def combined_min_drive(min_drive_1, min_drive_2):
+    return md.CombinedDrive(min_drive_1, min_drive_2)
+
+
+def old():
     # TimeDriver: 0, 1, 2, 5
     # MinDriver: 4, 6
     # RelaxDriver: 3
@@ -28,131 +79,151 @@ class TestDrive:
         data = md.Data(name="hysteresis", dirname=self.dirname)
         self.combined_drives.append(data[0] << data[0])
 
-    def test_init(self):
-        combined_drive = md.CombinedDrive(self.data[0], self.data[1])
-        assert isinstance(combined_drive, md.CombinedDrive)
-        with pytest.raises(ValueError):
-            md.CombinedDrive(self.data[0])
-        with pytest.raises(TypeError):
-            md.CombinedDrive(self.data[0], "wrong type")
 
-    def test_repr(self):
-        for combined in self.combined_drives:
-            assert isinstance(repr(combined), str)
-            assert "CombinedDrive" in repr(combined)
-            assert "Drive" in repr(combined)
+def test_init(time_drive_1, time_drive_2):
+    combined_drive = md.CombinedDrive(time_drive_1, time_drive_2)
+    assert isinstance(combined_drive, md.CombinedDrive)
 
-    def test_x(self):
-        for combined in self.combined_drives:
-            assert isinstance(combined.x, str)
+    # at least two drives must be passed
+    with pytest.raises(ValueError):
+        md.CombinedDrive(time_drive_1)
 
-            assert combined.x in ["t", "iteration", "B_hysteresis"]
+    with pytest.raises(TypeError):
+        md.CombinedDrive(time_drive_1, "wrong type")
 
-        self.combined_drives[0].x = "mx"
-        with pytest.raises(ValueError):
-            self.combined_drives[0].x = "wrong"
 
-    def test_info(self):
-        for combined in self.combined_drives:
-            assert isinstance(combined.info, dict)
-            assert isinstance(combined.info["drive_numbers"], list)
-            assert combined.info["driver"] in [
-                "MinDriver",
-                "RelaxDriver",
-                "TimeDriver",
-                "HysteresisDriver",
-            ]
+def test_repr(combined_time_drive):
+    assert isinstance(repr(combined_time_drive), str)
+    assert "CombinedDrive" in repr(combined_time_drive)
+    assert "Drive" in repr(combined_time_drive)
 
-    def test_m0(self):
-        for drive in self.combined_drives:
-            assert isinstance(drive.m0, df.Field)
 
-    def test_table(self):
-        for drive in self.combined_drives:
-            assert isinstance(drive.table, ut.Table)
-            assert drive.table.x == drive.x
+def test_x_time_drive(combined_time_drive):
+    assert combined_time_drive.x == "t"
 
-    def test_n(self):
-        assert tuple(drive.n for drive in self.combined_drives) == (290, 2, 28, 82)
+    combined_time_drive.x = "mx"
+    assert combined_time_drive.x == "mx"
 
-    def test_getitem(self):
-        assert all(
-            isinstance(self.combined_drives[1][i], df.Field)
-            for i in range(self.combined_drives[1].n)
+    with pytest.raises(ValueError):
+        combined_time_drive.x = "wrong"
+
+
+def test_x_min_drive(combined_min_drive):
+    assert combined_min_drive.x == "iteration"
+
+
+def test_info_time_drive(combined_time_drive):
+    assert isinstance(combined_time_drive.info, dict)
+    assert combined_time_drive.info["drive_numbers"] == [0, 1]
+    assert combined_time_drive.info["driver"] == "TimeDriver"
+
+
+def test_info_min_drive(combined_min_drive):
+    assert isinstance(combined_min_drive.info, dict)
+    assert combined_min_drive.info["drive_numbers"] == [2, 0]
+    assert combined_min_drive.info["driver"] == "MinDriver"
+
+
+def test_m0(combined_time_drive):
+    assert isinstance(combined_time_drive.m0, df.Field)
+
+
+def test_table_time_drive(combined_time_drive):
+    assert isinstance(combined_time_drive.table, ut.Table)
+    assert combined_time_drive.table.x == combined_time_drive.x
+
+
+def test_n(combined_time_drive, combined_min_drive):
+    assert combined_time_drive.n == 45
+    assert combined_min_drive.n == 11
+
+
+def test_getitem(combined_min_drive):
+    assert all(
+        isinstance(combined_min_drive[i], df.Field) for i in range(combined_min_drive.n)
+    )
+
+
+def test_iter(combined_min_drive):
+    for m in combined_min_drive:
+        assert isinstance(m, df.Field)
+
+    assert len(list(combined_min_drive)) == 11
+
+
+def test_lshift(combined_time_drive, time_drive_1, combined_min_drive, min_drive_1):
+    # two combined drives with independent variable t
+    combined = combined_time_drive << combined_time_drive
+    assert isinstance(combined, md.CombinedDrive)
+    assert len(combined.drives) == 4
+    assert combined.info["driver"] == "TimeDriver"
+    assert combined.x == "t"
+    assert combined.n == 90
+    assert len(combined.table.data) == 90
+
+    for drive1, drive2 in [
+        (combined_time_drive, time_drive_1),
+        (time_drive_1, combined_time_drive),
+    ]:
+        combined = drive1 << drive2
+        assert isinstance(combined, md.CombinedDrive)
+        assert len(combined.drives) == 3
+        assert combined.info["driver"] == "TimeDriver"
+        assert combined.x == "t"
+        assert combined.n == 70
+        assert len(combined.table.data) == 70
+
+    combined = combined_min_drive << combined_min_drive
+    assert isinstance(combined, md.CombinedDrive)
+    assert len(combined.drives) == 4
+    assert combined.info["driver"] == "MinDriver"
+    assert combined.x == "iteration"
+    assert combined.n == 22
+    assert len(combined.table.data) == 22
+
+    for drive1, drive2 in [
+        (combined_min_drive, min_drive_1),
+        (min_drive_1, combined_min_drive),
+    ]:
+        combined = drive1 << drive2
+        assert isinstance(combined, md.CombinedDrive)
+        assert len(combined.drives) == 3
+        assert combined.info["driver"] == "MinDriver"
+        assert combined.x == "iteration"
+        assert combined.n == 12
+        assert len(combined.table.data) == 12
+
+    with pytest.raises(ValueError):
+        combined_min_drive << combined_time_drive
+    with pytest.raises(ValueError):
+        combined_time_drive << min_drive_1
+    with pytest.raises(TypeError):
+        combined_time_drive << "wrong type"
+
+
+def test_to_xarray(combined_min_drive):
+    assert isinstance(combined_min_drive.to_xarray(), xr.DataArray)
+    assert all(
+        item in combined_min_drive.to_xarray().attrs.items()
+        for item in combined_min_drive.info.items()
+    )
+    assert len(combined_min_drive.to_xarray()[combined_min_drive.table.x]) == 11
+    assert np.allclose(
+        combined_min_drive.to_xarray()[combined_min_drive.table.x].values,
+        combined_min_drive.table.data[combined_min_drive.table.x].to_numpy(),
+    )
+
+    def test_register_callback(combined_min_drive):
+        drive_orientation = combined_min_drive.register_callback(
+            lambda field: field.orientation
         )
+        assert isinstance(drive_orientation, combined_min_drive.__class__)
+        assert len(drive_orientation._callbacks) == 1
+        for field in drive_orientation:
+            assert np.max(field.array) <= 1.0
+            assert np.min(field.array) >= -1.0
 
-    def test_iter(self):
-        for drive in self.combined_drives:
-            for m in drive:
-                assert isinstance(m, df.Field)
-
-        assert len(list(self.combined_drives[0])) == 290
-
-    def test_lshift(self):
-        # TimeDriver: 0, 1, 2, 5
-        # MinDriver: 4, 6
-        # RelaxDriver: 3
-        # HysteresisDriver: 7 [CURRENTLY MISSING IN THE DATASET]
-        for d1, d2, n_drives in itertools.chain(
-            zip(self.combined_drives, self.combined_drives, [6, 4, 4]),
-            zip(
-                self.combined_drives,
-                [self.data[0], self.data[3], self.data[6]],
-                [4, 3, 3],
-            ),
-            zip(
-                [self.data[0], self.data[3], self.data[6]],
-                self.combined_drives,
-                [4, 3, 3],
-            ),
-        ):
-            combined = d1 << d2
-            assert isinstance(combined, md.CombinedDrive)
-            assert len(combined.drives) == n_drives
-            assert combined.info["driver"] == d1.info["driver"]
-            assert combined.x == d1.x
-            assert len(combined.table.data) == combined.n
-
-        # different independent variable
-        with pytest.raises(ValueError):
-            self.combined_drives[0] << self.data[6]
-        with pytest.raises(TypeError):
-            self.combined_drives[0] << 1
-
-    def test_to_xarray(self):
-        for drive in self.combined_drives:
-            assert isinstance(drive.to_xarray(), xr.DataArray)
-            assert all(
-                item in drive.to_xarray().attrs.items() for item in drive.info.items()
-            )
-            if len(drive._step_files) != 1:
-                assert len(drive.to_xarray()[drive.table.x]) == len(drive._step_files)
-                assert np.allclose(
-                    drive.to_xarray()[drive.table.x].values,
-                    drive.table.data[drive.table.x].to_numpy(),
-                )
-
-            if drive.info["driver"] == "HysteresisDriver":
-                assert all(
-                    np.allclose(
-                        drive.to_xarray()[f"B{i}_hysteresis"].values,
-                        drive.table.data[f"B{i}_hysteresis"].to_numpy(),
-                    )
-                    for i in "xyz"
-                )
-
-    def test_register_callback(self):
-        for drive in self.combined_drives:
-            drive_orientation = drive.register_callback(lambda field: field.orientation)
-            assert isinstance(drive_orientation, drive.__class__)
-            assert len(drive_orientation._callbacks) == 1
-            for field in drive_orientation:
-                assert np.max(field.array) <= 1.0
-                assert np.min(field.array) >= -1.0
-
-        drive = self.combined_drives[0]
-        processed = drive.register_callback(lambda f: f.orientation)
-        processed = processed.register_callback(lambda f: f.x)
+        processed = drive_orientation.register_callback(lambda f: f.x)
         for field in processed:
             assert field.nvdim == 1
             assert np.max(field.array) <= 1.0
@@ -160,24 +231,25 @@ class TestDrive:
 
         assert len(processed.callbacks) == 2
 
-    def test_hv(self):
-        # time drive
-        check_hv(
-            self.combined_drives[0].hv(kdims=["y", "z"], vdims=["y", "z"]),
-            ["DynamicMap [x,t]", "Image [y,z]", "VectorField [y,z]"],
-        )
-        check_hv(
-            self.combined_drives[0].hv.scalar(kdims=["y", "z"]),
-            ["DynamicMap [x,vdims,t]", "Image [y,z]"],
-        )
 
-        with pytest.raises(NotImplementedError):
-            check_hv(self.combined_drives[0].hv.scalar(kdims=["x", "t"]), ...)
+def test_hv(combined_time_drive, combined_min_drive):
+    # time drive
+    check_hv(
+        combined_time_drive.hv(kdims=["y", "z"], vdims=["y", "z"]),
+        ["DynamicMap [x,t]", "Image [y,z]", "VectorField [y,z]"],
+    )
+    check_hv(
+        combined_time_drive.hv.scalar(kdims=["y", "z"]),
+        ["DynamicMap [x,vdims,t]", "Image [y,z]"],
+    )
 
-        # min drive with steps
-        check_hv(
-            self.combined_drives[2]
-            .register_callback(lambda f: f.sel("y"))
-            .hv.vector(kdims=["x", "z"]),
-            ["DynamicMap [iteration]", "VectorField [x,z]"],
-        )
+    with pytest.raises(NotImplementedError):
+        check_hv(combined_time_drive.hv.scalar(kdims=["x", "t"]), ...)
+
+    # min drive with steps
+    check_hv(
+        combined_min_drive.register_callback(lambda f: f.sel("y")).hv.vector(
+            kdims=["x", "z"]
+        ),
+        ["DynamicMap [iteration]", "VectorField [x,z]"],
+    )

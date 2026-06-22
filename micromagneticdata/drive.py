@@ -111,7 +111,7 @@ class Drive(md.AbstractDrive):
                 else:
                     adapter = "oommfc"
         else:
-            raise RuntimeError(
+            raise FileNotFoundError(
                 "No 'adapter' has been passed and the adapter could not be determined"
                 " automatically because no 'info.json' was found."
             )
