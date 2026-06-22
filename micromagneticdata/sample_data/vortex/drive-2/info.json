@@ -1,0 +1,1 @@
+{"drive_number": 2, "date": "2026-06-22", "time": "10:35:00", "start_time": "2026-06-22T10:35:00", "adapter": "oommfc", "adapter_version": "0.66.0", "driver": "TimeDriver", "t": 5e-09, "n": 250, "comment": "remove external field and relax vortex", "end_time": "2026-06-22T10:35:05", "elapsed_time": "00:00:05", "success": true}
