@@ -32,21 +32,11 @@ def drive(tmp_path, monkeypatch):
 
 
 @pytest.fixture
-def drive_x():
+def drive_with_reference(drive):
     """Independent variable of the drive."""
-    return "t"
-
-
-@pytest.fixture
-def new_drive_x():
     """An other column in drive.table, that can be used as indendent variable."""
-    return "mx"
-
-
-@pytest.fixture
-def calculator_script_content():
     """Representative section of a calculator script."""
-    return "run simulation"
+    return drive, ("t", "mx", "run simulation")
 
 
 #####################
