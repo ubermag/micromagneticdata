@@ -99,35 +99,6 @@ def vortex():
     td.drive(system, t=5e-9, n=250, comment="remove external field and relax vortex")
 
 
-# def hysteresis():
-#     """Hysteresis of a magnetic sphere with excange, uniaxial anisotropy and DMI."""
-#     print(">>> Running hysteresis simulation")
-#     region = df.Region(p1=(-50e-9, -50e-9, -50e-9), p2=(50e-9, 50e-9, 50e-9))
-#     mesh = df.Mesh(region=region, cell=(5e-9, 5e-9, 5e-9))
-
-#     system = mm.System(name="hysteresis")
-#     system.energy = (
-#         mm.Exchange(A=1e-12)
-#         + mm.UniaxialAnisotropy(K=4e5, u=(0, 0, 1))
-#         + mm.DMI(D=1e-3, crystalclass="T")
-#     )
-
-#     def Ms_fun(point):
-#         x, y, z = point
-#         if x**2 + y**2 + z**2 <= 50e-9**2:
-#             return 1e6
-#         else:
-#             return 0
-
-#     system.m = df.Field(mesh, nvdim=3, value=(0, 0, -1), norm=Ms_fun)
-
-#     Hmin = (0, 0, -1 / mm.consts.mu0)
-#     Hmax = (0, 0, 1 / mm.consts.mu0)
-
-#     hd = oc.HysteresisDriver()
-#     hd.drive(system, Hmin=Hmin, Hmax=Hmax, n=21, dirname=dirname)
-
-
 if __name__ == "__main__":
     clean("rectangle")
     clean("vortex")
