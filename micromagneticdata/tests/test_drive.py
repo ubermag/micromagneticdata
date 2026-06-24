@@ -11,7 +11,7 @@ import xarray as xr
 from discretisedfield.tests.test_field import check_hv
 
 import micromagneticdata as mdata
-from .mock_data import SampleDrive, create_drive, mock_entry_points
+from .mock_data import create_drive, mock_entry_points
 from micromagneticdata.testing.drive import *  # noqa: F403
 
 
@@ -28,7 +28,7 @@ def drive(tmp_path, monkeypatch):
     system_name = "test_system"
     index = 0
     create_drive(tmp_path, system_name, index, "t", n_steps=25)
-    return SampleDrive(system_name, index, dirname=tmp_path)
+    return mdata.Drive(system_name, index, dirname=tmp_path)
 
 
 @pytest.fixture
