@@ -91,12 +91,12 @@ class Drive(md.AbstractDrive):
         that time.
 
         """
-        if "adapter" in kwargs:
-            adapter = kwargs["adapter"]
         if not (drive_dir := pathlib.Path(f"{dirname}/{name}/drive-{number}")).is_dir():
             msg = f"Directory {drive_dir!r} does not exist."
             raise OSError(msg)
 
+        if "adapter" in kwargs:
+            adapter = kwargs["adapter"]
         elif (f := pathlib.Path(f"{dirname}/{name}/drive-{number}/info.json")).exists():
             info_json = json.loads(f.read_text())
             if "adapter" in info_json:

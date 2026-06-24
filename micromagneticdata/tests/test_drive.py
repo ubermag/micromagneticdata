@@ -41,7 +41,75 @@ def drive_with_reference(drive):
 
 #####################
 
-# TODO test plugin registration
+# Additional tests not reused in adapter packages
+
+
+def test_missing_adapter(tmp_path):
+    system_name = "test_system"
+    index = 0
+    create_drive(tmp_path, system_name, index, "t", n_steps=25)
+    with pytest.raises(RuntimeError, match="'micromagneticdata' must be installed"):
+        mdata.Drive(system_name, index, dirname=tmp_path)
+
+
+def test_missing_info_json(tmp_path):
+    system_name = "test_system"
+    index = 0
+    create_drive(tmp_path, system_name, index, "t", n_steps=25)
+    (tmp_path / system_name / f"drive-{index}" / "info.json").unlink()
+    with pytest.raises(
+        FileNotFoundError,
+        match="No 'adapter' has been passed.*no 'info.json' was found.",
+    ):
+        mdata.Drive(system_name, index, dirname=tmp_path)
+
+
+def test_pass_adapter_manually(monkeypatch, tmp_path):
+    monkeypatch.setattr(importlib.metadata, "entry_points", mock_entry_points)
+
+    system_name = "test_system"
+    index = 0
+    create_drive(tmp_path, system_name, index, "t", n_steps=25)
+
+    # overwrite info.json to remove "adapter"; invalid json -> the code path to read
+    # info.json is skipped
+    (tmp_path / system_name / f"drive-{index}" / "info.json").write_text("")
+
+    mdata.Drive(system_name, index, dirname=tmp_path, adapter="micromagneticdata")
+
+
+def test_legacy_drive(tmp_path):
+    # prior to writing "adapter" to info.json the correct driver was inferred from the
+    # directory structure
+    system_name = "test_system"
+    index = 0
+    create_drive(tmp_path, system_name, index, "t", n_steps=25)
+
+    # overwrite info.json to remove "adapter"
+    (tmp_path / system_name / f"drive-{index}" / "info.json").write_text(
+        '{"driver": "TimeDriver"}'
+    )
+
+    # no system_name.out subdirectory -> OOMMF
+    try:
+        import oommfc.plugins  # oommfc might not be installed
+
+        drive = mdata.Drive(system_name, index, dirname=tmp_path)
+        assert isinstance(drive, oommfc.plugins.OOMMFDrive)
+    except importlib.metadata.PackageNotFoundError:
+        with pytest.raises(RuntimeError, match="'oommfc' must be installed"):
+            mdata.Drive(system_name, index, dirname=tmp_path)
+
+    # system_name.out subdirectory -> OOMMF
+    (tmp_path / system_name / f"drive-{index}" / f"{system_name}.out").mkdir()
+    try:
+        import mumax3c.plugins  # mumax3c might not be installed
+
+        drive = mdata.Drive(system_name, index, dirname=tmp_path)
+        assert isinstance(drive, mumax3c.plugins.Mumax3Drive)
+    except importlib.metadata.PackageNotFoundError:
+        with pytest.raises(RuntimeError, match="'mumax3c' must be installed"):
+            mdata.Drive(system_name, index, dirname=tmp_path)
 
 
 def test_init(drive):
