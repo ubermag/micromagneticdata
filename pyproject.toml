@@ -36,7 +36,8 @@ classifiers = [
 
 dependencies = [
     "discretisedfield>=0.92.0",
-    "ubermagtable>=0.62.0"
+    "ubermagtable>=0.62.0",
+    "importlib_metadata; python_version<'3.10'",
 ]
 
 [project.optional-dependencies]
@@ -103,6 +104,9 @@ filterwarnings = [
 markers = [
     "pyvista",
 ]
+
+[tool.setuptools]
+include-package-data = true
 
 [tool.setuptools.packages.find]
 include = ["micromagneticdata*"]

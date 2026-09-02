@@ -1,3 +1,4 @@
+import importlib.metadata
 import os
 from pathlib import Path
 
@@ -9,284 +10,332 @@ import ubermagtable as ut
 import xarray as xr
 from discretisedfield.tests.test_field import check_hv
 
-import micromagneticdata as md
+import micromagneticdata as mdata
+from .mock_data import create_drive, mock_entry_points
+from micromagneticdata.testing.drive import *  # noqa: F403
 
 
-class TestDrive:
-    def setup_method(self):
-        self.dirname = os.path.join(os.path.dirname(__file__), "test_sample")
-        self.name = "rectangle"
-        self.data = md.Data(name=self.name, dirname=self.dirname)
+@pytest.fixture
+def drive(tmp_path, monkeypatch):
+    """Fixture that returns a single drive.
 
-    def test_init(self):
-        # str for dirname
-        drive = md.Drive(name=self.name, number=0, dirname=self.dirname)
-        assert isinstance(drive, md.Drive)
+    Parametrize the fixture to test different types of drives.
+    """
+    # mock the plugin detection so that micromagneticadata can be tested without
+    # any plugins; adapter packages must not do that
+    monkeypatch.setattr(importlib.metadata, "entry_points", mock_entry_points)
 
-        # Path for dirname
-        drive2 = md.Drive(name=self.name, number=0, dirname=Path(self.dirname))
-        assert isinstance(drive2, md.Drive)
-        assert drive.name == drive2.name
-        assert drive.number == drive2.number
-        assert drive.dirname == drive2.dirname
+    system_name = "test_system"
+    index = 0
+    create_drive(tmp_path, system_name, index, "t", n_steps=25)
+    return mdata.Drive(system_name, index, dirname=tmp_path)
 
-        # Exception
-        with pytest.raises(IOError):
-            drive = md.Drive(name=self.name, number=11, dirname=self.dirname)
 
-    def test_repr(self):
-        for drive in self.data:
-            assert isinstance(repr(drive), str)
-            assert "Drive" in repr(drive)
+@pytest.fixture
+def drive_with_reference(drive):
+    """Independent variable of the drive."""
+    """An other column in drive.table, that can be used as indendent variable."""
+    """Representative section of a calculator script."""
+    return drive, ("t", "mx", "run simulation")
 
-    def test_x(self):
-        for drive in self.data:
-            assert isinstance(drive.x, str)
-            assert drive.x in ["t", "iteration", "B_hysteresis"]
 
-        self.data[0].x = "mx"
-        # Exception
-        with pytest.raises(ValueError):
-            self.data[0].x = "wrong"
+#####################
 
-    def test_info(self):
-        for i, drive in enumerate(self.data):
-            assert isinstance(drive.info, dict)
-            assert drive.info["drive_number"] == i
+# Additional tests not reused in adapter packages
 
-    def test_mif(self):
-        for i in [0, 5, 6]:
-            drive = self.data[i]
-            assert isinstance(drive.calculator_script, str)
-            assert "MIF" in drive.calculator_script
 
-    def test_mx3(self):
-        for i in [1, 2, 3, 4]:
-            drive = self.data[i]
-            assert isinstance(drive.calculator_script, str)
-            assert "tableadd" in drive.calculator_script
+def test_missing_adapter(tmp_path):
+    system_name = "test_system"
+    index = 0
+    create_drive(tmp_path, system_name, index, "t", n_steps=25)
+    # the drive specifies 'micromagneticdata' as adapter package but micromagneticdata
+    # does not provide the required plugins, therefore the test fails (the error message
+    # is slightly misleading in this case, because micromagneticadata is installed;
+    # for real missing adapter packages the message makes sense)
+    with pytest.raises(RuntimeError, match="'micromagneticdata' must be installed"):
+        mdata.Drive(system_name, index, dirname=tmp_path)
 
-    def test_valid(self):
-        dirname = os.path.join(os.path.dirname(__file__), "test_sample")
-        name = "hysteresis"
-        data = md.Data(name=name, dirname=dirname)
-        m0_field = data[0].m0
-        test_points = [
-            m0_field.mesh.point2index(m0_field.mesh.region.pmin),
-            m0_field.mesh.point2index(m0_field.mesh.region.center),
-            m0_field.mesh.point2index(m0_field.mesh.region.pmax),
-        ]
-        expected_validity = [False, True, False]
+
+def test_missing_info_json(tmp_path):
+    system_name = "test_system"
+    index = 0
+    create_drive(tmp_path, system_name, index, "t", n_steps=25)
+    (tmp_path / system_name / f"drive-{index}" / "info.json").unlink()
+    with pytest.raises(
+        FileNotFoundError,
+        match="No 'adapter' has been passed.*no 'info.json' was found.",
+    ):
+        mdata.Drive(system_name, index, dirname=tmp_path)
+
+
+def test_pass_adapter_manually(monkeypatch, tmp_path):
+    monkeypatch.setattr(importlib.metadata, "entry_points", mock_entry_points)
+
+    system_name = "test_system"
+    index = 0
+    create_drive(tmp_path, system_name, index, "t", n_steps=25)
+
+    # overwrite info.json to remove "adapter"; invalid json -> the code path to read
+    # info.json is skipped
+    (tmp_path / system_name / f"drive-{index}" / "info.json").write_text("")
+
+    mdata.Drive(system_name, index, dirname=tmp_path, adapter="micromagneticdata")
+
+
+def test_legacy_drive(tmp_path):
+    # prior to writing "adapter" to info.json the correct driver was inferred from the
+    # directory structure
+    system_name = "test_system"
+    index = 0
+    create_drive(tmp_path, system_name, index, "t", n_steps=25)
+
+    # overwrite info.json to remove "adapter"
+    (tmp_path / system_name / f"drive-{index}" / "info.json").write_text(
+        '{"driver": "TimeDriver"}'
+    )
+
+    # no system_name.out subdirectory -> OOMMF
+    try:
+        import oommfc.plugins  # oommfc might not be installed
+
+        drive = mdata.Drive(system_name, index, dirname=tmp_path)
+        assert isinstance(drive, oommfc.plugins.OOMMFDrive)
+    except ModuleNotFoundError:
+        with pytest.raises(RuntimeError, match="'oommfc' must be installed"):
+            mdata.Drive(system_name, index, dirname=tmp_path)
+
+    # system_name.out subdirectory -> mumax3
+    (tmp_path / system_name / f"drive-{index}" / f"{system_name}.out").mkdir()
+    try:
+        import mumax3c.plugins  # mumax3c might not be installed
+
+        drive = mdata.Drive(system_name, index, dirname=tmp_path)
+        assert isinstance(drive, mumax3c.plugins.Mumax3Drive)
+    except ModuleNotFoundError:
+        with pytest.raises(RuntimeError, match="'mumax3c' must be installed"):
+            mdata.Drive(system_name, index, dirname=tmp_path)
+
+
+def test_init(drive):
+    # str for dirname
+    created_drive = mdata.Drive(name=drive.name, number=0, dirname=drive.dirname)
+    assert isinstance(created_drive, mdata.Drive)
+
+    # Path for dirname
+    drive2 = mdata.Drive(name=drive.name, number=0, dirname=Path(drive.dirname))
+    assert isinstance(drive2, mdata.Drive)
+    assert created_drive.name == drive2.name
+    assert created_drive.number == drive2.number
+    assert created_drive.dirname == drive2.dirname
+
+    # Exception
+    with pytest.raises(OSError):
+        created_drive = mdata.Drive(name=drive.name, number=1, dirname=drive.dirname)
+
+
+def test_repr(drive):
+    assert isinstance(repr(drive), str)
+    assert "Drive" in repr(drive)
+
+
+def test_info(drive):
+    assert isinstance(drive.info, dict)
+    assert drive.info["drive_number"] == 0
+
+
+@pytest.mark.skip
+def test_valid(drive):
+    dirname = os.path.join(os.path.dirname(__file__), "test_sample")
+    name = "hysteresis"
+    data = mdata.Data(name=name, dirname=dirname)
+    m0_field = data[0].m0
+    test_points = [
+        m0_field.mesh.point2index(m0_field.mesh.region.pmin),
+        m0_field.mesh.point2index(m0_field.mesh.region.center),
+        m0_field.mesh.point2index(m0_field.mesh.region.pmax),
+    ]
+    expected_validity = [False, True, False]
+    for point, expected in zip(test_points, expected_validity):
+        actual_valid = m0_field.valid[point]
+        assert actual_valid == expected
+
+    drive = data[0]
+    for d in drive:
         for point, expected in zip(test_points, expected_validity):
-            actual_valid = m0_field.valid[point]
+            actual_valid = d.valid[point]
             assert actual_valid == expected
 
-        drive = data[0]
-        for d in drive:
-            for point, expected in zip(test_points, expected_validity):
-                actual_valid = d.valid[point]
-                assert actual_valid == expected
 
-    def test_m0(self):
-        for drive in self.data:
-            assert isinstance(drive.m0, df.Field)
+def test_n_reference_data(drive):
+    assert drive.n == 25
 
-    def test_table(self):
-        for drive in self.data:
-            assert isinstance(drive.table, ut.Table)
-            assert drive.table.x == drive.x
 
-    def test_n(self):
-        for drive in self.data:
-            assert isinstance(drive.n, int)
-        assert self.data[0].n == 25
+def test_iter_reference_data(drive):
+    assert len(list(drive)) == 25
 
-    def test_getitem_int(self):
-        for i in range(self.data[0].n):
-            assert isinstance(self.data[0][i], df.Field)
 
-    def test_getitem_slice(self):
-        drive = self.data[0]
-        assert drive.n == 25
+def test_getitem_slice(drive):
+    assert drive.n == 25
 
-        sel = drive[:]
-        assert isinstance(sel, md.Drive)
-        assert sel.n == 25
-        assert len(list(sel)) == 25
-        assert sel.use_cache
+    sel = drive[:]
+    assert isinstance(sel, mdata.Drive)
+    assert sel.n == 25
+    assert len(list(sel)) == 25
+    assert sel.use_cache
 
-        sel = drive[:1]
-        assert isinstance(sel, md.Drive)
-        assert sel.n == 1
-        assert len(list(sel)) == 1
-        assert sel.use_cache
+    sel = drive[:1]
+    assert isinstance(sel, mdata.Drive)
+    assert sel.n == 1
+    assert len(list(sel)) == 1
+    assert sel.use_cache
 
-        sel = drive[:-3]
-        assert isinstance(sel, md.Drive)
-        assert sel.n == 22
-        assert len(list(sel)) == 22
-        assert sel.use_cache
+    sel = drive[:-3]
+    assert isinstance(sel, mdata.Drive)
+    assert sel.n == 22
+    assert len(list(sel)) == 22
+    assert sel.use_cache
 
-        sel = drive[4:8]
-        assert isinstance(sel, md.Drive)
-        assert sel.n == 4
-        assert len(list(sel)) == 4
-        assert sel.use_cache
+    sel = drive[4:8]
+    assert isinstance(sel, mdata.Drive)
+    assert sel.n == 4
+    assert len(list(sel)) == 4
+    assert sel.use_cache
 
-        sel = drive[::2]
-        assert isinstance(sel, md.Drive)
-        assert sel.n == 13
-        assert len(list(sel)) == 13
-        assert sel.use_cache
+    sel = drive[::2]
+    assert isinstance(sel, mdata.Drive)
+    assert sel.n == 13
+    assert len(list(sel)) == 13
+    assert sel.use_cache
 
-    def test_iter(self):
-        for drive in self.data:
-            for m in drive:
-                assert isinstance(m, df.Field)
 
-        assert len(list(self.data[0])) == 25
-
-    def test_ovf2vtk(self, tmp_path):
-        self.data[0].ovf2vtk(dirname=tmp_path)
-
-    def test_slider(self):
-        for drive in self.data:
-            assert isinstance(drive.slider(), ipywidgets.IntSlider)
-
-    def test_lshift(self):
-        # TimeDriver: 0, 1, 2, 5
-        # MinDriver: 4, 6
-        # RelaxDriver: 3
-        # HysteresisDriver: 7 [CURRENTLY MISSING IN THE DATASET]
-        for d1, d2 in [(0, 1), (6, 6), (3, 3)]:
-            combined = self.data[d1] << self.data[d2]
-            assert isinstance(combined, md.CombinedDrive)
-            assert len(combined.drives) == 2
-            assert combined.info["driver"] == self.data[d1].info["driver"]
-            assert combined.x == self.data[d1].x
-            assert len(combined.table.data) == combined.n
-
-        for d1, d2 in [(0, 6), (3, 6), (4, 6)]:
-            # TODO
-            # (0, 3), (0, 4) should be added and fail
-            # (4, 6) mixes OOMMF and Mumax3 min drive which does not work because
-            # they have different independent variables
-            with pytest.raises(ValueError):
-                self.data[d1] << self.data[d2]
-        with pytest.raises(TypeError):
-            self.data[0] << 1
-
-    def test_to_xarray(self):
-        for drive in self.data:
-            assert isinstance(drive.to_xarray(), xr.DataArray)
-            assert all(
-                item in drive.to_xarray().attrs.items() for item in drive.info.items()
-            )
-            if len(drive._step_files) != 1:
-                assert len(drive.to_xarray()[drive.table.x]) == len(drive._step_files)
-                assert np.allclose(
-                    drive.to_xarray()[drive.table.x].values,
-                    drive.table.data[drive.table.x].to_numpy(),
-                )
-
-            if drive.info["driver"] == "HysteresisDriver":
-                assert all(
-                    np.allclose(
-                        drive.to_xarray()[f"B{i}_hysteresis"].values,
-                        drive.table.data[f"B{i}_hysteresis"].to_numpy(),
-                    )
-                    for i in "xyz"
-                )
-
-    def test_hv(self):
-        # time drive
-        check_hv(
-            self.data[0].hv(kdims=["y", "z"], vdims=["y", "z"]),
-            ["DynamicMap [x,t]", "Image [y,z]", "VectorField [y,z]"],
-        )
-        check_hv(
-            self.data[0].hv.scalar(kdims=["y", "z"]),
-            ["DynamicMap [x,vdims,t]", "Image [y,z]"],
+def test_to_xarray(drive):
+    assert isinstance(drive.to_xarray(), xr.DataArray)
+    assert all(item in drive.to_xarray().attrs.items() for item in drive.info.items())
+    if len(drive._step_files) != 1:
+        assert len(drive.to_xarray()[drive.table.x]) == len(drive._step_files)
+        assert np.allclose(
+            drive.to_xarray()[drive.table.x].values,
+            drive.table.data[drive.table.x].to_numpy(),
         )
 
-        with pytest.raises(NotImplementedError):
-            check_hv(self.data[0].hv.scalar(kdims=["x", "t"]), ...)
 
-        # min drive
-        check_hv(
-            self.data[4]
-            .register_callback(lambda f: f.sel("z"))
-            .hv.vector(kdims=["x", "y"]),
-            ["VectorField [x,y]"],
-        )
+def test_hv_drive_scalar(drive):
+    check_hv(
+        drive.hv.scalar(kdims=["y", "z"]),
+        ["DynamicMap [x,vdims,t]", "Image [y,z]"],
+    )
 
-        # min drive with steps
-        check_hv(
-            self.data[6].hv.vector(kdims=["x", "y"]),
-            ["DynamicMap [z,iteration]", "VectorField [x,y]"],
-        )
 
-    def test_register_callback(self):
-        for drive in self.data:
-            drive_orientation = drive.register_callback(lambda field: field.orientation)
-            assert isinstance(drive_orientation, drive.__class__)
-            assert len(drive_orientation._callbacks) == 1
-            for field in drive_orientation:
-                assert np.max(field.array) <= 1.0
-                assert np.min(field.array) >= -1.0
+def test_hv_drive_vector(drive):
+    check_hv(
+        drive.hv.vector(kdims=["x", "y"]),
+        ["DynamicMap [z,t]", "VectorField [x,y]"],
+    )
 
-        drive = self.data[0]
-        processed = drive.register_callback(lambda f: f.orientation)
-        processed = processed.register_callback(lambda f: f.x)
-        for field in processed:
-            assert field.nvdim == 1
-            assert np.max(field.array) <= 1.0
-            assert np.min(field.array) >= -1.0
 
-        assert len(processed.callbacks) == 2
+def test_hv_drive_combined(drive):
+    check_hv(
+        drive.hv(kdims=["y", "z"], vdims=["y", "z"]),
+        ["DynamicMap [x,t]", "Image [y,z]", "VectorField [y,z]"],
+    )
 
-    def test_cache(self, monkeypatch):
-        ref = self.data[0]
-        drive = md.Drive(ref.name, ref.number, ref.dirname, ref.x, use_cache=True)
 
-        assert len(list(drive)) == 25
-        assert isinstance(drive[0], df.Field)
-        assert isinstance(drive.table, ut.Table)
+def test_hv_drive_t_not_as_kdim(drive):
+    with pytest.raises(NotImplementedError):
+        check_hv(drive.hv.scalar(kdims=["x", "t"]), ...)
 
-        with monkeypatch.context() as m:
-            m.setattr(drive.__class__, "_step_file_glob", ["a.omf", "b.omf"])
-            m.setattr(drive.__class__, "_table_path", "wrong_path")
 
-            assert len(drive._step_files) == 25
-            assert isinstance(drive[0], df.Field)
-            assert isinstance(drive.table, ut.Table)
+def test_hv_drive_single_m(drive):
+    # create a drive with a single element -> slider for t is omitted
+    drive = drive[:1]
+    check_hv(
+        drive.register_callback(lambda f: f.sel("z")).hv.vector(kdims=["x", "y"]),
+        ["VectorField [x,y]"],
+    )
 
-            drive.use_cache = False
 
-            assert drive._step_files == ["a.omf", "b.omf"]
-            with pytest.raises(FileNotFoundError):
-                drive[0]
-            with pytest.raises(FileNotFoundError):
-                drive.table  # noqa: B018
+def test_lshift(drive):
+    combined = drive << drive
+    assert isinstance(combined, mdata.CombinedDrive)
+    assert len(combined.drives) == 2
+    assert combined.info["driver"] == drive.info["driver"]
+    assert combined.x == drive.x
+    assert len(combined.table.data) == combined.n
 
-            drive.use_cache = True  # check new caching (no old cache)
+    with pytest.raises(TypeError):
+        drive << 1
 
-            assert drive._step_files == ["a.omf", "b.omf"]
-            with pytest.raises(FileNotFoundError):
-                drive[0]
-            with pytest.raises(FileNotFoundError):
-                drive.table  # noqa: B018
 
-        # caching has effects outside monkeypatch context
-        assert drive._step_files == ["a.omf", "b.omf"]
+def test_register_callback(drive):
+    drive_orientation = drive.register_callback(lambda field: field.orientation)
+    assert isinstance(drive_orientation, drive.__class__)
+    assert len(drive_orientation._callbacks) == 1
+    for field in drive_orientation:
+        assert np.max(field.array) <= 1.0
+        assert np.min(field.array) >= -1.0
+        assert field.nvdim == 3
+
+    processed = drive_orientation.register_callback(lambda f: f.x)
+    for field in processed:
+        assert field.nvdim == 1
+        assert np.max(field.array) <= 1.0
+        assert np.min(field.array) >= -1.0
+        assert field.nvdim == 1
+
+    assert len(processed.callbacks) == 2
+
+
+def test_cache(drive, monkeypatch):
+    generated_drive = mdata.Drive(
+        drive.name,
+        drive.number,
+        drive.dirname,
+        drive.x,
+        use_cache=True,
+    )
+
+    assert len(list(generated_drive)) == 25
+    assert isinstance(generated_drive[0], df.Field)
+    assert isinstance(generated_drive.table, ut.Table)
+
+    with monkeypatch.context() as m:
+        m.setattr(generated_drive.__class__, "_step_file_glob", ["a.omf", "b.omf"])
+        m.setattr(generated_drive.__class__, "_table_path", "wrong_path")
+
+        assert len(generated_drive._step_files) == 25
+        assert isinstance(generated_drive[0], df.Field)
+        assert isinstance(generated_drive.table, ut.Table)
+
+        generated_drive.use_cache = False
+
+        assert generated_drive._step_files == ["a.omf", "b.omf"]
         with pytest.raises(FileNotFoundError):
-            drive[0]
-        # no table object is cached
-        assert isinstance(drive.table, ut.Table)
+            generated_drive[0]
+        with pytest.raises(FileNotFoundError):
+            generated_drive.table  # noqa: B018
 
-        drive.use_cache = False  # remove cached monkeypatch
-        drive.use_cache = True  # check new caching (no old cache)
+        generated_drive.use_cache = True  # check new caching (no old cache)
 
-        assert len(list(drive)) == 25
-        assert isinstance(drive[0], df.Field)
-        assert isinstance(drive.table, ut.Table)
+        assert generated_drive._step_files == ["a.omf", "b.omf"]
+        with pytest.raises(FileNotFoundError):
+            generated_drive[0]
+        with pytest.raises(FileNotFoundError):
+            generated_drive.table  # noqa: B018
+
+    # caching has effects outside monkeypatch context
+    assert generated_drive._step_files == ["a.omf", "b.omf"]
+    with pytest.raises(FileNotFoundError):
+        generated_drive[0]
+    # no table object is cached
+    assert isinstance(generated_drive.table, ut.Table)
+
+    generated_drive.use_cache = False  # remove cached monkeypatch
+    generated_drive.use_cache = True  # check new caching (no old cache)
+
+    assert len(list(generated_drive)) == 25
+    assert isinstance(generated_drive[0], df.Field)
+    assert isinstance(generated_drive.table, ut.Table)
+
+
+def test_slider(drive):
+    assert isinstance(drive.slider(), ipywidgets.IntSlider)

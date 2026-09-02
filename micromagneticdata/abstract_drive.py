@@ -26,11 +26,6 @@ class AbstractDrive(abc.ABC):
     def __init__(self, callbacks=None):
         self._callbacks = callbacks or []
 
-    @abc.abstractmethod
-    def __repr__(self):
-        """Representation string."""
-        pass  # pragma: no cover
-
     @property
     def x(self):
         """Independent variable name.
@@ -57,14 +52,12 @@ class AbstractDrive(abc.ABC):
         --------
         1. Getting and setting independent variable name.
 
-        >>> import os
-        >>> import micromagneticdata as md
-        ...
-        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> drive = md.Data(name='hysteresis', dirname=dirname)[0]
+        >>> import micromagneticdata as mdata
+        >>> from micromagneticdata import sample_data
+        >>> drive = mdata.Data(name='vortex', dirname=sample_data.dirname)[0]
         >>> drive.x
-        'B_hysteresis'
-        >>> drive.x = 'Bx_hysteresis'
+        'iteration'
+        >>> drive.x = 'mx'
 
         """
         return self._x
@@ -96,11 +89,9 @@ class AbstractDrive(abc.ABC):
         --------
         1. Getting initial magnetisation field.
 
-        >>> import os
         >>> import micromagneticdata as md
-        ...
-        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> drive = md.Drive(name='rectangle', number=0, dirname=dirname)
+        >>> from micromagneticdata import sample_data
+        >>> drive = md.Drive(name='rectangle', number=0, dirname=sample_data.dirname)
         >>> drive.m0
         Field(...)
 
@@ -133,11 +124,9 @@ class AbstractDrive(abc.ABC):
         --------
         1. Getting table object.
 
-        >>> import os
         >>> import micromagneticdata as md
-        ...
-        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> drive = md.Drive(name='rectangle', number=0, dirname=dirname)
+        >>> from micromagneticdata import sample_data
+        >>> drive = md.Drive(name='rectangle', number=0, dirname=sample_data.dirname)
         >>> drive.table  # doctest: +SKIP
         E...
 
@@ -159,11 +148,9 @@ class AbstractDrive(abc.ABC):
         --------
         1. Getting the number of steps.
 
-        >>> import os
         >>> import micromagneticdata as md
-        ...
-        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> drive = md.Drive(name='rectangle', number=0, dirname=dirname)
+        >>> from micromagneticdata import sample_data
+        >>> drive = md.Drive(name='rectangle', number=0, dirname=sample_data.dirname)
         >>> drive.n
         25
 
@@ -188,11 +175,9 @@ class AbstractDrive(abc.ABC):
         --------
         1. Getting the field of a particular step.
 
-        >>> import os
         >>> import micromagneticdata as md
-        ...
-        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> drive = md.Drive(name='rectangle', number=0, dirname=dirname)
+        >>> from micromagneticdata import sample_data
+        >>> drive = md.Drive(name='rectangle', number=0, dirname=sample_data.dirname)
         >>> drive[5]
         Field(...)
 
@@ -224,11 +209,9 @@ class AbstractDrive(abc.ABC):
         --------
         1. Iterating drive.
 
-        >>> import os
         >>> import micromagneticdata as md
-        ...
-        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> drive = md.Drive(name='rectangle', number=0, dirname=dirname)
+        >>> from micromagneticdata import sample_data
+        >>> drive = md.Drive(name='rectangle', number=0, dirname=sample_data.dirname)
         >>> list(drive)
         [...]
 
@@ -277,12 +260,10 @@ class AbstractDrive(abc.ABC):
         --------
         1. Concatenating two drives
 
-        >>> import os
         >>> import micromagneticdata as md
-        ...
-        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> drive_0 = md.Drive(name='rectangle', number=0, dirname=dirname)
-        >>> drive_1 = md.Drive(name='rectangle', number=1, dirname=dirname)
+        >>> from micromagneticdata import sample_data
+        >>> drive_0 = md.Drive(name='rectangle', number=0, dirname=sample_data.dirname)
+        >>> drive_1 = md.Drive(name='rectangle', number=1, dirname=sample_data.dirname)
         >>> drive_0 << drive_1
         CombinedDrive...
 
@@ -330,11 +311,9 @@ class AbstractDrive(abc.ABC):
         --------
         1. Drive to DataArray
 
-        >>> import os
         >>> import micromagneticdata as md
-        ...
-        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> drive = md.Drive(name='rectangle', number=0, dirname=dirname)
+        >>> from micromagneticdata import sample_data
+        >>> drive = md.Drive(name='rectangle', number=0, dirname=sample_data.dirname)
         >>> xr_drive = drive.to_xarray(name='Mag')
         >>> xr_drive
         <xarray.DataArray 'Mag' (t: 25, x: 20, y: 10, z: 4, vdims: 3)>...
@@ -407,11 +386,9 @@ class AbstractDrive(abc.ABC):
 
         1. Visualising a drive using ``hv``.
 
-        >>> import os
         >>> import micromagneticdata as md
-        ...
-        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> drive = md.Drive(name='rectangle', number=0, dirname=dirname)
+        >>> from micromagneticdata import sample_data
+        >>> drive = md.Drive(name='rectangle', number=0, dirname=sample_data.dirname)
         >>> drive.hv(kdims=['x', 'y'])
         :DynamicMap...
 

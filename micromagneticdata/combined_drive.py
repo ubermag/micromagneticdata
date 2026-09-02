@@ -32,16 +32,6 @@ class CombinedDrive(md.AbstractDrive):
 
         If the passed objects are not of type ``micromagneticdata.Drive``.
 
-    Examples
-    --------
-    1. Getting drive object.
-
-    >>> import os
-    >>> import micromagneticdata as md
-    ...
-    >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-    >>> drive = md.Drive(name='rectangle', number=0, dirname=dirname)
-
     """
 
     def __init__(self, *drives, **kwargs):
@@ -86,14 +76,12 @@ class CombinedDrive(md.AbstractDrive):
         --------
         1. Representation string.
 
-        >>> import os
         >>> import micromagneticdata as md
-        ...
-        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> drive = md.Drive(name='rectangle', number=0, dirname=dirname)
-        >>> drive
-        OOMMFDrive(...)
-
+        >>> from micromagneticdata import sample_data
+        >>> data = md.Data(name='rectangle', dirname=sample_data.dirname)
+        >>> combined = data[0] << data[1]
+        >>> combined
+        CombinedDrive(...)
         """
         drives = ",\n".join(f"  {drive!r}" for drive in self.drives)
         return f"{self.__class__.__name__}(\n{drives}\n)"
@@ -114,12 +102,11 @@ class CombinedDrive(md.AbstractDrive):
         --------
         1. Getting information about drive.
 
-        >>> import os
         >>> import micromagneticdata as md
-        ...
-        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> drive = md.Drive(name='rectangle', number=6, dirname=dirname)
-        >>> drive.info
+        >>> from micromagneticdata import sample_data
+        >>> data = md.Data(name='rectangle', dirname=sample_data.dirname)
+        >>> combined = data[0] << data[1]
+        >>> combined.info
         {...}
 
         """

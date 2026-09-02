@@ -1,12 +1,12 @@
 import abc
 import copy
+import importlib.metadata
 import json
 import numbers
 import pathlib
 
 import discretisedfield as df
 import ipywidgets
-import ubermagtable as ut
 import ubermagutil as uu
 import ubermagutil.typesystem as ts
 
@@ -59,50 +59,96 @@ class Drive(md.AbstractDrive):
     --------
     1. Getting drive object from data object.
 
-    >>> import os
     >>> import micromagneticdata as md
-    ...
-    >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-    >>> drive = md.Data(name='rectangle', dirname=dirname)[0]
+    >>> from micromagneticdata import sample_data
+    >>> drive = md.Data(name='rectangle', dirname=sample_data.dirname)[0]
     >>> drive
     OOMMFDrive(...)
 
-    2. Getting drive objet directly.
+    2. Getting drive object directly.
 
-    >>> drive = md.Drive(name='rectangle', number=1, dirname=dirname)
+    >>> drive = md.Drive(name='rectangle', number=0, dirname=sample_data.dirname)
     >>> drive
-    Mumax3Drive(...)
+    OOMMFDrive(...)
 
     """
 
     def __new__(cls, name, number, dirname=".", x=None, use_cache=False, **kwargs):
-        """Create a new OOMMFDrive or Mumax3Drive depending on the directory structure.
+        """Create a new drive depending on the calculator.
 
-        If a subdirectory <name>.out exists a Mumax3Drive is created else an
-        OOMMFDrive.
+        Details of a drive can be calculator specific. Therefore, the individual adapter
+        classes have to provide the implementation for finding the relevant data. The
+        information about the adapter is inferred from the 'info.json' file created by
+        the driver, e.g. when using OOMMF via oommfc, the json file contains:::
+
+            "adapter": "oommfc"
+
+        A suitable adapter can also be passed explicitly.
+
+        Simulations computed with ubermag <= 2023.11 did not write 'adapter' in the
+        'info.json'. For those the legacy behaviour is kept to determine whether it is
+        an OOMMF or a Mumax3 simulation (the correct adapter is inferred from the file
+        and directory structure), which were the only supported calculators at that
+        time.
 
         """
-        if pathlib.Path(f"{dirname}/{name}/drive-{number}/{name}.out").exists():
-            return super().__new__(md.Mumax3Drive)
+        if not (drive_dir := pathlib.Path(f"{dirname}/{name}/drive-{number}")).is_dir():
+            msg = f"Directory {drive_dir!r} does not exist."
+            raise OSError(msg)
+
+        if "adapter" in kwargs:
+            adapter = kwargs["adapter"]
+        elif (f := pathlib.Path(f"{dirname}/{name}/drive-{number}/info.json")).exists():
+            info_json = json.loads(f.read_text())
+            if "adapter" in info_json:
+                adapter = info_json["adapter"]
+            else:
+                # info files written with ubermag.__version__ <= 2023.11 do not contain
+                # 'adapter'; legacy data loading
+                if pathlib.Path(f"{dirname}/{name}/drive-{number}/{name}.out").exists():
+                    adapter = "mumax3c"
+                else:
+                    adapter = "oommfc"
         else:
-            return super().__new__(md.OOMMFDrive)
+            raise FileNotFoundError(
+                "No 'adapter' has been passed and the adapter could not be determined"
+                " automatically because no 'info.json' was found."
+            )
+
+        drive_entry_points = importlib.metadata.entry_points(
+            group="micromagneticdata.plugins.CalculatorDrive"
+        )
+
+        try:
+            CalculatorDrive = drive_entry_points[adapter].load()
+        except KeyError:
+            raise RuntimeError(
+                f"'{adapter}' must be installed to read drive '{name}/drive-{number}'."
+            ) from None
+
+        return super().__new__(CalculatorDrive)
 
     def __init__(self, name, number, dirname="./", x=None, use_cache=False, **kwargs):
         # use kwargs to not expose the following additional internal arguments to users
         self._step_file_list = kwargs.pop("step_files", [])
         self._table = kwargs.pop("table", None)
 
+        kwargs.pop("adapter", None)
+
         super().__init__(**kwargs)
         self.dirname = dirname
         self.drive_path = pathlib.Path(f"{dirname}/{name}/drive-{number}")
-        if not self.drive_path.exists():
-            msg = f"Directory {self.drive_path!r} does not exist."
-            raise OSError(msg)
 
         self.use_cache = use_cache
         self.name = name
         self.number = number
         self.x = x
+
+    def __repr__(self):
+        return (
+            f"{self.__class__.__name__}(name='{self.name}', number={self.number}, "
+            f"dirname='{self.dirname}', x='{self.x}')"
+        )
 
     @property
     def dirname(self):
@@ -116,6 +162,15 @@ class Drive(md.AbstractDrive):
                 f"Wrong type '{type(dirname)}' for dirname, must be str or Path."
             )
         self._dirname = str(dirname)
+
+    @property
+    def _adapter(self):
+        """
+        Name of the adapter package, e.g. oommfc, used to read the drive.
+        The information can be used to load additional entry points from that package.
+        """
+        # extract package name
+        return self.__class__.__module__.split(".")[0]
 
     @property
     def use_cache(self):
@@ -153,12 +208,18 @@ class Drive(md.AbstractDrive):
 
     @property
     def table(self):
-        if not self.use_cache:
-            return ut.Table.fromfile(str(self._table_path), x=self.x)
+        if self.use_cache and self._table is not None:
+            return self._table
 
-        if self._table is None:
-            self._table = ut.Table.fromfile(str(self._table_path), x=self.x)
-        return self._table
+        read_table = importlib.metadata.entry_points(
+            group="micromagneticdata.plugins.read_table"
+        )[self._adapter].load()
+        table = read_table(self._table_path, x=self.x)
+
+        if self.use_cache:
+            self._table = table
+
+        return table
 
     @property
     @abc.abstractmethod
@@ -199,21 +260,17 @@ class Drive(md.AbstractDrive):
         --------
         1. Getting the field of a particular step.
 
-        >>> import os
-        >>> import micromagneticdata as md
-        ...
-        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> drive = md.Drive(name='rectangle', number=0, dirname=dirname)
+        >>> import micromagneticdata as mdata
+        >>> from micromagneticdata import sample_data
+        >>> drive = mdata.Drive(name='rectangle', number=0, dirname=sample_data.dirname)
         >>> drive[5]
         Field(...)
 
         2. Selecting a part of the drive.
-        >>> import os
-        >>> import micromagneticdata as md
-        ...
-        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> drive = md.Drive(name='rectangle', number=0, dirname=dirname)
-        >>> selection = drive[:8:2]
+
+        >>> drive.n
+        25
+        >>> selection = drive[:8:2]  # select elements 0, 2, 4, 6
         >>> selection
         OOMMFDrive(...)
         >>> selection.n
@@ -255,11 +312,9 @@ class Drive(md.AbstractDrive):
         --------
         1. Getting information about drive.
 
-        >>> import os
         >>> import micromagneticdata as md
-        ...
-        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> drive = md.Drive(name='rectangle', number=6, dirname=dirname)
+        >>> from micromagneticdata import sample_data
+        >>> drive = md.Drive(name='rectangle', number=0, dirname=sample_data.dirname)
         >>> drive.info
         {...}
 
@@ -271,28 +326,23 @@ class Drive(md.AbstractDrive):
     @abc.abstractmethod
     def calculator_script(self):
         """MIF file.
-        This property returns a string with the content of MIF file.
+        This property returns a string with the content of the calculator script.
 
         Returns
         -------
         str
-            MIF file content.
+            Calculator script file content.
 
         Examples
         --------
-        1. Getting MIF file.
+        1. Getting MIF file for OOMMF simulations.
 
-        >>> import os
         >>> import micromagneticdata as md
-        ...
-        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> drive = md.Drive(name='rectangle', number=6, dirname=dirname)
+        >>> from micromagneticdata import sample_data
+        >>> drive = md.Drive(name='rectangle', number=0, dirname=sample_data.dirname)
         >>> drive.calculator_script
         '# MIF 2...'
 
-        2. Getting mx3 file
-
-        TODO add mumax3 output to the pre-computed data
         """
 
     def ovf2vtk(self, dirname=None):
@@ -312,11 +362,9 @@ class Drive(md.AbstractDrive):
         --------
         1. Iterating drive.
 
-        >>> import os
         >>> import micromagneticdata as md
-        ...
-        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> drive = md.Drive(name='rectangle', number=0, dirname=dirname)
+        >>> from micromagneticdata import sample_data
+        >>> drive = md.Drive(name='rectangle', number=0, dirname=sample_data.dirname)
         >>> drive.ovf2vtk()
 
         """
@@ -347,11 +395,9 @@ class Drive(md.AbstractDrive):
         --------
         1. Slider widget.
 
-        >>> import os
         >>> import micromagneticdata as md
-        ...
-        >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-        >>> drive = md.Drive(name='rectangle', number=0, dirname=dirname)
+        >>> from micromagneticdata import sample_data
+        >>> drive = md.Drive(name='rectangle', number=0, dirname=sample_data.dirname)
         >>> drive.slider()
         IntSlider(...)
 
@@ -362,7 +408,6 @@ class Drive(md.AbstractDrive):
 
     def __lshift__(self, other):
         if isinstance(other, md.Drive):
-            # no use of self.__class__ to allow combining Mumax3 and OOMMF runs
             return md.CombinedDrive(self, other)
         elif isinstance(other, md.CombinedDrive):
             return md.CombinedDrive(self, *other.drives)

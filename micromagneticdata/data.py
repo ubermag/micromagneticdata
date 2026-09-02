@@ -39,17 +39,13 @@ class Data:
     --------
     1. Creating data object using `path`
 
-    >>> from pathlib import Path
     >>> import micromagneticdata as mdata
-    >>> path = Path(__file__).parent / 'tests' / 'test_sample' / 'rectangle'
-    >>> data = mdata.Data(path=path)
+    >>> from micromagneticdata import sample_data
+    >>> data = mdata.Data(path=sample_data.dirname / "rectangle")
 
     2. Creating data object using `name` and `dirname`
 
-    >>> import os
-    >>> import micromagneticdata as mdata
-    >>> dirname = os.path.join(os.path.dirname(__file__), 'tests', 'test_sample')
-    >>> data = mdata.Data(name='rectangle', dirname=dirname)
+    >>> data = mdata.Data(name='rectangle', dirname=sample_data.dirname)
 
     """
 
@@ -100,10 +96,9 @@ class Data:
         --------
         1. Representation string.
 
-        >>> from pathlib import Path
         >>> import micromagneticdata as mdata
-        >>> path = Path(__file__).parent / 'tests' / 'test_sample' / 'rectangle'
-        >>> data = mdata.Data(path=path)
+        >>> from micromagneticdata import sample_data
+        >>> data = mdata.Data(path=sample_data.dirname / "rectangle")
         >>> data
         Data(path='...rectangle')
 
@@ -128,10 +123,9 @@ class Data:
         --------
         1. Getting information about data.
 
-        >>> from pathlib import Path
         >>> import micromagneticdata as mdata
-        >>> path = Path(__file__).parent / 'tests' / 'test_sample' / 'rectangle'
-        >>> data = mdata.Data(path=path)
+        >>> from micromagneticdata import sample_data
+        >>> data = mdata.Data(path=sample_data.dirname / "rectangle")
         >>> data.info
            drive_number...
         """
@@ -143,6 +137,9 @@ class Data:
                     drive_info = json.load(f)
                 drive_info["info.json"] = "available"
                 records.append(drive_info)
+            except RuntimeError as e:
+                print(f"Warning: Missing adapter package: {e}")
+                records.append({"drive_number": i, "info.json": "missing"})
             except FileNotFoundError:
                 print(f"Warning: Missing info.json for drive-{i}")
                 records.append({"drive_number": i, "info.json": "missing"})
@@ -170,12 +167,11 @@ class Data:
         --------
         1. Getting the number of drives.
 
-        >>> from pathlib import Path
         >>> import micromagneticdata as mdata
-        >>> path = Path(__file__).parent / 'tests' / 'test_sample' / 'rectangle'
-        >>> data = mdata.Data(path=path)
+        >>> from micromagneticdata import sample_data
+        >>> data = mdata.Data(path=sample_data.dirname / "rectangle")
         >>> data.n
-        7
+        2
 
         """
         return len(list(glob.iglob(os.path.join(self.path, "drive-*"))))
@@ -202,17 +198,14 @@ class Data:
         --------
         1. Getting drive.
 
-        >>> from pathlib import Path
         >>> import micromagneticdata as mdata
-        >>> path = Path(__file__).parent / 'tests' / 'test_sample' / 'rectangle'
-        >>> data = mdata.Data(path=path)
+        >>> from micromagneticdata import sample_data
+        >>> data = mdata.Data(path=sample_data.dirname / "rectangle")
         >>> data.n
-        7
-        >>> data[0]  # first (0th) drive
+        2
+        >>> data[0]  # first drive
         OOMMFDrive(...)
-        >>> data[1]  # second (1th) drive
-        Mumax3Drive(...)
-        >>> data[-1]  # last (6th) drive
+        >>> data[-1]  # last drive
         OOMMFDrive(...)
 
         """
@@ -238,14 +231,13 @@ class Data:
 
         1. Iterating data object.
 
-        >>> from pathlib import Path
         >>> import micromagneticdata as mdata
-        >>> path = Path(__file__).parent / 'tests' / 'test_sample' / 'rectangle'
-        >>> data = mdata.Data(path=path)
+        >>> from micromagneticdata import sample_data
+        >>> data = mdata.Data(path=sample_data.dirname / "rectangle")
         >>> data.n
-        7
+        2
         >>> len(list(data))
-        7
+        2
 
         """
         for i in range(self.n):
@@ -273,12 +265,11 @@ class Data:
         --------
         1. Selection widget.
 
-        >>> from pathlib import Path
         >>> import micromagneticdata as mdata
-        >>> path = Path(__file__).parent / 'tests' / 'test_sample' / 'rectangle'
-        >>> data = mdata.Data(path=path)
+        >>> from micromagneticdata import sample_data
+        >>> data = mdata.Data(path=sample_data.dirname / "rectangle")
         >>> data.selector()
-        BoundedIntText(value=0, description='drive', max=6)
+        BoundedIntText(value=0, description='drive', max=1)
 
         """
         return ipywidgets.BoundedIntText(
