@@ -63,7 +63,7 @@ def mock_entry_points(group):
             ]
         )
     else:
-        return importlib_metadata_entry_points(group)
+        return importlib_metadata_entry_points(group=group)
 
 
 def create_drive(base: Path, system_name, index, x, n_steps):
