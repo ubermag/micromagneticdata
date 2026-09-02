@@ -100,7 +100,7 @@ def test_legacy_drive(tmp_path):
 
         drive = mdata.Drive(system_name, index, dirname=tmp_path)
         assert isinstance(drive, oommfc.plugins.OOMMFDrive)
-    except importlib.metadata.PackageNotFoundError:
+    except ModuleNotFoundError:
         with pytest.raises(RuntimeError, match="'oommfc' must be installed"):
             mdata.Drive(system_name, index, dirname=tmp_path)
 
@@ -111,7 +111,7 @@ def test_legacy_drive(tmp_path):
 
         drive = mdata.Drive(system_name, index, dirname=tmp_path)
         assert isinstance(drive, mumax3c.plugins.Mumax3Drive)
-    except importlib.metadata.PackageNotFoundError:
+    except ModuleNotFoundError:
         with pytest.raises(RuntimeError, match="'mumax3c' must be installed"):
             mdata.Drive(system_name, index, dirname=tmp_path)
 
