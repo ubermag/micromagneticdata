@@ -1,10 +1,13 @@
 """This module can be used to recompute the sample data shipped with micromagneticdata.
 
 Sample data is used for the documentation notebooks and doctests to keep the examples
-and documentation more (proper physics, without having to properly fake micromagnetic
-simulations). Running the simulations requires oommfc and OOMMF.
+and documentation more realistic (proper physics, without having to properly fake
+micromagnetic simulations). Running the simulations requires oommfc and OOMMF and using
+the sample data.
 
-The sample_data should not be used for any unit tests in micromagneticdata.
+The sample data must not be used for any unit tests in micromagneticdata as it is
+crucial to run these without having oommfc installed (in particular for conda-forge
+releases).
 """
 
 import os
@@ -48,18 +51,6 @@ def rectangle():
     td = oc.TimeDriver()
     td.drive(system, t=25e-12, n=25)
     td.drive(system, t=5e-10, n=250)
-
-    # md = mc.MinDriver()
-    # md.drive(system, dirname=dirname)  # drive-4
-
-    # system.energy.zeeman.H = (0.0, 0.0, 1.0e6)
-
-    # # OOMMF
-    # td = oc.TimeDriver()
-    # td.drive(system, t=5e-12, n=5, dirname=dirname)  # drive-5
-
-    # md = oc.MinDriver()
-    # md.drive(system, dirname=dirname, output_step=True)  # drive-6
 
 
 def vortex():

@@ -87,8 +87,9 @@ class Drive(md.AbstractDrive):
 
         Simulations computed with ubermag <= 2023.11 did not write 'adapter' in the
         'info.json'. For those the legacy behaviour is kept to determine whether it is
-        an OOMMF or a Mumax3 simulation, which were the only supported calculators at
-        that time.
+        an OOMMF or a Mumax3 simulation (the correct adapter is inferred from the file
+        and directory structure), which were the only supported calculators at that
+        time.
 
         """
         if not (drive_dir := pathlib.Path(f"{dirname}/{name}/drive-{number}")).is_dir():
@@ -213,7 +214,7 @@ class Drive(md.AbstractDrive):
         read_table = importlib.metadata.entry_points(
             group="micromagneticdata.plugins.read_table"
         )[self._adapter].load()
-        table = read_table(str(self._table_path), x=self.x)
+        table = read_table(self._table_path, x=self.x)
 
         if self.use_cache:
             self._table = table

@@ -2,7 +2,11 @@
 
 Adapter packages should import these tests and implement the following fixtures:
 
--
+- ``drive``: returns a single Drive subclass instance
+- ``drive_with_reference``: returns a single Drive subclass instance and reference data:
+  - name of the independent variable x
+  - a suitable other column name to change the independent variable x to
+  - a suitable substring of the calculator script to verify that it is loaded correctly
 
 Data for the fixtures can either be generated dynamically or pre-computed and committed
 to the repository. Consider pre-computing in particular for long-running simulations
@@ -14,6 +18,12 @@ data.
 import discretisedfield as df
 import pytest
 import ubermagtable as ut
+
+import micromagneticdata as mdata
+
+
+def test_drive_fixture(drive):
+    assert isinstance(drive, mdata.Drive)
 
 
 def test_n(drive):
