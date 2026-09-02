@@ -2,6 +2,7 @@
 # and should instead test with real data
 import importlib.metadata
 import json
+from importlib.metadata import entry_points as importlib_metadata_entry_points
 from pathlib import Path
 
 import discretisedfield as df
@@ -62,11 +63,11 @@ def mock_entry_points(group):
             ]
         )
     else:
-        raise NotImplementedError(f"Group {group} not supported.")
+        return importlib_metadata_entry_points(group)
 
 
 def create_drive(base: Path, system_name, index, x, n_steps):
-    """Create a drive with 25 steps and metadata compatible with SampleDrive."""
+    """Create a drive with n_steps steps and metadata compatible with SampleDrive."""
     # support time driver and min driver
     driver_name = {
         "t": "TimeDriver",

@@ -1,5 +1,4 @@
 import importlib.metadata
-import os
 
 import discretisedfield as df
 import numpy as np
@@ -60,24 +59,6 @@ def combined_time_drive(time_drive_1, time_drive_2):
 @pytest.fixture
 def combined_min_drive(min_drive_1, min_drive_2):
     return md.CombinedDrive(min_drive_1, min_drive_2)
-
-
-def old():
-    # TimeDriver: 0, 1, 2, 5
-    # MinDriver: 4, 6
-    # RelaxDriver: 3
-    # HysteresisDriver: 7 [CURRENTLY MISSING IN THE DATASET]
-    def setup_method(self):
-        self.dirname = os.path.join(os.path.dirname(__file__), "test_sample")
-        self.name = "rectangle"
-        self.data = md.Data(name=self.name, dirname=self.dirname)
-        self.combined_drives = [
-            self.data[0] << self.data[1] << self.data[2],
-            self.data[3] << self.data[3],
-            self.data[6] << self.data[6],
-        ]
-        data = md.Data(name="hysteresis", dirname=self.dirname)
-        self.combined_drives.append(data[0] << data[0])
 
 
 def test_init(time_drive_1, time_drive_2):

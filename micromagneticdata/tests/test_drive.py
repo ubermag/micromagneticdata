@@ -48,6 +48,10 @@ def test_missing_adapter(tmp_path):
     system_name = "test_system"
     index = 0
     create_drive(tmp_path, system_name, index, "t", n_steps=25)
+    # the drive specifies 'micromagneticdata' as adapter package but micromagneticdata
+    # does not provide the required plugins, therefore the test fails (the error message
+    # is slightly misleading in this case, because micromagneticadata is installed;
+    # for real missing adapter packages the message makes sense)
     with pytest.raises(RuntimeError, match="'micromagneticdata' must be installed"):
         mdata.Drive(system_name, index, dirname=tmp_path)
 
@@ -100,7 +104,7 @@ def test_legacy_drive(tmp_path):
         with pytest.raises(RuntimeError, match="'oommfc' must be installed"):
             mdata.Drive(system_name, index, dirname=tmp_path)
 
-    # system_name.out subdirectory -> OOMMF
+    # system_name.out subdirectory -> mumax3
     (tmp_path / system_name / f"drive-{index}" / f"{system_name}.out").mkdir()
     try:
         import mumax3c.plugins  # mumax3c might not be installed
