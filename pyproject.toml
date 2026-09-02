@@ -105,6 +105,9 @@ markers = [
     "pyvista",
 ]
 
+[tool.setuptools]
+include-package-data = true
+
 [tool.setuptools.packages.find]
 include = ["micromagneticdata*"]
 
