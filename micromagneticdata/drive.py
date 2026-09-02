@@ -1,9 +1,14 @@
 import abc
 import copy
-import importlib.metadata
 import json
 import numbers
 import pathlib
+import sys
+
+if sys.version_info < (3, 10):
+    import importlib_metadata as metadata
+else:
+    from importlib import metadata
 
 import discretisedfield as df
 import ipywidgets
@@ -115,7 +120,7 @@ class Drive(md.AbstractDrive):
                 " automatically because no 'info.json' was found."
             )
 
-        drive_entry_points = importlib.metadata.entry_points(
+        drive_entry_points = metadata.entry_points(
             group="micromagneticdata.plugins.CalculatorDrive"
         )
 
@@ -211,7 +216,7 @@ class Drive(md.AbstractDrive):
         if self.use_cache and self._table is not None:
             return self._table
 
-        read_table = importlib.metadata.entry_points(
+        read_table = metadata.entry_points(
             group="micromagneticdata.plugins.read_table"
         )[self._adapter].load()
         table = read_table(self._table_path, x=self.x)
