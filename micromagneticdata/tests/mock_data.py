@@ -2,6 +2,7 @@
 # and should instead test with real data
 import importlib.metadata
 import json
+from dataclasses import dataclass
 from importlib.metadata import entry_points as importlib_metadata_entry_points
 from pathlib import Path
 
@@ -33,6 +34,21 @@ class SampleDrive(mdata.Drive):
         return (self.drive_path / "script.txt").read_text()
 
 
+@dataclass(frozen=True)
+class BackendState:
+    """Minimal calculator-specific state used to test plugin dispatch."""
+
+    filename: Path
+    initial: bool
+
+
+class BackendStateDrive(SampleDrive):
+    """Drive returning objects that are not discretisedfield fields."""
+
+    def _read_state(self, filename, *, initial=False):
+        return BackendState(Path(filename), initial)
+
+
 def read_table(filename, x=None, rename=True):
     return ut.Table(
         pd.read_csv(filename), units={x: "s", "mx": "", "my": "", "mz": ""}, x=x
@@ -48,6 +64,11 @@ def mock_entry_points(group):
                 importlib.metadata.EntryPoint(
                     name="micromagneticdata",
                     value="micromagneticdata.tests.mock_data:SampleDrive",
+                    group="micromagneticdata.plugins.CalculatorDrive",
+                ),
+                importlib.metadata.EntryPoint(
+                    name="backend_state_adapter",
+                    value=("micromagneticdata.tests.mock_data:BackendStateDrive"),
                     group="micromagneticdata.plugins.CalculatorDrive",
                 ),
             ]

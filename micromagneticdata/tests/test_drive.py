@@ -1,4 +1,5 @@
 import importlib.metadata
+import json
 import os
 from pathlib import Path
 
@@ -11,7 +12,7 @@ import xarray as xr
 from discretisedfield.tests.test_field import check_hv
 
 import micromagneticdata as mdata
-from .mock_data import create_drive, mock_entry_points
+from .mock_data import BackendState, BackendStateDrive, create_drive, mock_entry_points
 from micromagneticdata.testing.drive import *  # noqa: F403
 
 
@@ -131,6 +132,36 @@ def test_init(drive):
     # Exception
     with pytest.raises(OSError):
         created_drive = mdata.Drive(name=drive.name, number=1, dirname=drive.dirname)
+
+
+def test_backend_specific_state(monkeypatch, tmp_path):
+    monkeypatch.setattr(importlib.metadata, "entry_points", mock_entry_points)
+
+    system_name = "backend_state"
+    create_drive(tmp_path, system_name, index=0, x="t", n_steps=2)
+    info_path = tmp_path / system_name / "drive-0" / "info.json"
+    info = json.loads(info_path.read_text())
+    info["adapter"] = "backend_state_adapter"
+    info_path.write_text(json.dumps(info))
+
+    drive = mdata.Drive(system_name, 0, dirname=tmp_path)
+    assert isinstance(drive, BackendStateDrive)
+    assert drive.m0 == BackendState(drive.drive_path / "m0.omf", initial=True)
+    assert drive[0] == BackendState(drive.drive_path / "m-001.hdf5", initial=False)
+    assert all(isinstance(state, BackendState) for state in drive)
+
+    selection = drive[:1]
+    assert isinstance(selection[0], BackendState)
+
+    filenames = drive.register_callback(lambda state: state.filename.name)
+    assert filenames[0] == "m-001.hdf5"
+
+    with pytest.raises(NotImplementedError, match="to_xarray"):
+        drive.to_xarray()
+    with pytest.raises(NotImplementedError, match="hv"):
+        drive.hv  # noqa: B018
+    with pytest.raises(NotImplementedError, match="ovf2vtk"):
+        drive.ovf2vtk()
 
 
 def test_repr(drive):

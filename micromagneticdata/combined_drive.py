@@ -123,6 +123,17 @@ class CombinedDrive(md.AbstractDrive):
     def _step_files(self):
         return sum((drive._step_files for drive in self.drives), start=[])
 
+    def _read_state(self, filename, *, initial=False):
+        """Delegate state loading to the calculator-specific source drive."""
+        if initial:
+            return self.drives[0]._read_state(filename, initial=True)
+
+        for drive in self.drives:
+            if filename in drive._step_files:
+                return drive._read_state(filename)
+
+        raise ValueError(f"State file {filename!r} does not belong to this drive.")
+
     def __lshift__(self, other):
         if isinstance(other, md.Drive):
             return self.__class__(*self.drives, other)

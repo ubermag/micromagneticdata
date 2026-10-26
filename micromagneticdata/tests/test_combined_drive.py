@@ -1,4 +1,5 @@
 import importlib.metadata
+import json
 
 import discretisedfield as df
 import numpy as np
@@ -8,7 +9,7 @@ import xarray as xr
 from discretisedfield.tests.test_field import check_hv
 
 import micromagneticdata as md
-from .mock_data import SampleDrive, create_drive, mock_entry_points
+from .mock_data import BackendState, SampleDrive, create_drive, mock_entry_points
 
 
 @pytest.fixture
@@ -71,6 +72,29 @@ def test_init(time_drive_1, time_drive_2):
 
     with pytest.raises(TypeError):
         md.CombinedDrive(time_drive_1, "wrong type")
+
+
+def test_backend_specific_states(tmp_path, monkeypatch):
+    monkeypatch.setattr(importlib.metadata, "entry_points", mock_entry_points)
+
+    system_name = "backend_state"
+    drives = []
+    for index in range(2):
+        create_drive(tmp_path, system_name, index, "t", n_steps=2)
+        info_path = tmp_path / system_name / f"drive-{index}" / "info.json"
+        info = json.loads(info_path.read_text())
+        info["adapter"] = "backend_state_adapter"
+        info_path.write_text(json.dumps(info))
+        drives.append(md.Drive(system_name, index, dirname=tmp_path))
+
+    combined = md.CombinedDrive(*drives)
+    assert combined.m0 == BackendState(drives[0].drive_path / "m0.omf", initial=True)
+    assert combined[0] == BackendState(
+        drives[0].drive_path / "m-001.hdf5", initial=False
+    )
+    assert combined[2] == BackendState(
+        drives[1].drive_path / "m-001.hdf5", initial=False
+    )
 
 
 def test_repr(combined_time_drive):

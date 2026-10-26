@@ -243,9 +243,9 @@ class Drive(md.AbstractDrive):
     def __getitem__(self, item):
         """Magnetisation field of an individual step or subpart of the drive.
 
-        If an ``int`` is passed a single magnetisation field (discretisedfield.Field
-        object) is returned. Additional callbacks (if registered) are applied to this
-        field before it is returned.
+        If an ``int`` is passed, a single calculator-specific magnetisation
+        state is returned. Additional callbacks (if registered) are applied to
+        this state before it is returned.
 
         If a slice is passed a new drive object with the magnetisation steps defined via
         the slice is returned. Additional callbacks (if registered) are passed to the
@@ -253,9 +253,9 @@ class Drive(md.AbstractDrive):
 
         Returns
         -------
-        discretisedfield.Field
+        object
 
-            Magnetisation field if an int is passed.
+            Calculator-specific magnetisation state if an int is passed.
 
         micromagneticdata.Drive
 
@@ -373,6 +373,13 @@ class Drive(md.AbstractDrive):
         >>> drive.ovf2vtk()
 
         """
+        if self._step_files:
+            state = self._read_state(self._step_files[0])
+            if not isinstance(state, df.Field):
+                raise NotImplementedError(
+                    "ovf2vtk is only implemented for discretisedfield.Field "
+                    f"states, not {type(state).__name__}."
+                )
         dirname = pathlib.Path(dirname) if dirname is not None else self.drive_path
         for i, filename in enumerate(self._step_files):
             vtkfilename = dirname / f"drive-{self.number}-{i:07d}.vtk"

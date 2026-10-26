@@ -13,9 +13,11 @@ to the repository. Consider pre-computing in particular for long-running simulat
 or when setting up the environment/the calculator is difficult (or restricted to
 specific hardware). For pre-computed data also commit the script to (re-)generate the
 data.
+
+The concrete magnetisation-state type is calculator-specific. Adapter packages should
+add a focused assertion for their expected type and data contract.
 """
 
-import discretisedfield as df
 import pytest
 import ubermagtable as ut
 
@@ -59,14 +61,16 @@ def test_table(drive):
 
 
 def test_m0(drive):
-    assert isinstance(drive.m0, df.Field)
+    assert isinstance(drive.m0, type(drive[0]))
 
 
 def test_getitem(drive):
+    state_type = type(drive[0])
     for i in range(drive.n):
-        assert isinstance(drive[i], df.Field)
+        assert isinstance(drive[i], state_type)
 
 
 def test_iter(drive):
-    for m in drive:
-        assert isinstance(m, df.Field)
+    state_type = type(drive[0])
+    for state in drive:
+        assert isinstance(state, state_type)
