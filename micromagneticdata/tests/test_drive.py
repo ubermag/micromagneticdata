@@ -155,6 +155,10 @@ def test_backend_specific_state(monkeypatch, tmp_path):
 
     filenames = drive.register_callback(lambda state: state.filename.name)
     assert filenames[0] == "m-001.hdf5"
+    with pytest.raises(NotImplementedError, match="received str"):
+        filenames.to_xarray()
+    with pytest.raises(NotImplementedError, match="received str"):
+        filenames.hv  # noqa: B018
 
     with pytest.raises(NotImplementedError, match="to_xarray"):
         drive.to_xarray()

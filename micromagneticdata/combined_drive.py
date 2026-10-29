@@ -1,5 +1,6 @@
 import functools
 import operator
+import pathlib
 
 import ubermagutil as uu
 
@@ -128,8 +129,9 @@ class CombinedDrive(md.AbstractDrive):
         if initial:
             return self.drives[0]._read_state(filename, initial=True)
 
+        filename = pathlib.Path(filename)
         for drive in self.drives:
-            if filename in drive._step_files:
+            if filename.is_relative_to(drive.drive_path):
                 return drive._read_state(filename)
 
         raise ValueError(f"State file {filename!r} does not belong to this drive.")

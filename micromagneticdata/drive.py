@@ -10,7 +10,6 @@ if sys.version_info < (3, 10):
 else:
     from importlib import metadata
 
-import discretisedfield as df
 import ipywidgets
 import ubermagutil as uu
 import ubermagutil.typesystem as ts
@@ -373,17 +372,12 @@ class Drive(md.AbstractDrive):
         >>> drive.ovf2vtk()
 
         """
-        if self._step_files:
-            state = self._read_state(self._step_files[0])
-            if not isinstance(state, df.Field):
-                raise NotImplementedError(
-                    "ovf2vtk is only implemented for discretisedfield.Field "
-                    f"states, not {type(state).__name__}."
-                )
         dirname = pathlib.Path(dirname) if dirname is not None else self.drive_path
         for i, filename in enumerate(self._step_files):
             vtkfilename = dirname / f"drive-{self.number}-{i:07d}.vtk"
-            df.Field.from_file(filename).to_file(vtkfilename)
+            state = self._read_state(filename)
+            field = self._require_discretisedfield(state, "ovf2vtk")
+            field.to_file(vtkfilename)
 
     def slider(self, description="step", **kwargs):
         """Widget for selecting individual steps.

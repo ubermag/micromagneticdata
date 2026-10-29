@@ -163,9 +163,10 @@ class AbstractDrive(abc.ABC):
     def _read_state(self, filename, *, initial=False):
         """Read a calculator-specific magnetisation state.
 
-        Calculator plugins can override this method to support state types and
-        file formats other than ``discretisedfield.Field``. The default
-        implementation preserves the existing finite-difference behaviour.
+        This is the protected extension hook for calculator plugins. Plugins
+        can override it to support state types and file formats other than
+        ``discretisedfield.Field``. The default implementation preserves the
+        existing finite-difference behaviour.
 
         Parameters
         ----------
@@ -187,10 +188,11 @@ class AbstractDrive(abc.ABC):
         """
         field = df.Field.from_file(filename=filename)
         if not initial:
-            if not field.mesh.region.allclose(self.m0.mesh.region):
+            m0 = self.m0
+            if not field.mesh.region.allclose(m0.mesh.region):
                 # mumax3 (and maybe others) do not preserve the position of the origin
                 field.mesh.translate(
-                    self.m0.mesh.region.pmin - field.mesh.region.pmin, inplace=True
+                    m0.mesh.region.pmin - field.mesh.region.pmin, inplace=True
                 )
             with contextlib.suppress(FileNotFoundError):
                 field.mesh.load_subregions(self._m0_path)
@@ -243,10 +245,11 @@ class AbstractDrive(abc.ABC):
         [...]
 
         """
-        # self.n and self._step_files might have different length from restart
-        # or if data is missing; therefore self._step_files is used
-        for i in range(len(self._step_files)):
-            yield self[i]
+        # self.n and self._step_files might have different lengths after a restart
+        # or if data is missing; therefore self._step_files is used directly.
+        for filename in self._step_files:
+            state = self._read_state(filename)
+            yield self._apply_callbacks(state)
 
     @property
     def callbacks(self):
@@ -262,13 +265,12 @@ class AbstractDrive(abc.ABC):
             state = callback(state)
         return state
 
-    def _require_discretisedfield(self, operation):
-        """Return the first state or reject a discretisedfield-only operation."""
-        state = self[0]
+    def _require_discretisedfield(self, state, operation):
+        """Return ``state`` or reject a discretisedfield-only operation."""
         if not isinstance(state, df.Field):
             raise NotImplementedError(
-                f"{operation} is only implemented for discretisedfield.Field "
-                f"states, not {type(state).__name__}."
+                f"{operation} requires a discretisedfield.Field, but received "
+                f"{type(state).__name__}."
             )
         return state
 
@@ -361,7 +363,8 @@ class AbstractDrive(abc.ABC):
         <xarray.DataArray 'Mag' (t: 25, vdims: 3)>...
 
         """
-        field_0 = self._require_discretisedfield("to_xarray")
+        states = iter(self)
+        field_0 = self._require_discretisedfield(next(states), "to_xarray")
         if len(self._step_files) == 1:
             darray = field_0.to_xarray(*args, **kwargs)
         else:
@@ -371,7 +374,9 @@ class AbstractDrive(abc.ABC):
             array = np.empty(
                 (self.n, *field_0.mesh.n, field_0.nvdim), dtype=field_0.array.dtype
             )
-            for i, field in enumerate(self):
+            array[0] = field_0.array
+            for i, state in enumerate(states, start=1):
+                field = self._require_discretisedfield(state, "to_xarray")
                 array[i] = field.array
             # remove "comp" dimension for scalar fields
             if field_0.nvdim == 1:
@@ -431,7 +436,6 @@ class AbstractDrive(abc.ABC):
         :DynamicMap...
 
         """
-        self._require_discretisedfield("hv")
         return dfp.Hv(self._hv_key_dims, self._hv_data_selection, self._hv_vdims_guess)
 
     def _hv_data_selection(self, **kwargs):
@@ -445,13 +449,15 @@ class AbstractDrive(abc.ABC):
             n = self.table.data.loc[self.table.data[self.x] == value].index[0]
         else:
             n = -1
-        return self[n]._hv_data_selection(**kwargs)
+        field = self._require_discretisedfield(self[n], "hv")
+        return field._hv_data_selection(**kwargs)
 
     def _hv_vdims_guess(self, kdims):
         """Try to find vector components matching the given kdims."""
         if self.x in kdims:
             return None
-        return self[0]._hv_vdims_guess(kdims)
+        field = self._require_discretisedfield(self[0], "hv")
+        return field._hv_vdims_guess(kdims)
 
     @property
     def _hv_key_dims(self):
@@ -461,7 +467,8 @@ class AbstractDrive(abc.ABC):
         dimensions.
 
         """
-        key_dims = self[0]._hv_key_dims
+        field = self._require_discretisedfield(self[0], "hv")
+        key_dims = field._hv_key_dims
         if len(self.table.data) > 1:
             key_dims[self.x] = hv_key_dim(
                 self.table.data[self.x].to_numpy(),

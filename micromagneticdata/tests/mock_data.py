@@ -68,7 +68,7 @@ def mock_entry_points(group):
                 ),
                 importlib.metadata.EntryPoint(
                     name="backend_state_adapter",
-                    value=("micromagneticdata.tests.mock_data:BackendStateDrive"),
+                    value="micromagneticdata.tests.mock_data:BackendStateDrive",
                     group="micromagneticdata.plugins.CalculatorDrive",
                 ),
             ]

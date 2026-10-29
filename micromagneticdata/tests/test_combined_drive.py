@@ -97,6 +97,24 @@ def test_backend_specific_states(tmp_path, monkeypatch):
     )
 
 
+def test_state_uses_initial_state_from_source_drive(time_drive_1, time_drive_2):
+    region = df.Region(p1=(2, 0, 0), p2=(3, 1, 1))
+    subregion = df.Region(p1=(2, 0, 0), p2=(2.4, 1, 1))
+    mesh = df.Mesh(
+        region=region,
+        n=(5, 5, 5),
+        subregions={"second_drive": subregion},
+    )
+    m0 = df.Field(mesh=mesh, nvdim=3, value=(0, 1, 0), norm=1e5)
+    m0.to_file(time_drive_2._m0_path)
+
+    combined = md.CombinedDrive(time_drive_1, time_drive_2)
+    state = combined[len(time_drive_1._step_files)]
+
+    assert state.mesh.region.allclose(region)
+    assert state.mesh.subregions == {"second_drive": subregion}
+
+
 def test_repr(combined_time_drive):
     assert isinstance(repr(combined_time_drive), str)
     assert "CombinedDrive" in repr(combined_time_drive)
