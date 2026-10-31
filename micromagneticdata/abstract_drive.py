@@ -18,7 +18,7 @@ class AbstractDrive(abc.ABC):
 
     callbacks : list of callables, optional
 
-        List of callback functions that are applied to individual states of the drive
+        List of callback functions that are applied to individual fields of the drive
         when accessing them.
 
     """
@@ -74,16 +74,16 @@ class AbstractDrive(abc.ABC):
 
     @property
     def m0(self):
-        """Initial magnetisation state.
+        """Initial magnetisation field.
 
-        The concrete state type is defined by the calculator plugin. Existing
+        The field type is defined by the calculator plugin. Existing
         finite-difference plugins return a ``discretisedfield.Field``.
 
         Returns
         -------
         object
 
-            Initial magnetisation state.
+            Initial magnetisation field.
 
         Examples
         --------
@@ -161,10 +161,10 @@ class AbstractDrive(abc.ABC):
         """List of filenames of individual snapshots."""
 
     def _read_state(self, filename, *, initial=False):
-        """Read a calculator-specific magnetisation state.
+        """Read a magnetisation field.
 
         This is the protected extension hook for calculator plugins. Plugins
-        can override it to support state types and file formats other than
+        can override it to support field types and file formats other than
         ``discretisedfield.Field``. The default implementation preserves the
         existing finite-difference behaviour.
 
@@ -172,18 +172,18 @@ class AbstractDrive(abc.ABC):
         ----------
         filename : pathlib.Path or str
 
-            State file to read.
+            Magnetisation file to read.
 
         initial : bool, optional
 
-            Whether ``filename`` contains the initial state. Defaults to
+            Whether ``filename`` contains the initial magnetisation. Defaults to
             ``False``.
 
         Returns
         -------
         object
 
-            Calculator-specific magnetisation state.
+            Magnetisation field.
 
         """
         field = df.Field.from_file(filename=filename)
@@ -200,13 +200,13 @@ class AbstractDrive(abc.ABC):
         return field
 
     def __getitem__(self, item):
-        """Magnetisation state of an individual step.
+        """Magnetisation field of an individual step.
 
         Returns
         -------
         object
 
-            Calculator-specific magnetisation state.
+            Magnetisation field.
 
         Examples
         --------
@@ -225,14 +225,13 @@ class AbstractDrive(abc.ABC):
     def __iter__(self):
         """Iterator.
 
-        This iterator yields all calculator-specific magnetisation states in
-        the drive.
+        This iterator yields all magnetisation fields in the drive.
 
         Returns
         -------
         object
 
-            Calculator-specific magnetisation state.
+            Magnetisation field.
 
         Examples
         --------
@@ -258,7 +257,7 @@ class AbstractDrive(abc.ABC):
 
     @abc.abstractmethod
     def register_callback(self, callback):
-        """Register a callback to which a state is passed before being returned."""
+        """Register a callback to which a field is passed before being returned."""
 
     def _apply_callbacks(self, state):
         for callback in self._callbacks:
