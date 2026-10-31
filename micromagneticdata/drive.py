@@ -252,9 +252,10 @@ class Drive(md.AbstractDrive):
 
         Returns
         -------
-        object
+        discretisedfield.Field or pyvista.UnstructuredGrid
 
-            Magnetisation field if an int is passed.
+            Magnetisation field if an int is passed. Registered callbacks are
+            applied before returning it and may change its type.
 
         micromagneticdata.Drive
 

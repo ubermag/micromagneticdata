@@ -19,7 +19,8 @@ class AbstractDrive(abc.ABC):
     callbacks : list of callables, optional
 
         List of callback functions that are applied to individual fields of the drive
-        when accessing them.
+        when accessing them. Callbacks are applied in registration order and may
+        change the returned type.
 
     """
 
@@ -76,12 +77,12 @@ class AbstractDrive(abc.ABC):
     def m0(self):
         """Initial magnetisation field.
 
-        The field type is defined by the calculator plugin. Existing
-        finite-difference plugins return a ``discretisedfield.Field``.
+        The field type is defined by the calculator plugin. Registered
+        callbacks are not applied to the initial magnetisation.
 
         Returns
         -------
-        object
+        discretisedfield.Field or pyvista.UnstructuredGrid
 
             Initial magnetisation field.
 
@@ -163,10 +164,9 @@ class AbstractDrive(abc.ABC):
     def _read_state(self, filename, *, initial=False):
         """Read a magnetisation field.
 
-        This is the protected extension hook for calculator plugins. Plugins
-        can override it to support field types and file formats other than
-        ``discretisedfield.Field``. The default implementation preserves the
-        existing finite-difference behaviour.
+        This is the protected extension hook for calculator plugins. The default
+        implementation returns a ``discretisedfield.Field``. Plugins can override
+        it to return a ``pyvista.UnstructuredGrid`` for an unstructured mesh.
 
         Parameters
         ----------
@@ -181,9 +181,9 @@ class AbstractDrive(abc.ABC):
 
         Returns
         -------
-        object
+        discretisedfield.Field or pyvista.UnstructuredGrid
 
-            Magnetisation field.
+            Magnetisation field before callbacks are applied.
 
         """
         field = df.Field.from_file(filename=filename)
@@ -204,9 +204,10 @@ class AbstractDrive(abc.ABC):
 
         Returns
         -------
-        object
+        discretisedfield.Field or pyvista.UnstructuredGrid
 
-            Magnetisation field.
+            Magnetisation field if no callbacks are registered. Otherwise, the
+            result of applying the callbacks, which may have a different type.
 
         Examples
         --------
@@ -225,13 +226,15 @@ class AbstractDrive(abc.ABC):
     def __iter__(self):
         """Iterator.
 
-        This iterator yields all magnetisation fields in the drive.
+        This iterator yields all magnetisation fields in the drive, with
+        registered callbacks applied.
 
-        Returns
-        -------
-        object
+        Yields
+        ------
+        discretisedfield.Field or pyvista.UnstructuredGrid
 
-            Magnetisation field.
+            Magnetisation field if no callbacks are registered. Otherwise, the
+            result of applying the callbacks, which may have a different type.
 
         Examples
         --------
@@ -257,7 +260,12 @@ class AbstractDrive(abc.ABC):
 
     @abc.abstractmethod
     def register_callback(self, callback):
-        """Register a callback to which a field is passed before being returned."""
+        """Register a callback applied before a step is returned.
+
+        Callbacks are applied in registration order. The first callback receives
+        the magnetisation field; each subsequent callback receives the result
+        of the previous callback. Callbacks may change the returned type.
+        """
 
     def _apply_callbacks(self, state):
         for callback in self._callbacks:
