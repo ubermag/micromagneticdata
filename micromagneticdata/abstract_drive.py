@@ -1,11 +1,50 @@
 import abc
 import contextlib
+import functools
+import inspect
 
 import discretisedfield as df
 import discretisedfield.plotting as dfp
 import numpy as np
 import xarray as xr
 from discretisedfield.plotting.util import hv_key_dim
+
+
+def _required_m_type(m_type, *, operation=None):
+    """Supply a field-type validator to a method as ``_require_m``.
+
+    The method validates each field where it is used. This avoids extra reads
+    and allows checking either raw fields or callback results as appropriate.
+    The injected parameter is omitted from the public method signature.
+    """
+
+    def decorate(method):
+        operation_name = operation or method.__name__
+        type_name = f"{m_type.__module__.split('.')[0]}.{m_type.__name__}"
+
+        def require_m(m):
+            if not isinstance(m, m_type):
+                raise NotImplementedError(
+                    f"{operation_name} requires a {type_name}, but received "
+                    f"{type(m).__name__}."
+                )
+            return m
+
+        @functools.wraps(method)
+        def wrapper(self, *args, **kwargs):
+            return method(self, *args, _require_m=require_m, **kwargs)
+
+        signature = inspect.signature(method)
+        wrapper.__signature__ = signature.replace(
+            parameters=[
+                parameter
+                for name, parameter in signature.parameters.items()
+                if name != "_require_m"
+            ]
+        )
+        return wrapper
+
+    return decorate
 
 
 class AbstractDrive(abc.ABC):
@@ -272,15 +311,6 @@ class AbstractDrive(abc.ABC):
             state = callback(state)
         return state
 
-    def _require_discretisedfield(self, state, operation):
-        """Return ``state`` or reject a discretisedfield-only operation."""
-        if not isinstance(state, df.Field):
-            raise NotImplementedError(
-                f"{operation} requires a discretisedfield.Field, but received "
-                f"{type(state).__name__}."
-            )
-        return state
-
     @abc.abstractmethod
     def __lshift__(self, other):
         """Concatenate multiple drives of the same type.
@@ -315,7 +345,8 @@ class AbstractDrive(abc.ABC):
 
         """
 
-    def to_xarray(self, *args, **kwargs):
+    @_required_m_type(df.Field)
+    def to_xarray(self, *args, _require_m, **kwargs):
         """Export ``micromagneticdata.Drive`` as ``xarray.DataArray``
 
         The method depends on ``discretisedfield.Field.to_xarray`` and derives the last
@@ -371,7 +402,7 @@ class AbstractDrive(abc.ABC):
 
         """
         states = iter(self)
-        field_0 = self._require_discretisedfield(next(states), "to_xarray")
+        field_0 = _require_m(next(states))
         if len(self._step_files) == 1:
             darray = field_0.to_xarray(*args, **kwargs)
         else:
@@ -383,7 +414,7 @@ class AbstractDrive(abc.ABC):
             )
             array[0] = field_0.array
             for i, state in enumerate(states, start=1):
-                field = self._require_discretisedfield(state, "to_xarray")
+                field = _require_m(state)
                 array[i] = field.array
             # remove "comp" dimension for scalar fields
             if field_0.nvdim == 1:
@@ -445,7 +476,8 @@ class AbstractDrive(abc.ABC):
         """
         return dfp.Hv(self._hv_key_dims, self._hv_data_selection, self._hv_vdims_guess)
 
-    def _hv_data_selection(self, **kwargs):
+    @_required_m_type(df.Field, operation="hv")
+    def _hv_data_selection(self, *, _require_m, **kwargs):
         """Select one field for plotting in holoviews."""
         if self.x in self._hv_key_dims:
             if self.x not in kwargs:
@@ -456,25 +488,27 @@ class AbstractDrive(abc.ABC):
             n = self.table.data.loc[self.table.data[self.x] == value].index[0]
         else:
             n = -1
-        field = self._require_discretisedfield(self[n], "hv")
+        field = _require_m(self[n])
         return field._hv_data_selection(**kwargs)
 
-    def _hv_vdims_guess(self, kdims):
+    @_required_m_type(df.Field, operation="hv")
+    def _hv_vdims_guess(self, kdims, *, _require_m):
         """Try to find vector components matching the given kdims."""
         if self.x in kdims:
             return None
-        field = self._require_discretisedfield(self[0], "hv")
+        field = _require_m(self[0])
         return field._hv_vdims_guess(kdims)
 
     @property
-    def _hv_key_dims(self):
+    @_required_m_type(df.Field, operation="hv")
+    def _hv_key_dims(self, *, _require_m):
         """Key dimensions for holoviews.
 
         Key dimensions are the independent variable of the drive and all field key
         dimensions.
 
         """
-        field = self._require_discretisedfield(self[0], "hv")
+        field = _require_m(self[0])
         key_dims = field._hv_key_dims
         if len(self.table.data) > 1:
             key_dims[self.x] = hv_key_dim(

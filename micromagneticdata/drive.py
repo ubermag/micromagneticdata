@@ -10,11 +10,13 @@ if sys.version_info < (3, 10):
 else:
     from importlib import metadata
 
+import discretisedfield as df
 import ipywidgets
 import ubermagutil as uu
 import ubermagutil.typesystem as ts
 
 import micromagneticdata as md
+from .abstract_drive import _required_m_type
 
 
 @uu.inherit_docs
@@ -350,7 +352,8 @@ class Drive(md.AbstractDrive):
 
         """
 
-    def ovf2vtk(self, dirname=None):
+    @_required_m_type(df.Field)
+    def ovf2vtk(self, dirname=None, *, _require_m):
         """OVF to VTK conversion.
 
         This method iterates through all magnetisation fields in the drive and
@@ -377,7 +380,7 @@ class Drive(md.AbstractDrive):
         for i, filename in enumerate(self._step_files):
             vtkfilename = dirname / f"drive-{self.number}-{i:07d}.vtk"
             state = self._read_state(filename)
-            field = self._require_discretisedfield(state, "ovf2vtk")
+            field = _require_m(state)
             field.to_file(vtkfilename)
 
     def slider(self, description="step", **kwargs):

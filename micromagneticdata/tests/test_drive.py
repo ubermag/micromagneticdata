@@ -1,4 +1,5 @@
 import importlib.metadata
+import inspect
 import json
 import os
 from pathlib import Path
@@ -258,6 +259,69 @@ def test_to_xarray(drive):
             drive.to_xarray()[drive.table.x].values,
             drive.table.data[drive.table.x].to_numpy(),
         )
+
+
+@pytest.mark.parametrize("operation", ["to_xarray", "hv", "ovf2vtk"])
+def test_field_type_guards_do_not_read_extra_states(
+    drive, monkeypatch, tmp_path, operation
+):
+    drive = drive[:2]
+    if operation == "ovf2vtk":
+        drive = drive.register_callback(lambda m: pytest.fail("Export ran a callback"))
+
+    read_state = drive._read_state
+    step_reads = []
+
+    def counted_read(filename, *, initial=False):
+        if not initial:
+            step_reads.append(filename)
+        return read_state(filename, initial=initial)
+
+    monkeypatch.setattr(drive, "_read_state", counted_read)
+    if operation == "hv":
+        drive.hv  # noqa: B018
+        assert step_reads == drive._step_files[:1]
+    elif operation == "ovf2vtk":
+        drive.ovf2vtk(tmp_path)
+        assert step_reads == drive._step_files
+        assert len(list(tmp_path.glob("*.vtk"))) == 2
+    else:
+        drive.to_xarray()
+        assert step_reads == drive._step_files
+
+
+@pytest.mark.parametrize("operation", ["to_xarray", "hv"])
+def test_field_type_guards_reject_callback_result(drive, operation):
+    drive = drive.register_callback(lambda m: "not a field")
+    with pytest.raises(NotImplementedError, match="received str"):
+        result = getattr(drive, operation)
+        if operation == "to_xarray":
+            result()
+
+
+def test_to_xarray_rejects_later_callback_result(drive):
+    callback_count = 0
+
+    def callback(m):
+        nonlocal callback_count
+        callback_count += 1
+        return m if callback_count == 1 else "not a field"
+
+    drive = drive[:2].register_callback(callback)
+    with pytest.raises(NotImplementedError, match="received str"):
+        drive.to_xarray()
+    assert callback_count == 2
+
+
+@pytest.mark.parametrize(
+    ("method", "parameters"),
+    [
+        (mdata.AbstractDrive.to_xarray, ("self", "args", "kwargs")),
+        (mdata.Drive.ovf2vtk, ("self", "dirname")),
+    ],
+)
+def test_field_type_guards_preserve_public_signature(method, parameters):
+    assert tuple(inspect.signature(method).parameters) == parameters
 
 
 def test_hv_drive_scalar(drive):
