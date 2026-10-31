@@ -40,6 +40,12 @@ def drive_with_reference(drive):
     return drive, ("t", "mx", "run simulation")
 
 
+@pytest.fixture
+def expected_state_type():
+    """Expected type returned for initial and per-step magnetisation fields."""
+    return df.Field
+
+
 #####################
 
 # Additional tests not reused in adapter packages

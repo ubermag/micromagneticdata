@@ -7,8 +7,7 @@ Adapter packages should import these tests and implement the following fixtures:
   - name of the independent variable x
   - a suitable other column name to change the independent variable x to
   - a suitable substring of the calculator script to verify that it is loaded correctly
-- ``expected_state_type`` (optional): returns the expected magnetisation field type;
-  defaults to ``discretisedfield.Field``
+- ``expected_state_type``: returns the expected magnetisation field type
 
 Data for the fixtures can either be generated dynamically or pre-computed and committed
 to the repository. Consider pre-computing in particular for long-running simulations
@@ -16,22 +15,15 @@ or when setting up the environment/the calculator is difficult (or restricted to
 specific hardware). For pre-computed data also commit the script to (re-)generate the
 data.
 
-The magnetisation field type is defined by the adapter. Adapter packages that
-return a different type must override ``expected_state_type`` and should add focused
-assertions for their magnetisation field data contract.
+Every adapter package must provide ``expected_state_type`` for its magnetisation
+fields. Adapter packages should also add focused assertions for their magnetisation
+field data contract.
 """
 
-import discretisedfield as df
 import pytest
 import ubermagtable as ut
 
 import micromagneticdata as mdata
-
-
-@pytest.fixture
-def expected_state_type():
-    """Expected type returned for initial and per-step magnetisation fields."""
-    return df.Field
 
 
 def test_drive_fixture(drive):
