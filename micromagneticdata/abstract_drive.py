@@ -19,7 +19,8 @@ class AbstractDrive(abc.ABC):
     callbacks : list of callables, optional
 
         List of callback functions that are applied to individual fields of the drive
-        when accessing them.
+        when accessing them. Callbacks are applied in registration order and may
+        change the returned type.
 
     """
 
@@ -74,14 +75,14 @@ class AbstractDrive(abc.ABC):
 
     @property
     def m0(self):
-        """Inital magnetisation.
+        """Initial magnetisation field.
 
-        This property returns a ``discretisedfield.Field`` object for the
-        initial magnetisation field.
+        The field type is defined by the calculator plugin. Registered
+        callbacks are not applied to the initial magnetisation.
 
         Returns
         -------
-        discretisedfield.Field
+        discretisedfield.Field or pyvista.UnstructuredGrid
 
             Initial magnetisation field.
 
@@ -96,9 +97,7 @@ class AbstractDrive(abc.ABC):
         Field(...)
 
         """
-        field = df.Field.from_file(self._m0_path)
-        field.valid = "norm"
-        return field
+        return self._read_state(self._m0_path, initial=True)
 
     @property
     @abc.abstractmethod
@@ -162,14 +161,53 @@ class AbstractDrive(abc.ABC):
     def _step_files(self):
         """List of filenames of individual snapshots."""
 
+    def _read_state(self, filename, *, initial=False):
+        """Read a magnetisation field.
+
+        This is the protected extension hook for calculator plugins. The default
+        implementation returns a ``discretisedfield.Field``. Plugins can override
+        it to return a ``pyvista.UnstructuredGrid`` for an unstructured mesh.
+
+        Parameters
+        ----------
+        filename : pathlib.Path or str
+
+            Magnetisation file to read.
+
+        initial : bool, optional
+
+            Whether ``filename`` contains the initial magnetisation. Defaults to
+            ``False``.
+
+        Returns
+        -------
+        discretisedfield.Field or pyvista.UnstructuredGrid
+
+            Magnetisation field before callbacks are applied.
+
+        """
+        field = df.Field.from_file(filename=filename)
+        if not initial:
+            m0 = self.m0
+            if not field.mesh.region.allclose(m0.mesh.region):
+                # mumax3 (and maybe others) do not preserve the position of the origin
+                field.mesh.translate(
+                    m0.mesh.region.pmin - field.mesh.region.pmin, inplace=True
+                )
+            with contextlib.suppress(FileNotFoundError):
+                field.mesh.load_subregions(self._m0_path)
+        field.valid = "norm"
+        return field
+
     def __getitem__(self, item):
         """Magnetisation field of an individual step.
 
         Returns
         -------
-        discretisedfield.Field
+        discretisedfield.Field or pyvista.UnstructuredGrid
 
-            Magnetisation field.
+            Magnetisation field if no callbacks are registered. Otherwise, the
+            result of applying the callbacks, which may have a different type.
 
         Examples
         --------
@@ -182,28 +220,21 @@ class AbstractDrive(abc.ABC):
         Field(...)
 
         """
-        field = df.Field.from_file(filename=self._step_files[item])
-        if not field.mesh.region.allclose(self.m0.mesh.region):
-            # mumax3 (and maybe others) do not preserve the position of the origin
-            field.mesh.translate(
-                self.m0.mesh.region.pmin - field.mesh.region.pmin, inplace=True
-            )
-        with contextlib.suppress(FileNotFoundError):
-            field.mesh.load_subregions(self._m0_path)
-        field.valid = "norm"
-        return self._apply_callbacks(field)
+        state = self._read_state(self._step_files[item])
+        return self._apply_callbacks(state)
 
     def __iter__(self):
         """Iterator.
 
-        This iterator iterates through all magnetisation field in drive and
-        yields ``discretisedfield.Field`` objects.
+        This iterator yields all magnetisation fields in the drive, with
+        registered callbacks applied.
 
-        Returns
-        -------
-        discretisedfield.Field
+        Yields
+        ------
+        discretisedfield.Field or pyvista.UnstructuredGrid
 
-            Magnetisation field.
+            Magnetisation field if no callbacks are registered. Otherwise, the
+            result of applying the callbacks, which may have a different type.
 
         Examples
         --------
@@ -216,10 +247,11 @@ class AbstractDrive(abc.ABC):
         [...]
 
         """
-        # self.n and self._step_files might have different length from restart
-        # or if data is missing; therefore self._step_files is used
-        for i in range(len(self._step_files)):
-            yield self[i]
+        # self.n and self._step_files might have different lengths after a restart
+        # or if data is missing; therefore self._step_files is used directly.
+        for filename in self._step_files:
+            state = self._read_state(filename)
+            yield self._apply_callbacks(state)
 
     @property
     def callbacks(self):
@@ -228,12 +260,26 @@ class AbstractDrive(abc.ABC):
 
     @abc.abstractmethod
     def register_callback(self, callback):
-        """Register a callback to which a field is passed before being returned."""
+        """Register a callback applied before a step is returned.
 
-    def _apply_callbacks(self, field):
+        Callbacks are applied in registration order. The first callback receives
+        the magnetisation field; each subsequent callback receives the result
+        of the previous callback. Callbacks may change the returned type.
+        """
+
+    def _apply_callbacks(self, state):
         for callback in self._callbacks:
-            field = callback(field)
-        return field
+            state = callback(state)
+        return state
+
+    def _require_discretisedfield(self, state, operation):
+        """Return ``state`` or reject a discretisedfield-only operation."""
+        if not isinstance(state, df.Field):
+            raise NotImplementedError(
+                f"{operation} requires a discretisedfield.Field, but received "
+                f"{type(state).__name__}."
+            )
+        return state
 
     @abc.abstractmethod
     def __lshift__(self, other):
@@ -324,27 +370,31 @@ class AbstractDrive(abc.ABC):
         <xarray.DataArray 'Mag' (t: 25, vdims: 3)>...
 
         """
+        states = iter(self)
+        field_0 = self._require_discretisedfield(next(states), "to_xarray")
         if len(self._step_files) == 1:
-            darray = self[0].to_xarray(*args, **kwargs)
+            darray = field_0.to_xarray(*args, **kwargs)
         else:
             # xr.stack (below) is too slow and needs twice the amount of memory
             # field_darrays = (field.to_xarray(*args, **kwargs) for field in self)
             # darray = xr.concat(field_darrays, dim=self.table.data[self.table.x])
             array = np.empty(
-                (self.n, *self[0].mesh.n, self[0].nvdim), dtype=self[0].array.dtype
+                (self.n, *field_0.mesh.n, field_0.nvdim), dtype=field_0.array.dtype
             )
-            for i, field in enumerate(self):
+            array[0] = field_0.array
+            for i, state in enumerate(states, start=1):
+                field = self._require_discretisedfield(state, "to_xarray")
                 array[i] = field.array
             # remove "comp" dimension for scalar fields
-            if self[0].nvdim == 1:
+            if field_0.nvdim == 1:
                 array = np.squeeze(array, axis=-1)
 
-            field_0 = self[0].to_xarray(*args, **kwargs)
-            coords = dict(field_0.coords)
+            field_darray = field_0.to_xarray(*args, **kwargs)
+            coords = dict(field_darray.coords)
             coords[self.table.x] = self.table.data[self.table.x]
 
             darray = xr.DataArray(
-                array, coords=coords, dims=[self.table.x, *field_0.dims]
+                array, coords=coords, dims=[self.table.x, *field_darray.dims]
             )
             darray[self.table.x].attrs["units"] = self.table.units[self.table.x]
             if self.info["driver"] == "HysteresisDriver":
@@ -360,8 +410,8 @@ class AbstractDrive(abc.ABC):
                     darray[f"B{i}_hysteresis"].attrs["units"] = self.table.units[
                         f"B{i}_hysteresis"
                     ]
-            darray.name = field_0.name
-            darray.assign_attrs(**field_0.attrs)
+            darray.name = field_darray.name
+            darray.assign_attrs(**field_darray.attrs)
 
         return darray.assign_attrs(**self.info)
 
@@ -406,13 +456,15 @@ class AbstractDrive(abc.ABC):
             n = self.table.data.loc[self.table.data[self.x] == value].index[0]
         else:
             n = -1
-        return self[n]._hv_data_selection(**kwargs)
+        field = self._require_discretisedfield(self[n], "hv")
+        return field._hv_data_selection(**kwargs)
 
     def _hv_vdims_guess(self, kdims):
         """Try to find vector components matching the given kdims."""
         if self.x in kdims:
             return None
-        return self[0]._hv_vdims_guess(kdims)
+        field = self._require_discretisedfield(self[0], "hv")
+        return field._hv_vdims_guess(kdims)
 
     @property
     def _hv_key_dims(self):
@@ -422,7 +474,8 @@ class AbstractDrive(abc.ABC):
         dimensions.
 
         """
-        key_dims = self[0]._hv_key_dims
+        field = self._require_discretisedfield(self[0], "hv")
+        key_dims = field._hv_key_dims
         if len(self.table.data) > 1:
             key_dims[self.x] = hv_key_dim(
                 self.table.data[self.x].to_numpy(),

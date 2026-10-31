@@ -1,5 +1,6 @@
 import functools
 import operator
+import pathlib
 
 import ubermagutil as uu
 
@@ -122,6 +123,18 @@ class CombinedDrive(md.AbstractDrive):
     @property
     def _step_files(self):
         return sum((drive._step_files for drive in self.drives), start=[])
+
+    def _read_state(self, filename, *, initial=False):
+        """Delegate state loading to the calculator-specific source drive."""
+        if initial:
+            return self.drives[0]._read_state(filename, initial=True)
+
+        filename = pathlib.Path(filename)
+        for drive in self.drives:
+            if filename.is_relative_to(drive.drive_path):
+                return drive._read_state(filename)
+
+        raise ValueError(f"State file {filename!r} does not belong to this drive.")
 
     def __lshift__(self, other):
         if isinstance(other, md.Drive):
