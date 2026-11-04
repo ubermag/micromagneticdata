@@ -4,12 +4,13 @@ import json
 import discretisedfield as df
 import numpy as np
 import pytest
+import pyvista as pv
 import ubermagtable as ut
 import xarray as xr
 from discretisedfield.tests.test_field import check_hv
 
 import micromagneticdata as md
-from .mock_data import BackendState, SampleDrive, create_drive, mock_entry_points
+from .mock_data import SampleDrive, create_drive, mock_entry_points
 
 
 @pytest.fixture
@@ -74,30 +75,31 @@ def test_init(time_drive_1, time_drive_2):
         md.CombinedDrive(time_drive_1, "wrong type")
 
 
-def test_backend_specific_states(tmp_path, monkeypatch):
+def test_unstructured_grid_fields(tmp_path, monkeypatch):
     monkeypatch.setattr(importlib.metadata, "entry_points", mock_entry_points)
 
-    system_name = "backend_state"
+    system_name = "unstructured_grid"
     drives = []
     for index in range(2):
         create_drive(tmp_path, system_name, index, "t", n_steps=2)
         info_path = tmp_path / system_name / f"drive-{index}" / "info.json"
         info = json.loads(info_path.read_text())
-        info["adapter"] = "backend_state_adapter"
+        info["adapter"] = "unstructured_grid_adapter"
         info_path.write_text(json.dumps(info))
         drives.append(md.Drive(system_name, index, dirname=tmp_path))
 
     combined = md.CombinedDrive(*drives)
-    assert combined.m0 == BackendState(drives[0].drive_path / "m0.omf", initial=True)
-    assert combined[0] == BackendState(
-        drives[0].drive_path / "m-001.hdf5", initial=False
+    assert isinstance(combined.m0, pv.UnstructuredGrid)
+    assert combined.m0.field_data["filename"][0] == str(drives[0]._m0_path)
+    assert combined[0].field_data["filename"][0] == str(
+        drives[0].drive_path / "m-001.hdf5"
     )
-    assert combined[2] == BackendState(
-        drives[1].drive_path / "m-001.hdf5", initial=False
+    assert combined[2].field_data["filename"][0] == str(
+        drives[1].drive_path / "m-001.hdf5"
     )
 
 
-def test_state_uses_initial_state_from_source_drive(time_drive_1, time_drive_2):
+def test_field_uses_initial_field_from_source_drive(time_drive_1, time_drive_2):
     region = df.Region(p1=(2, 0, 0), p2=(3, 1, 1))
     subregion = df.Region(p1=(2, 0, 0), p2=(2.4, 1, 1))
     mesh = df.Mesh(
@@ -109,10 +111,10 @@ def test_state_uses_initial_state_from_source_drive(time_drive_1, time_drive_2):
     m0.to_file(time_drive_2._m0_path)
 
     combined = md.CombinedDrive(time_drive_1, time_drive_2)
-    state = combined[len(time_drive_1._step_files)]
+    field = combined[len(time_drive_1._step_files)]
 
-    assert state.mesh.region.allclose(region)
-    assert state.mesh.subregions == {"second_drive": subregion}
+    assert field.mesh.region.allclose(region)
+    assert field.mesh.subregions == {"second_drive": subregion}
 
 
 def test_repr(combined_time_drive):

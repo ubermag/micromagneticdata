@@ -1,13 +1,17 @@
 # Mock data for tests in micromagneticadata; adapter packages don't need this
 # and should instead test with real data
+import contextlib
+import copy
 import importlib.metadata
 import json
-from dataclasses import dataclass
+import numbers
 from importlib.metadata import entry_points as importlib_metadata_entry_points
 from pathlib import Path
 
 import discretisedfield as df
+import numpy as np
 import pandas as pd
+import pyvista as pv
 import ubermagtable as ut
 
 import micromagneticdata as mdata
@@ -33,20 +37,67 @@ class SampleDrive(mdata.Drive):
     def calculator_script(self):
         return (self.drive_path / "script.txt").read_text()
 
+    def _read_field(self, filename):
+        field = df.Field.from_file(filename)
+        field.valid = "norm"
+        return field
 
-@dataclass(frozen=True)
-class BackendState:
-    """Minimal calculator-specific state used to test plugin dispatch."""
+    @property
+    def m0(self):
+        return self._read_field(self._m0_path)
 
-    filename: Path
-    initial: bool
+    def __getitem__(self, item):
+        if isinstance(item, numbers.Integral):
+            field = self._read_field(self._step_files[item])
+            m0 = self.m0
+            if not field.mesh.region.allclose(m0.mesh.region):
+                field.mesh.translate(
+                    m0.mesh.region.pmin - field.mesh.region.pmin, inplace=True
+                )
+            with contextlib.suppress(FileNotFoundError):
+                field.mesh.load_subregions(self._m0_path)
+            return self._apply_callbacks(field)
+        elif isinstance(item, slice):
+            step_files = self._step_files[item]
+            table = copy.copy(self.table)
+            table.data = table.data.iloc[item].reset_index()
+            return self.__class__(
+                self.name,
+                self.number,
+                self.dirname,
+                self.x,
+                use_cache=True,
+                callbacks=self.callbacks,
+                step_files=step_files,
+                table=table,
+            )
+        else:
+            raise TypeError(f"{type(item)=} is not supported")
 
 
-class BackendStateDrive(SampleDrive):
-    """Drive returning objects that are not discretisedfield fields."""
+def _unstructured_field(filename):
+    points = np.array([[0, 0, 0], [1e-9, 0, 0], [0, 1e-9, 0], [0, 0, 1e-9]])
+    field = pv.UnstructuredGrid(
+        np.array([4, 0, 1, 2, 3]),
+        np.array([pv.CellType.TETRA]),
+        points,
+    )
+    field.point_data["m"] = np.tile((0.0, 0.0, 1.0), (field.n_points, 1))
+    field.field_data["filename"] = [str(filename)]
+    return field
 
-    def _read_state(self, filename, *, initial=False):
-        return BackendState(Path(filename), initial)
+
+class UnstructuredGridDrive(SampleDrive):
+    """Drive returning unstructured-grid magnetisation fields."""
+
+    def _read_field(self, filename):
+        return _unstructured_field(filename)
+
+    def __getitem__(self, item):
+        if isinstance(item, numbers.Integral):
+            field = self._read_field(self._step_files[item])
+            return self._apply_callbacks(field)
+        return super().__getitem__(item)
 
 
 def read_table(filename, x=None, rename=True):
@@ -67,8 +118,8 @@ def mock_entry_points(group):
                     group="micromagneticdata.plugins.CalculatorDrive",
                 ),
                 importlib.metadata.EntryPoint(
-                    name="backend_state_adapter",
-                    value="micromagneticdata.tests.mock_data:BackendStateDrive",
+                    name="unstructured_grid_adapter",
+                    value="micromagneticdata.tests.mock_data:UnstructuredGridDrive",
                     group="micromagneticdata.plugins.CalculatorDrive",
                 ),
             ]

@@ -1,5 +1,4 @@
 import abc
-import contextlib
 import functools
 import inspect
 
@@ -113,11 +112,11 @@ class AbstractDrive(abc.ABC):
         """Drive information."""
 
     @property
+    @abc.abstractmethod
     def m0(self):
         """Initial magnetisation field.
 
-        The field type is defined by the calculator plugin. Registered
-        callbacks are not applied to the initial magnetisation.
+        Registered callbacks are not applied to the initial magnetisation.
 
         Returns
         -------
@@ -136,12 +135,6 @@ class AbstractDrive(abc.ABC):
         Field(...)
 
         """
-        return self._read_state(self._m0_path, initial=True)
-
-    @property
-    @abc.abstractmethod
-    def _m0_path(self):
-        """Path to m0 file."""
 
     @property
     @abc.abstractmethod
@@ -200,44 +193,7 @@ class AbstractDrive(abc.ABC):
     def _step_files(self):
         """List of filenames of individual snapshots."""
 
-    def _read_state(self, filename, *, initial=False):
-        """Read a magnetisation field.
-
-        This is the protected extension hook for calculator plugins. The default
-        implementation returns a ``discretisedfield.Field``. Plugins can override
-        it to return a ``pyvista.UnstructuredGrid`` for an unstructured mesh.
-
-        Parameters
-        ----------
-        filename : pathlib.Path or str
-
-            Magnetisation file to read.
-
-        initial : bool, optional
-
-            Whether ``filename`` contains the initial magnetisation. Defaults to
-            ``False``.
-
-        Returns
-        -------
-        discretisedfield.Field or pyvista.UnstructuredGrid
-
-            Magnetisation field before callbacks are applied.
-
-        """
-        field = df.Field.from_file(filename=filename)
-        if not initial:
-            m0 = self.m0
-            if not field.mesh.region.allclose(m0.mesh.region):
-                # mumax3 (and maybe others) do not preserve the position of the origin
-                field.mesh.translate(
-                    m0.mesh.region.pmin - field.mesh.region.pmin, inplace=True
-                )
-            with contextlib.suppress(FileNotFoundError):
-                field.mesh.load_subregions(self._m0_path)
-        field.valid = "norm"
-        return field
-
+    @abc.abstractmethod
     def __getitem__(self, item):
         """Magnetisation field of an individual step.
 
@@ -259,8 +215,6 @@ class AbstractDrive(abc.ABC):
         Field(...)
 
         """
-        state = self._read_state(self._step_files[item])
-        return self._apply_callbacks(state)
 
     def __iter__(self):
         """Iterator.
@@ -286,11 +240,10 @@ class AbstractDrive(abc.ABC):
         [...]
 
         """
-        # self.n and self._step_files might have different lengths after a restart
-        # or if data is missing; therefore self._step_files is used directly.
-        for filename in self._step_files:
-            state = self._read_state(filename)
-            yield self._apply_callbacks(state)
+        # self.n and self._step_files might have different length from restart
+        # or if data is missing; therefore self._step_files is used
+        for i in range(len(self._step_files)):
+            yield self[i]
 
     @property
     def callbacks(self):
@@ -306,10 +259,10 @@ class AbstractDrive(abc.ABC):
         of the previous callback. Callbacks may change the returned type.
         """
 
-    def _apply_callbacks(self, state):
+    def _apply_callbacks(self, field):
         for callback in self._callbacks:
-            state = callback(state)
-        return state
+            field = callback(field)
+        return field
 
     @abc.abstractmethod
     def __lshift__(self, other):
@@ -401,8 +354,8 @@ class AbstractDrive(abc.ABC):
         <xarray.DataArray 'Mag' (t: 25, vdims: 3)>...
 
         """
-        states = iter(self)
-        field_0 = _require_m(next(states))
+        fields = iter(self)
+        field_0 = _require_m(next(fields))
         if len(self._step_files) == 1:
             darray = field_0.to_xarray(*args, **kwargs)
         else:
@@ -413,8 +366,8 @@ class AbstractDrive(abc.ABC):
                 (self.n, *field_0.mesh.n, field_0.nvdim), dtype=field_0.array.dtype
             )
             array[0] = field_0.array
-            for i, state in enumerate(states, start=1):
-                field = _require_m(state)
+            for i, field in enumerate(fields, start=1):
+                field = _require_m(field)
                 array[i] = field.array
             # remove "comp" dimension for scalar fields
             if field_0.nvdim == 1:

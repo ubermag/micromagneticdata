@@ -8,12 +8,13 @@ import discretisedfield as df
 import ipywidgets
 import numpy as np
 import pytest
+import pyvista as pv
 import ubermagtable as ut
 import xarray as xr
 from discretisedfield.tests.test_field import check_hv
 
 import micromagneticdata as mdata
-from .mock_data import BackendState, BackendStateDrive, create_drive, mock_entry_points
+from .mock_data import UnstructuredGridDrive, create_drive, mock_entry_points
 from micromagneticdata.testing.drive import *  # noqa: F403
 
 
@@ -42,7 +43,7 @@ def drive_with_reference(drive):
 
 
 @pytest.fixture
-def expected_state_type():
+def expected_field_type():
     """Expected type returned for initial and per-step magnetisation fields."""
     return df.Field
 
@@ -141,26 +142,30 @@ def test_init(drive):
         created_drive = mdata.Drive(name=drive.name, number=1, dirname=drive.dirname)
 
 
-def test_backend_specific_state(monkeypatch, tmp_path):
+def test_unstructured_grid_field(monkeypatch, tmp_path):
     monkeypatch.setattr(importlib.metadata, "entry_points", mock_entry_points)
 
-    system_name = "backend_state"
+    system_name = "unstructured_grid"
     create_drive(tmp_path, system_name, index=0, x="t", n_steps=2)
     info_path = tmp_path / system_name / "drive-0" / "info.json"
     info = json.loads(info_path.read_text())
-    info["adapter"] = "backend_state_adapter"
+    info["adapter"] = "unstructured_grid_adapter"
     info_path.write_text(json.dumps(info))
 
     drive = mdata.Drive(system_name, 0, dirname=tmp_path)
-    assert isinstance(drive, BackendStateDrive)
-    assert drive.m0 == BackendState(drive.drive_path / "m0.omf", initial=True)
-    assert drive[0] == BackendState(drive.drive_path / "m-001.hdf5", initial=False)
-    assert all(isinstance(state, BackendState) for state in drive)
+    assert isinstance(drive, UnstructuredGridDrive)
+    assert isinstance(drive.m0, pv.UnstructuredGrid)
+    assert drive.m0.field_data["filename"][0] == str(drive._m0_path)
+    assert isinstance(drive[0], pv.UnstructuredGrid)
+    assert drive[0].field_data["filename"][0] == str(drive.drive_path / "m-001.hdf5")
+    assert all(isinstance(field, pv.UnstructuredGrid) for field in drive)
 
     selection = drive[:1]
-    assert isinstance(selection[0], BackendState)
+    assert isinstance(selection[0], pv.UnstructuredGrid)
 
-    filenames = drive.register_callback(lambda state: state.filename.name)
+    filenames = drive.register_callback(
+        lambda field: Path(field.field_data["filename"][0]).name
+    )
     assert filenames[0] == "m-001.hdf5"
     with pytest.raises(NotImplementedError, match="received str"):
         filenames.to_xarray()
@@ -262,22 +267,19 @@ def test_to_xarray(drive):
 
 
 @pytest.mark.parametrize("operation", ["to_xarray", "hv", "ovf2vtk"])
-def test_field_type_guards_do_not_read_extra_states(
+def test_field_type_guards_do_not_read_extra_fields(
     drive, monkeypatch, tmp_path, operation
 ):
     drive = drive[:2]
-    if operation == "ovf2vtk":
-        drive = drive.register_callback(lambda m: pytest.fail("Export ran a callback"))
-
-    read_state = drive._read_state
+    read_field = drive._read_field
     step_reads = []
 
-    def counted_read(filename, *, initial=False):
-        if not initial:
+    def counted_read(filename):
+        if filename != drive._m0_path:
             step_reads.append(filename)
-        return read_state(filename, initial=initial)
+        return read_field(filename)
 
-    monkeypatch.setattr(drive, "_read_state", counted_read)
+    monkeypatch.setattr(drive, "_read_field", counted_read)
     if operation == "hv":
         drive.hv  # noqa: B018
         assert step_reads == drive._step_files[:1]
@@ -290,13 +292,16 @@ def test_field_type_guards_do_not_read_extra_states(
         assert step_reads == drive._step_files
 
 
-@pytest.mark.parametrize("operation", ["to_xarray", "hv"])
-def test_field_type_guards_reject_callback_result(drive, operation):
+@pytest.mark.parametrize("operation", ["to_xarray", "hv", "ovf2vtk"])
+def test_field_type_guards_reject_callback_result(drive, tmp_path, operation):
     drive = drive.register_callback(lambda m: "not a field")
     with pytest.raises(NotImplementedError, match="received str"):
-        result = getattr(drive, operation)
         if operation == "to_xarray":
-            result()
+            drive.to_xarray()
+        elif operation == "hv":
+            drive.hv  # noqa: B018
+        else:
+            drive.ovf2vtk(tmp_path)
 
 
 def test_to_xarray_rejects_later_callback_result(drive):

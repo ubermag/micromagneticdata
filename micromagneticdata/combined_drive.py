@@ -1,6 +1,6 @@
 import functools
+import numbers
 import operator
-import pathlib
 
 import ubermagutil as uu
 
@@ -61,8 +61,8 @@ class CombinedDrive(md.AbstractDrive):
             raise ValueError(msg)
 
     @property
-    def _m0_path(self):
-        return self.drives[0]._m0_path
+    def m0(self):
+        return self.drives[0].m0
 
     def __repr__(self):
         """Representation string.
@@ -124,17 +124,18 @@ class CombinedDrive(md.AbstractDrive):
     def _step_files(self):
         return sum((drive._step_files for drive in self.drives), start=[])
 
-    def _read_state(self, filename, *, initial=False):
-        """Delegate state loading to the calculator-specific source drive."""
-        if initial:
-            return self.drives[0]._read_state(filename, initial=True)
+    def __getitem__(self, item):
+        """Return a magnetisation field from its source drive."""
+        if not isinstance(item, numbers.Integral):
+            raise TypeError(f"{type(item)=} is not supported")
 
-        filename = pathlib.Path(filename)
+        item = range(len(self._step_files))[item]
         for drive in self.drives:
-            if filename.is_relative_to(drive.drive_path):
-                return drive._read_state(filename)
+            if item < len(drive._step_files):
+                return self._apply_callbacks(drive[item])
+            item -= len(drive._step_files)
 
-        raise ValueError(f"State file {filename!r} does not belong to this drive.")
+        raise IndexError(item)
 
     def __lshift__(self, other):
         if isinstance(other, md.Drive):
