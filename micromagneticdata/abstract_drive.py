@@ -1,49 +1,9 @@
 import abc
-import functools
-import inspect
 
-import discretisedfield as df
 import discretisedfield.plotting as dfp
 import numpy as np
 import xarray as xr
 from discretisedfield.plotting.util import hv_key_dim
-
-
-def _required_m_type(m_type, *, operation=None):
-    """Supply a field-type validator to a method as ``_require_m``.
-
-    The method validates each field where it is used. This avoids extra reads
-    and allows checking either raw fields or callback results as appropriate.
-    The injected parameter is omitted from the public method signature.
-    """
-
-    def decorate(method):
-        operation_name = operation or method.__name__
-        type_name = f"{m_type.__module__.split('.')[0]}.{m_type.__name__}"
-
-        def require_m(m):
-            if not isinstance(m, m_type):
-                raise NotImplementedError(
-                    f"{operation_name} requires a {type_name}, but received "
-                    f"{type(m).__name__}."
-                )
-            return m
-
-        @functools.wraps(method)
-        def wrapper(self, *args, **kwargs):
-            return method(self, *args, _require_m=require_m, **kwargs)
-
-        signature = inspect.signature(method)
-        wrapper.__signature__ = signature.replace(
-            parameters=[
-                parameter
-                for name, parameter in signature.parameters.items()
-                if name != "_require_m"
-            ]
-        )
-        return wrapper
-
-    return decorate
 
 
 class AbstractDrive(abc.ABC):
@@ -57,8 +17,7 @@ class AbstractDrive(abc.ABC):
     callbacks : list of callables, optional
 
         List of callback functions that are applied to individual fields of the drive
-        when accessing them. Callbacks are applied in registration order and may
-        change the returned type.
+        when accessing them.
 
     """
 
@@ -112,17 +71,15 @@ class AbstractDrive(abc.ABC):
         """Drive information."""
 
     @property
-    @abc.abstractmethod
     def m0(self):
         """Initial magnetisation field.
-
-        Registered callbacks are not applied to the initial magnetisation.
 
         Returns
         -------
         discretisedfield.Field or pyvista.UnstructuredGrid
 
-            Initial magnetisation field.
+            Initial magnetisation field if no callbacks are registered. Otherwise,
+            the result of applying the callbacks.
 
         Examples
         --------
@@ -135,6 +92,16 @@ class AbstractDrive(abc.ABC):
         Field(...)
 
         """
+        return self._apply_callbacks(self._read_m(self._m0_path))
+
+    @property
+    @abc.abstractmethod
+    def _m0_path(self):
+        """Path to the initial magnetisation field."""
+
+    @abc.abstractmethod
+    def _read_m(self, filename):
+        """Read a magnetisation field from ``filename``."""
 
     @property
     @abc.abstractmethod
@@ -193,7 +160,6 @@ class AbstractDrive(abc.ABC):
     def _step_files(self):
         """List of filenames of individual snapshots."""
 
-    @abc.abstractmethod
     def __getitem__(self, item):
         """Magnetisation field of an individual step.
 
@@ -215,6 +181,7 @@ class AbstractDrive(abc.ABC):
         Field(...)
 
         """
+        return self._apply_callbacks(self._read_m(self._step_files[item]))
 
     def __iter__(self):
         """Iterator.
@@ -252,12 +219,7 @@ class AbstractDrive(abc.ABC):
 
     @abc.abstractmethod
     def register_callback(self, callback):
-        """Register a callback applied before a step is returned.
-
-        Callbacks are applied in registration order. The first callback receives
-        the magnetisation field; each subsequent callback receives the result
-        of the previous callback. Callbacks may change the returned type.
-        """
+        """Register a callback to which a field is passed before being returned."""
 
     def _apply_callbacks(self, field):
         for callback in self._callbacks:
@@ -298,8 +260,7 @@ class AbstractDrive(abc.ABC):
 
         """
 
-    @_required_m_type(df.Field)
-    def to_xarray(self, *args, _require_m, **kwargs):
+    def to_xarray(self, *args, **kwargs):
         """Export ``micromagneticdata.Drive`` as ``xarray.DataArray``
 
         The method depends on ``discretisedfield.Field.to_xarray`` and derives the last
@@ -354,31 +315,27 @@ class AbstractDrive(abc.ABC):
         <xarray.DataArray 'Mag' (t: 25, vdims: 3)>...
 
         """
-        fields = iter(self)
-        field_0 = _require_m(next(fields))
         if len(self._step_files) == 1:
-            darray = field_0.to_xarray(*args, **kwargs)
+            darray = self[0].to_xarray(*args, **kwargs)
         else:
             # xr.stack (below) is too slow and needs twice the amount of memory
             # field_darrays = (field.to_xarray(*args, **kwargs) for field in self)
             # darray = xr.concat(field_darrays, dim=self.table.data[self.table.x])
             array = np.empty(
-                (self.n, *field_0.mesh.n, field_0.nvdim), dtype=field_0.array.dtype
+                (self.n, *self[0].mesh.n, self[0].nvdim), dtype=self[0].array.dtype
             )
-            array[0] = field_0.array
-            for i, field in enumerate(fields, start=1):
-                field = _require_m(field)
+            for i, field in enumerate(self):
                 array[i] = field.array
             # remove "comp" dimension for scalar fields
-            if field_0.nvdim == 1:
+            if self[0].nvdim == 1:
                 array = np.squeeze(array, axis=-1)
 
-            field_darray = field_0.to_xarray(*args, **kwargs)
-            coords = dict(field_darray.coords)
+            field_0 = self[0].to_xarray(*args, **kwargs)
+            coords = dict(field_0.coords)
             coords[self.table.x] = self.table.data[self.table.x]
 
             darray = xr.DataArray(
-                array, coords=coords, dims=[self.table.x, *field_darray.dims]
+                array, coords=coords, dims=[self.table.x, *field_0.dims]
             )
             darray[self.table.x].attrs["units"] = self.table.units[self.table.x]
             if self.info["driver"] == "HysteresisDriver":
@@ -394,8 +351,8 @@ class AbstractDrive(abc.ABC):
                     darray[f"B{i}_hysteresis"].attrs["units"] = self.table.units[
                         f"B{i}_hysteresis"
                     ]
-            darray.name = field_darray.name
-            darray.assign_attrs(**field_darray.attrs)
+            darray.name = field_0.name
+            darray.assign_attrs(**field_0.attrs)
 
         return darray.assign_attrs(**self.info)
 
@@ -429,8 +386,7 @@ class AbstractDrive(abc.ABC):
         """
         return dfp.Hv(self._hv_key_dims, self._hv_data_selection, self._hv_vdims_guess)
 
-    @_required_m_type(df.Field, operation="hv")
-    def _hv_data_selection(self, *, _require_m, **kwargs):
+    def _hv_data_selection(self, **kwargs):
         """Select one field for plotting in holoviews."""
         if self.x in self._hv_key_dims:
             if self.x not in kwargs:
@@ -441,28 +397,23 @@ class AbstractDrive(abc.ABC):
             n = self.table.data.loc[self.table.data[self.x] == value].index[0]
         else:
             n = -1
-        field = _require_m(self[n])
-        return field._hv_data_selection(**kwargs)
+        return self[n]._hv_data_selection(**kwargs)
 
-    @_required_m_type(df.Field, operation="hv")
-    def _hv_vdims_guess(self, kdims, *, _require_m):
+    def _hv_vdims_guess(self, kdims):
         """Try to find vector components matching the given kdims."""
         if self.x in kdims:
             return None
-        field = _require_m(self[0])
-        return field._hv_vdims_guess(kdims)
+        return self[0]._hv_vdims_guess(kdims)
 
     @property
-    @_required_m_type(df.Field, operation="hv")
-    def _hv_key_dims(self, *, _require_m):
+    def _hv_key_dims(self):
         """Key dimensions for holoviews.
 
         Key dimensions are the independent variable of the drive and all field key
         dimensions.
 
         """
-        field = _require_m(self[0])
-        key_dims = field._hv_key_dims
+        key_dims = self[0]._hv_key_dims
         if len(self.table.data) > 1:
             key_dims[self.x] = hv_key_dim(
                 self.table.data[self.x].to_numpy(),

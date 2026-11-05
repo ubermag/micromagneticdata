@@ -1,5 +1,7 @@
 import abc
+import copy
 import json
+import numbers
 import pathlib
 import sys
 
@@ -14,7 +16,6 @@ import ubermagutil as uu
 import ubermagutil.typesystem as ts
 
 import micromagneticdata as md
-from .abstract_drive import _required_m_type
 
 
 @uu.inherit_docs
@@ -239,6 +240,66 @@ class Drive(md.AbstractDrive):
             self._step_file_list = sorted(self._step_file_glob)
         return self._step_file_list
 
+    def __getitem__(self, item):
+        """Magnetisation field of an individual step or subpart of the drive.
+
+        If an ``int`` is passed a single magnetisation field is returned. Additional
+        callbacks (if registered) are applied to this field before it is returned.
+
+        If a slice is passed a new drive object with the magnetisation steps defined via
+        the slice is returned. Additional callbacks (if registered) are passed to the
+        new drive object.
+
+        Returns
+        -------
+        discretisedfield.Field or pyvista.UnstructuredGrid
+
+            Magnetisation field if an integer is passed.
+
+        micromagneticdata.Drive
+
+            Drive with selected data if a slice is passed.
+
+        Examples
+        --------
+        1. Getting the field of a particular step.
+
+        >>> import micromagneticdata as mdata
+        >>> from micromagneticdata import sample_data
+        >>> drive = mdata.Drive(name='rectangle', number=0, dirname=sample_data.dirname)
+        >>> drive[5]
+        Field(...)
+
+        2. Selecting a part of the drive.
+
+        >>> drive.n
+        25
+        >>> selection = drive[:8:2]  # select elements 0, 2, 4, 6
+        >>> selection
+        OOMMFDrive(...)
+        >>> selection.n
+        4
+
+        """
+        if isinstance(item, numbers.Integral):
+            return super().__getitem__(item)
+        elif isinstance(item, slice):
+            step_files = self._step_files[item]
+            table = copy.copy(self.table)
+            table.data = table.data.iloc[item].reset_index()
+            return self.__class__(
+                self.name,
+                self.number,
+                self.dirname,
+                self.x,
+                use_cache=True,
+                callbacks=self.callbacks,
+                step_files=step_files,
+                table=table,
+            )
+        else:
+            raise TypeError(f"{type(item)=} is not supported")
+
     @property
     def info(self):
         """Drive information.
@@ -288,8 +349,7 @@ class Drive(md.AbstractDrive):
 
         """
 
-    @_required_m_type(df.Field)
-    def ovf2vtk(self, dirname=None, *, _require_m):
+    def ovf2vtk(self, dirname=None):
         """OVF to VTK conversion.
 
         This method iterates through all magnetisation fields in the drive and
@@ -313,10 +373,9 @@ class Drive(md.AbstractDrive):
 
         """
         dirname = pathlib.Path(dirname) if dirname is not None else self.drive_path
-        for i, field in enumerate(self):
+        for i, filename in enumerate(self._step_files):
             vtkfilename = dirname / f"drive-{self.number}-{i:07d}.vtk"
-            field = _require_m(field)
-            field.to_file(vtkfilename)
+            df.Field.from_file(filename).to_file(vtkfilename)
 
     def slider(self, description="step", **kwargs):
         """Widget for selecting individual steps.

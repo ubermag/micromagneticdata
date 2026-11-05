@@ -1,10 +1,7 @@
 # Mock data for tests in micromagneticadata; adapter packages don't need this
 # and should instead test with real data
-import contextlib
-import copy
 import importlib.metadata
 import json
-import numbers
 from importlib.metadata import entry_points as importlib_metadata_entry_points
 from pathlib import Path
 
@@ -37,42 +34,10 @@ class SampleDrive(mdata.Drive):
     def calculator_script(self):
         return (self.drive_path / "script.txt").read_text()
 
-    def _read_field(self, filename):
+    def _read_m(self, filename):
         field = df.Field.from_file(filename)
         field.valid = "norm"
         return field
-
-    @property
-    def m0(self):
-        return self._read_field(self._m0_path)
-
-    def __getitem__(self, item):
-        if isinstance(item, numbers.Integral):
-            field = self._read_field(self._step_files[item])
-            m0 = self.m0
-            if not field.mesh.region.allclose(m0.mesh.region):
-                field.mesh.translate(
-                    m0.mesh.region.pmin - field.mesh.region.pmin, inplace=True
-                )
-            with contextlib.suppress(FileNotFoundError):
-                field.mesh.load_subregions(self._m0_path)
-            return self._apply_callbacks(field)
-        elif isinstance(item, slice):
-            step_files = self._step_files[item]
-            table = copy.copy(self.table)
-            table.data = table.data.iloc[item].reset_index()
-            return self.__class__(
-                self.name,
-                self.number,
-                self.dirname,
-                self.x,
-                use_cache=True,
-                callbacks=self.callbacks,
-                step_files=step_files,
-                table=table,
-            )
-        else:
-            raise TypeError(f"{type(item)=} is not supported")
 
 
 def _unstructured_field(filename):
@@ -90,14 +55,8 @@ def _unstructured_field(filename):
 class UnstructuredGridDrive(SampleDrive):
     """Drive returning unstructured-grid magnetisation fields."""
 
-    def _read_field(self, filename):
+    def _read_m(self, filename):
         return _unstructured_field(filename)
-
-    def __getitem__(self, item):
-        if isinstance(item, numbers.Integral):
-            field = self._read_field(self._step_files[item])
-            return self._apply_callbacks(field)
-        return super().__getitem__(item)
 
 
 def read_table(filename, x=None, rename=True):
@@ -113,12 +72,12 @@ def mock_entry_points(group):
         return importlib.metadata.EntryPoints(
             [
                 importlib.metadata.EntryPoint(
-                    name="micromagneticdata",
+                    name="discretisedfield_field_sample",
                     value="micromagneticdata.tests.mock_data:SampleDrive",
                     group="micromagneticdata.plugins.CalculatorDrive",
                 ),
                 importlib.metadata.EntryPoint(
-                    name="unstructured_grid_adapter",
+                    name="pyvista_unstructured_grid_sample",
                     value="micromagneticdata.tests.mock_data:UnstructuredGridDrive",
                     group="micromagneticdata.plugins.CalculatorDrive",
                 ),
@@ -138,7 +97,14 @@ def mock_entry_points(group):
         return importlib_metadata_entry_points(group=group)
 
 
-def create_drive(base: Path, system_name, index, x, n_steps):
+def create_drive(
+    base: Path,
+    system_name,
+    index,
+    x,
+    n_steps,
+    adapter="discretisedfield_field_sample",
+):
     """Create a drive with n_steps steps and metadata compatible with SampleDrive."""
     # support time driver and min driver
     driver_name = {
@@ -152,7 +118,7 @@ def create_drive(base: Path, system_name, index, x, n_steps):
         json.dumps(
             {
                 "drive_number": index,
-                "adapter": "micromagneticdata",
+                "adapter": adapter,
                 "driver": driver_name[x],
             }
         )

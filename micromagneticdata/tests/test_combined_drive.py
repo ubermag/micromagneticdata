@@ -1,5 +1,4 @@
 import importlib.metadata
-import json
 
 import discretisedfield as df
 import numpy as np
@@ -81,11 +80,14 @@ def test_unstructured_grid_fields(tmp_path, monkeypatch):
     system_name = "unstructured_grid"
     drives = []
     for index in range(2):
-        create_drive(tmp_path, system_name, index, "t", n_steps=2)
-        info_path = tmp_path / system_name / f"drive-{index}" / "info.json"
-        info = json.loads(info_path.read_text())
-        info["adapter"] = "unstructured_grid_adapter"
-        info_path.write_text(json.dumps(info))
+        create_drive(
+            tmp_path,
+            system_name,
+            index,
+            "t",
+            n_steps=2,
+            adapter="pyvista_unstructured_grid_sample",
+        )
         drives.append(md.Drive(system_name, index, dirname=tmp_path))
 
     combined = md.CombinedDrive(*drives)
@@ -99,22 +101,16 @@ def test_unstructured_grid_fields(tmp_path, monkeypatch):
     )
 
 
-def test_field_uses_initial_field_from_source_drive(time_drive_1, time_drive_2):
-    region = df.Region(p1=(2, 0, 0), p2=(3, 1, 1))
-    subregion = df.Region(p1=(2, 0, 0), p2=(2.4, 1, 1))
-    mesh = df.Mesh(
-        region=region,
-        n=(5, 5, 5),
-        subregions={"second_drive": subregion},
-    )
-    m0 = df.Field(mesh=mesh, nvdim=3, value=(0, 1, 0), norm=1e5)
-    m0.to_file(time_drive_2._m0_path)
-
+def test_field_uses_reader_from_source_drive(time_drive_1, time_drive_2, monkeypatch):
+    """CombinedDrive delegates each field to its source drive's reader."""
+    first_field = object()
+    second_field = object()
+    monkeypatch.setattr(time_drive_1, "_read_m", lambda filename: first_field)
+    monkeypatch.setattr(time_drive_2, "_read_m", lambda filename: second_field)
     combined = md.CombinedDrive(time_drive_1, time_drive_2)
-    field = combined[len(time_drive_1._step_files)]
 
-    assert field.mesh.region.allclose(region)
-    assert field.mesh.subregions == {"second_drive": subregion}
+    assert combined[0] is first_field
+    assert combined[len(time_drive_1._step_files)] is second_field
 
 
 def test_repr(combined_time_drive):

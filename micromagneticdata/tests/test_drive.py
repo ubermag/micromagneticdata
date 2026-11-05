@@ -1,6 +1,4 @@
 import importlib.metadata
-import inspect
-import json
 import os
 from pathlib import Path
 
@@ -57,11 +55,10 @@ def test_missing_adapter(tmp_path):
     system_name = "test_system"
     index = 0
     create_drive(tmp_path, system_name, index, "t", n_steps=25)
-    # the drive specifies 'micromagneticdata' as adapter package but micromagneticdata
-    # does not provide the required plugins, therefore the test fails (the error message
-    # is slightly misleading in this case, because micromagneticadata is installed;
-    # for real missing adapter packages the message makes sense)
-    with pytest.raises(RuntimeError, match="'micromagneticdata' must be installed"):
+    # the sample adapter is only provided by the mocked test entry points
+    with pytest.raises(
+        RuntimeError, match="'discretisedfield_field_sample' must be installed"
+    ):
         mdata.Drive(system_name, index, dirname=tmp_path)
 
 
@@ -88,7 +85,12 @@ def test_pass_adapter_manually(monkeypatch, tmp_path):
     # info.json is skipped
     (tmp_path / system_name / f"drive-{index}" / "info.json").write_text("")
 
-    mdata.Drive(system_name, index, dirname=tmp_path, adapter="micromagneticdata")
+    mdata.Drive(
+        system_name,
+        index,
+        dirname=tmp_path,
+        adapter="discretisedfield_field_sample",
+    )
 
 
 def test_legacy_drive(tmp_path):
@@ -146,11 +148,14 @@ def test_unstructured_grid_field(monkeypatch, tmp_path):
     monkeypatch.setattr(importlib.metadata, "entry_points", mock_entry_points)
 
     system_name = "unstructured_grid"
-    create_drive(tmp_path, system_name, index=0, x="t", n_steps=2)
-    info_path = tmp_path / system_name / "drive-0" / "info.json"
-    info = json.loads(info_path.read_text())
-    info["adapter"] = "unstructured_grid_adapter"
-    info_path.write_text(json.dumps(info))
+    create_drive(
+        tmp_path,
+        system_name,
+        index=0,
+        x="t",
+        n_steps=2,
+        adapter="pyvista_unstructured_grid_sample",
+    )
 
     drive = mdata.Drive(system_name, 0, dirname=tmp_path)
     assert isinstance(drive, UnstructuredGridDrive)
@@ -160,24 +165,11 @@ def test_unstructured_grid_field(monkeypatch, tmp_path):
     assert drive[0].field_data["filename"][0] == str(drive.drive_path / "m-001.hdf5")
     assert all(isinstance(field, pv.UnstructuredGrid) for field in drive)
 
-    selection = drive[:1]
-    assert isinstance(selection[0], pv.UnstructuredGrid)
-
     filenames = drive.register_callback(
         lambda field: Path(field.field_data["filename"][0]).name
     )
+    assert filenames.m0 == "m0.omf"
     assert filenames[0] == "m-001.hdf5"
-    with pytest.raises(NotImplementedError, match="received str"):
-        filenames.to_xarray()
-    with pytest.raises(NotImplementedError, match="received str"):
-        filenames.hv  # noqa: B018
-
-    with pytest.raises(NotImplementedError, match="to_xarray"):
-        drive.to_xarray()
-    with pytest.raises(NotImplementedError, match="hv"):
-        drive.hv  # noqa: B018
-    with pytest.raises(NotImplementedError, match="ovf2vtk"):
-        drive.ovf2vtk()
 
 
 def test_repr(drive):
@@ -264,69 +256,6 @@ def test_to_xarray(drive):
             drive.to_xarray()[drive.table.x].values,
             drive.table.data[drive.table.x].to_numpy(),
         )
-
-
-@pytest.mark.parametrize("operation", ["to_xarray", "hv", "ovf2vtk"])
-def test_field_type_guards_do_not_read_extra_fields(
-    drive, monkeypatch, tmp_path, operation
-):
-    drive = drive[:2]
-    read_field = drive._read_field
-    step_reads = []
-
-    def counted_read(filename):
-        if filename != drive._m0_path:
-            step_reads.append(filename)
-        return read_field(filename)
-
-    monkeypatch.setattr(drive, "_read_field", counted_read)
-    if operation == "hv":
-        drive.hv  # noqa: B018
-        assert step_reads == drive._step_files[:1]
-    elif operation == "ovf2vtk":
-        drive.ovf2vtk(tmp_path)
-        assert step_reads == drive._step_files
-        assert len(list(tmp_path.glob("*.vtk"))) == 2
-    else:
-        drive.to_xarray()
-        assert step_reads == drive._step_files
-
-
-@pytest.mark.parametrize("operation", ["to_xarray", "hv", "ovf2vtk"])
-def test_field_type_guards_reject_callback_result(drive, tmp_path, operation):
-    drive = drive.register_callback(lambda m: "not a field")
-    with pytest.raises(NotImplementedError, match="received str"):
-        if operation == "to_xarray":
-            drive.to_xarray()
-        elif operation == "hv":
-            drive.hv  # noqa: B018
-        else:
-            drive.ovf2vtk(tmp_path)
-
-
-def test_to_xarray_rejects_later_callback_result(drive):
-    callback_count = 0
-
-    def callback(m):
-        nonlocal callback_count
-        callback_count += 1
-        return m if callback_count == 1 else "not a field"
-
-    drive = drive[:2].register_callback(callback)
-    with pytest.raises(NotImplementedError, match="received str"):
-        drive.to_xarray()
-    assert callback_count == 2
-
-
-@pytest.mark.parametrize(
-    ("method", "parameters"),
-    [
-        (mdata.AbstractDrive.to_xarray, ("self", "args", "kwargs")),
-        (mdata.Drive.ovf2vtk, ("self", "dirname")),
-    ],
-)
-def test_field_type_guards_preserve_public_signature(method, parameters):
-    assert tuple(inspect.signature(method).parameters) == parameters
 
 
 def test_hv_drive_scalar(drive):
