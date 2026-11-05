@@ -40,6 +40,14 @@ class SampleDrive(mdata.Drive):
         return field
 
 
+class MockOOMMFDrive(SampleDrive):
+    """Mock drive selected for legacy OOMMF data."""
+
+
+class MockMumax3Drive(SampleDrive):
+    """Mock drive selected for legacy MuMax3 data."""
+
+
 def _unstructured_field(filename):
     points = np.array([[0, 0, 0], [1e-9, 0, 0], [0, 1e-9, 0], [0, 0, 1e-9]])
     field = pv.UnstructuredGrid(
@@ -79,6 +87,16 @@ def mock_entry_points(group):
                 importlib.metadata.EntryPoint(
                     name="pyvista_unstructured_grid_sample",
                     value="micromagneticdata.tests.mock_data:UnstructuredGridDrive",
+                    group="micromagneticdata.plugins.CalculatorDrive",
+                ),
+                importlib.metadata.EntryPoint(
+                    name="oommfc",
+                    value="micromagneticdata.tests.mock_data:MockOOMMFDrive",
+                    group="micromagneticdata.plugins.CalculatorDrive",
+                ),
+                importlib.metadata.EntryPoint(
+                    name="mumax3c",
+                    value="micromagneticdata.tests.mock_data:MockMumax3Drive",
                     group="micromagneticdata.plugins.CalculatorDrive",
                 ),
             ]

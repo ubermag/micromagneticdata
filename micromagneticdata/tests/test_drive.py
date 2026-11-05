@@ -12,7 +12,13 @@ import xarray as xr
 from discretisedfield.tests.test_field import check_hv
 
 import micromagneticdata as mdata
-from .mock_data import UnstructuredGridDrive, create_drive, mock_entry_points
+from .mock_data import (
+    MockMumax3Drive,
+    MockOOMMFDrive,
+    UnstructuredGridDrive,
+    create_drive,
+    mock_entry_points,
+)
 from micromagneticdata.testing.drive import *  # noqa: F403
 
 
@@ -93,7 +99,10 @@ def test_pass_adapter_manually(monkeypatch, tmp_path):
     )
 
 
-def test_legacy_drive(tmp_path):
+def test_legacy_drive(tmp_path, monkeypatch):
+    """Legacy directory layouts select the matching calculator adapter."""
+    monkeypatch.setattr(importlib.metadata, "entry_points", mock_entry_points)
+
     # prior to writing "adapter" to info.json the correct driver was inferred from the
     # directory structure
     system_name = "test_system"
@@ -106,25 +115,13 @@ def test_legacy_drive(tmp_path):
     )
 
     # no system_name.out subdirectory -> OOMMF
-    try:
-        import oommfc.plugins  # oommfc might not be installed
-
-        drive = mdata.Drive(system_name, index, dirname=tmp_path)
-        assert isinstance(drive, oommfc.plugins.OOMMFDrive)
-    except ModuleNotFoundError:
-        with pytest.raises(RuntimeError, match="'oommfc' must be installed"):
-            mdata.Drive(system_name, index, dirname=tmp_path)
+    drive = mdata.Drive(system_name, index, dirname=tmp_path)
+    assert isinstance(drive, MockOOMMFDrive)
 
     # system_name.out subdirectory -> mumax3
     (tmp_path / system_name / f"drive-{index}" / f"{system_name}.out").mkdir()
-    try:
-        import mumax3c.plugins  # mumax3c might not be installed
-
-        drive = mdata.Drive(system_name, index, dirname=tmp_path)
-        assert isinstance(drive, mumax3c.plugins.Mumax3Drive)
-    except ModuleNotFoundError:
-        with pytest.raises(RuntimeError, match="'mumax3c' must be installed"):
-            mdata.Drive(system_name, index, dirname=tmp_path)
+    drive = mdata.Drive(system_name, index, dirname=tmp_path)
+    assert isinstance(drive, MockMumax3Drive)
 
 
 def test_init(drive):
