@@ -75,6 +75,7 @@ def test_init(time_drive_1, time_drive_2):
 
 
 def test_unstructured_grid_fields(tmp_path, monkeypatch):
+    """CombinedDrive preserves unstructured-grid magnetisation fields."""
     monkeypatch.setattr(importlib.metadata, "entry_points", mock_entry_points)
 
     system_name = "unstructured_grid"

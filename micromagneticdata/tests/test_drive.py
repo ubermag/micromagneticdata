@@ -145,6 +145,7 @@ def test_init(drive):
 
 
 def test_unstructured_grid_field(monkeypatch, tmp_path):
+    """Drive loads unstructured-grid fields and applies callbacks to them."""
     monkeypatch.setattr(importlib.metadata, "entry_points", mock_entry_points)
 
     system_name = "unstructured_grid"
