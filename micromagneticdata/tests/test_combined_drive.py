@@ -3,6 +3,7 @@ import importlib.metadata
 import discretisedfield as df
 import numpy as np
 import pytest
+import pyvista as pv
 import ubermagtable as ut
 import xarray as xr
 from discretisedfield.tests.test_field import check_hv
@@ -71,6 +72,46 @@ def test_init(time_drive_1, time_drive_2):
 
     with pytest.raises(TypeError):
         md.CombinedDrive(time_drive_1, "wrong type")
+
+
+def test_unstructured_grid_fields(tmp_path, monkeypatch):
+    """CombinedDrive preserves unstructured-grid magnetisation fields."""
+    monkeypatch.setattr(importlib.metadata, "entry_points", mock_entry_points)
+
+    system_name = "unstructured_grid"
+    drives = []
+    for index in range(2):
+        create_drive(
+            tmp_path,
+            system_name,
+            index,
+            "t",
+            n_steps=2,
+            adapter="pyvista_unstructured_grid_sample",
+        )
+        drives.append(md.Drive(system_name, index, dirname=tmp_path))
+
+    combined = md.CombinedDrive(*drives)
+    assert isinstance(combined.m0, pv.UnstructuredGrid)
+    assert combined.m0.field_data["filename"][0] == str(drives[0]._m0_path)
+    assert combined[0].field_data["filename"][0] == str(
+        drives[0].drive_path / "m-001.hdf5"
+    )
+    assert combined[2].field_data["filename"][0] == str(
+        drives[1].drive_path / "m-001.hdf5"
+    )
+
+
+def test_field_uses_reader_from_source_drive(time_drive_1, time_drive_2, monkeypatch):
+    """CombinedDrive delegates each field to its source drive's reader."""
+    first_field = object()
+    second_field = object()
+    monkeypatch.setattr(time_drive_1, "_read_m", lambda filename: first_field)
+    monkeypatch.setattr(time_drive_2, "_read_m", lambda filename: second_field)
+    combined = md.CombinedDrive(time_drive_1, time_drive_2)
+
+    assert combined[0] is first_field
+    assert combined[len(time_drive_1._step_files)] is second_field
 
 
 def test_repr(combined_time_drive):

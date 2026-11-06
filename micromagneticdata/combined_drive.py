@@ -1,5 +1,6 @@
 import functools
 import operator
+import pathlib
 
 import ubermagutil as uu
 
@@ -122,6 +123,15 @@ class CombinedDrive(md.AbstractDrive):
     @property
     def _step_files(self):
         return sum((drive._step_files for drive in self.drives), start=[])
+
+    def _read_m(self, filename):
+        """Read a magnetisation field with the adapter of its source drive."""
+        filename = pathlib.Path(filename)
+        for drive in self.drives:
+            if drive.drive_path in filename.parents:
+                return drive._read_m(filename)
+
+        raise ValueError(f"Magnetisation file {filename!s} is not part of this drive.")
 
     def __lshift__(self, other):
         if isinstance(other, md.Drive):

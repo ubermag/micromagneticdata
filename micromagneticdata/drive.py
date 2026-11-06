@@ -243,9 +243,8 @@ class Drive(md.AbstractDrive):
     def __getitem__(self, item):
         """Magnetisation field of an individual step or subpart of the drive.
 
-        If an ``int`` is passed a single magnetisation field (discretisedfield.Field
-        object) is returned. Additional callbacks (if registered) are applied to this
-        field before it is returned.
+        If an ``int`` is passed a single magnetisation field is returned. Additional
+        callbacks (if registered) are applied to this field before it is returned.
 
         If a slice is passed a new drive object with the magnetisation steps defined via
         the slice is returned. Additional callbacks (if registered) are passed to the
@@ -253,9 +252,9 @@ class Drive(md.AbstractDrive):
 
         Returns
         -------
-        discretisedfield.Field
+        discretisedfield.Field or pyvista.UnstructuredGrid
 
-            Magnetisation field if an int is passed.
+            Magnetisation field if an integer is passed.
 
         micromagneticdata.Drive
 

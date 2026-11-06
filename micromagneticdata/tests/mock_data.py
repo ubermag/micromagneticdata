@@ -6,7 +6,9 @@ from importlib.metadata import entry_points as importlib_metadata_entry_points
 from pathlib import Path
 
 import discretisedfield as df
+import numpy as np
 import pandas as pd
+import pyvista as pv
 import ubermagtable as ut
 
 import micromagneticdata as mdata
@@ -32,6 +34,38 @@ class SampleDrive(mdata.Drive):
     def calculator_script(self):
         return (self.drive_path / "script.txt").read_text()
 
+    def _read_m(self, filename):
+        field = df.Field.from_file(filename)
+        field.valid = "norm"
+        return field
+
+
+class MockOOMMFDrive(SampleDrive):
+    """Mock drive selected for legacy OOMMF data."""
+
+
+class MockMumax3Drive(SampleDrive):
+    """Mock drive selected for legacy MuMax3 data."""
+
+
+def _unstructured_field(filename):
+    points = np.array([[0, 0, 0], [1e-9, 0, 0], [0, 1e-9, 0], [0, 0, 1e-9]])
+    field = pv.UnstructuredGrid(
+        np.array([4, 0, 1, 2, 3]),
+        np.array([pv.CellType.TETRA]),
+        points,
+    )
+    field.point_data["m"] = np.tile((0.0, 0.0, 1.0), (field.n_points, 1))
+    field.field_data["filename"] = [str(filename)]
+    return field
+
+
+class UnstructuredGridDrive(SampleDrive):
+    """Drive returning unstructured-grid magnetisation fields."""
+
+    def _read_m(self, filename):
+        return _unstructured_field(filename)
+
 
 def read_table(filename, x=None, rename=True):
     return ut.Table(
@@ -46,8 +80,23 @@ def mock_entry_points(group):
         return importlib.metadata.EntryPoints(
             [
                 importlib.metadata.EntryPoint(
-                    name="micromagneticdata",
+                    name="discretisedfield_field_sample",
                     value="micromagneticdata.tests.mock_data:SampleDrive",
+                    group="micromagneticdata.plugins.CalculatorDrive",
+                ),
+                importlib.metadata.EntryPoint(
+                    name="pyvista_unstructured_grid_sample",
+                    value="micromagneticdata.tests.mock_data:UnstructuredGridDrive",
+                    group="micromagneticdata.plugins.CalculatorDrive",
+                ),
+                importlib.metadata.EntryPoint(
+                    name="oommfc",
+                    value="micromagneticdata.tests.mock_data:MockOOMMFDrive",
+                    group="micromagneticdata.plugins.CalculatorDrive",
+                ),
+                importlib.metadata.EntryPoint(
+                    name="mumax3c",
+                    value="micromagneticdata.tests.mock_data:MockMumax3Drive",
                     group="micromagneticdata.plugins.CalculatorDrive",
                 ),
             ]
@@ -66,7 +115,14 @@ def mock_entry_points(group):
         return importlib_metadata_entry_points(group=group)
 
 
-def create_drive(base: Path, system_name, index, x, n_steps):
+def create_drive(
+    base: Path,
+    system_name,
+    index,
+    x,
+    n_steps,
+    adapter="discretisedfield_field_sample",
+):
     """Create a drive with n_steps steps and metadata compatible with SampleDrive."""
     # support time driver and min driver
     driver_name = {
@@ -80,7 +136,7 @@ def create_drive(base: Path, system_name, index, x, n_steps):
         json.dumps(
             {
                 "drive_number": index,
-                "adapter": "micromagneticdata",
+                "adapter": adapter,
                 "driver": driver_name[x],
             }
         )

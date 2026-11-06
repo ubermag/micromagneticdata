@@ -6,12 +6,19 @@ import discretisedfield as df
 import ipywidgets
 import numpy as np
 import pytest
+import pyvista as pv
 import ubermagtable as ut
 import xarray as xr
 from discretisedfield.tests.test_field import check_hv
 
 import micromagneticdata as mdata
-from .mock_data import create_drive, mock_entry_points
+from .mock_data import (
+    MockMumax3Drive,
+    MockOOMMFDrive,
+    UnstructuredGridDrive,
+    create_drive,
+    mock_entry_points,
+)
 from micromagneticdata.testing.drive import *  # noqa: F403
 
 
@@ -39,6 +46,12 @@ def drive_with_reference(drive):
     return drive, ("t", "mx", "run simulation")
 
 
+@pytest.fixture
+def expected_field_type():
+    """Expected type returned for initial and per-step magnetisation fields."""
+    return df.Field
+
+
 #####################
 
 # Additional tests not reused in adapter packages
@@ -48,11 +61,10 @@ def test_missing_adapter(tmp_path):
     system_name = "test_system"
     index = 0
     create_drive(tmp_path, system_name, index, "t", n_steps=25)
-    # the drive specifies 'micromagneticdata' as adapter package but micromagneticdata
-    # does not provide the required plugins, therefore the test fails (the error message
-    # is slightly misleading in this case, because micromagneticadata is installed;
-    # for real missing adapter packages the message makes sense)
-    with pytest.raises(RuntimeError, match="'micromagneticdata' must be installed"):
+    # the sample adapter is only provided by the mocked test entry points
+    with pytest.raises(
+        RuntimeError, match="'discretisedfield_field_sample' must be installed"
+    ):
         mdata.Drive(system_name, index, dirname=tmp_path)
 
 
@@ -79,10 +91,18 @@ def test_pass_adapter_manually(monkeypatch, tmp_path):
     # info.json is skipped
     (tmp_path / system_name / f"drive-{index}" / "info.json").write_text("")
 
-    mdata.Drive(system_name, index, dirname=tmp_path, adapter="micromagneticdata")
+    mdata.Drive(
+        system_name,
+        index,
+        dirname=tmp_path,
+        adapter="discretisedfield_field_sample",
+    )
 
 
-def test_legacy_drive(tmp_path):
+def test_legacy_drive(tmp_path, monkeypatch):
+    """Legacy directory layouts select the matching calculator adapter."""
+    monkeypatch.setattr(importlib.metadata, "entry_points", mock_entry_points)
+
     # prior to writing "adapter" to info.json the correct driver was inferred from the
     # directory structure
     system_name = "test_system"
@@ -95,25 +115,13 @@ def test_legacy_drive(tmp_path):
     )
 
     # no system_name.out subdirectory -> OOMMF
-    try:
-        import oommfc.plugins  # oommfc might not be installed
-
-        drive = mdata.Drive(system_name, index, dirname=tmp_path)
-        assert isinstance(drive, oommfc.plugins.OOMMFDrive)
-    except ModuleNotFoundError:
-        with pytest.raises(RuntimeError, match="'oommfc' must be installed"):
-            mdata.Drive(system_name, index, dirname=tmp_path)
+    drive = mdata.Drive(system_name, index, dirname=tmp_path)
+    assert isinstance(drive, MockOOMMFDrive)
 
     # system_name.out subdirectory -> mumax3
     (tmp_path / system_name / f"drive-{index}" / f"{system_name}.out").mkdir()
-    try:
-        import mumax3c.plugins  # mumax3c might not be installed
-
-        drive = mdata.Drive(system_name, index, dirname=tmp_path)
-        assert isinstance(drive, mumax3c.plugins.Mumax3Drive)
-    except ModuleNotFoundError:
-        with pytest.raises(RuntimeError, match="'mumax3c' must be installed"):
-            mdata.Drive(system_name, index, dirname=tmp_path)
+    drive = mdata.Drive(system_name, index, dirname=tmp_path)
+    assert isinstance(drive, MockMumax3Drive)
 
 
 def test_init(drive):
@@ -131,6 +139,35 @@ def test_init(drive):
     # Exception
     with pytest.raises(OSError):
         created_drive = mdata.Drive(name=drive.name, number=1, dirname=drive.dirname)
+
+
+def test_unstructured_grid_field(monkeypatch, tmp_path):
+    """Drive loads unstructured-grid fields and applies callbacks to them."""
+    monkeypatch.setattr(importlib.metadata, "entry_points", mock_entry_points)
+
+    system_name = "unstructured_grid"
+    create_drive(
+        tmp_path,
+        system_name,
+        index=0,
+        x="t",
+        n_steps=2,
+        adapter="pyvista_unstructured_grid_sample",
+    )
+
+    drive = mdata.Drive(system_name, 0, dirname=tmp_path)
+    assert isinstance(drive, UnstructuredGridDrive)
+    assert isinstance(drive.m0, pv.UnstructuredGrid)
+    assert drive.m0.field_data["filename"][0] == str(drive._m0_path)
+    assert isinstance(drive[0], pv.UnstructuredGrid)
+    assert drive[0].field_data["filename"][0] == str(drive.drive_path / "m-001.hdf5")
+    assert all(isinstance(field, pv.UnstructuredGrid) for field in drive)
+
+    filenames = drive.register_callback(
+        lambda field: Path(field.field_data["filename"][0]).name
+    )
+    assert filenames.m0 == "m0.omf"
+    assert filenames[0] == "m-001.hdf5"
 
 
 def test_repr(drive):

@@ -60,7 +60,7 @@ def test_info_missing_corrupt(monkeypatch, tmp_path):
             "date": "2025-05-31",
             "time": "20:29:33",
             "start_time": "2025-05-31T20:29:33",
-            "adapter": "micromagneticdata",
+            "adapter": "discretisedfield_field_sample",
             "adapter_version": "0.65.0",
             "driver": "MinDriver",
             "end_time": "2025-05-31T20:29:33",

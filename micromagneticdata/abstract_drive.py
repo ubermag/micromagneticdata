@@ -1,7 +1,5 @@
 import abc
-import contextlib
 
-import discretisedfield as df
 import discretisedfield.plotting as dfp
 import numpy as np
 import xarray as xr
@@ -74,16 +72,14 @@ class AbstractDrive(abc.ABC):
 
     @property
     def m0(self):
-        """Inital magnetisation.
-
-        This property returns a ``discretisedfield.Field`` object for the
-        initial magnetisation field.
+        """Initial magnetisation field.
 
         Returns
         -------
-        discretisedfield.Field
+        discretisedfield.Field or pyvista.UnstructuredGrid
 
-            Initial magnetisation field.
+            Initial magnetisation field if no callbacks are registered. Otherwise,
+            the result of applying the callbacks.
 
         Examples
         --------
@@ -96,14 +92,16 @@ class AbstractDrive(abc.ABC):
         Field(...)
 
         """
-        field = df.Field.from_file(self._m0_path)
-        field.valid = "norm"
-        return field
+        return self._apply_callbacks(self._read_m(self._m0_path))
 
     @property
     @abc.abstractmethod
     def _m0_path(self):
-        """Path to m0 file."""
+        """Path to the initial magnetisation field."""
+
+    @abc.abstractmethod
+    def _read_m(self, filename):
+        """Read a magnetisation field from ``filename``."""
 
     @property
     @abc.abstractmethod
@@ -167,9 +165,10 @@ class AbstractDrive(abc.ABC):
 
         Returns
         -------
-        discretisedfield.Field
+        discretisedfield.Field or pyvista.UnstructuredGrid
 
-            Magnetisation field.
+            Magnetisation field if no callbacks are registered. Otherwise, the
+            result of applying the callbacks, which may have a different type.
 
         Examples
         --------
@@ -182,28 +181,20 @@ class AbstractDrive(abc.ABC):
         Field(...)
 
         """
-        field = df.Field.from_file(filename=self._step_files[item])
-        if not field.mesh.region.allclose(self.m0.mesh.region):
-            # mumax3 (and maybe others) do not preserve the position of the origin
-            field.mesh.translate(
-                self.m0.mesh.region.pmin - field.mesh.region.pmin, inplace=True
-            )
-        with contextlib.suppress(FileNotFoundError):
-            field.mesh.load_subregions(self._m0_path)
-        field.valid = "norm"
-        return self._apply_callbacks(field)
+        return self._apply_callbacks(self._read_m(self._step_files[item]))
 
     def __iter__(self):
         """Iterator.
 
-        This iterator iterates through all magnetisation field in drive and
-        yields ``discretisedfield.Field`` objects.
+        This iterator yields all magnetisation fields in the drive, with
+        registered callbacks applied.
 
-        Returns
-        -------
-        discretisedfield.Field
+        Yields
+        ------
+        discretisedfield.Field or pyvista.UnstructuredGrid
 
-            Magnetisation field.
+            Magnetisation field if no callbacks are registered. Otherwise, the
+            result of applying the callbacks, which may have a different type.
 
         Examples
         --------
