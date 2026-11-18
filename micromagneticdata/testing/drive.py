@@ -41,6 +41,7 @@ def test_x(drive_with_reference):
 
     with pytest.raises(ValueError):
         drive.x = "not_a_valid_column_name"
+    assert drive.x == drive_x
 
 
 def test_set_x(drive_with_reference):

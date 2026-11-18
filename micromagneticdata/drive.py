@@ -202,9 +202,29 @@ class Drive(md.AbstractDrive):
             self._table = None
         self._use_cache = use_cache
 
+    @md.AbstractDrive.x.setter
+    def x(self, value):
+        if value is None:
+            self._x = self._default_x
+            return
+        # self.table reads self.x, so self._x has to be set before validating;
+        # reading the table may itself reject an unknown column
+        old_value = getattr(self, "_x", None)
+        self._x = value
+        try:
+            if value not in self.table.data.columns:
+                raise ValueError(f"Column {value=} does not exist in data.")
+        except ValueError:
+            if old_value is None:
+                del self._x
+            else:
+                self._x = old_value
+            raise
+
     @property
-    def _m0_path(self):
-        return self.drive_path / "m0.omf"
+    @abc.abstractmethod
+    def _default_x(self):
+        """Independent variable."""
 
     @property
     @abc.abstractmethod
