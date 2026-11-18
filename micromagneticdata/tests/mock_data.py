@@ -31,6 +31,10 @@ class SampleDrive(mdata.Drive):
         return self.drive_path.glob("m-*.hdf5")
 
     @property
+    def _m0_path(self):
+        return self.drive_path / "m0.omf"
+
+    @property
     def calculator_script(self):
         return (self.drive_path / "script.txt").read_text()
 

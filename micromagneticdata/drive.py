@@ -202,9 +202,6 @@ class Drive(md.AbstractDrive):
             self._table = None
         self._use_cache = use_cache
 
-    @property
-    def _m0_path(self):
-        return self.drive_path / "m0.omf"
 
     @property
     @abc.abstractmethod
