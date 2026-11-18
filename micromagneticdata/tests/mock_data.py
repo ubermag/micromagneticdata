@@ -15,12 +15,9 @@ import micromagneticdata as mdata
 
 
 class SampleDrive(mdata.Drive):
-    @mdata.AbstractDrive.x.setter
-    def x(self, value):
-        value = value or "t"  # fall back to time driver by default
-        if value not in ["t", "iteration", "mx", "my", "mz"]:
-            raise ValueError(f"Unsupported x={value}")
-        self._x = value
+    @property
+    def _default_x(self):
+        return "t"
 
     @property
     def _table_path(self):
